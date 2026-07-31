@@ -30,6 +30,21 @@ class MenuSeeder extends Seeder
                     ['nome' => 'Fanta Lattina', 'prezzo' => 2.50],
                     ['nome' => 'Birra Piccola 300ml', 'prezzo' => 3.50],
                     ['nome' => 'Birra Media 400ml', 'prezzo' => 4.50],
+                    // Al Bar del Marinaio — inattive di default finché non si decide quali attivare
+                    ['nome' => 'Caffè', 'prezzo' => 1.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Caffè Corretto', 'prezzo' => 1.50, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Estathè Brik', 'prezzo' => 1.50, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Bicchiere di Vino', 'prezzo' => 2.50, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Bicchiere di Prosecco', 'prezzo' => 3.50, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Spritz del Marinaio', 'prezzo' => 5.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Americano', 'prezzo' => 5.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Negroni', 'prezzo' => 5.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Gin Tonic', 'prezzo' => 5.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Limoncello', 'prezzo' => 3.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Montenegro', 'prezzo' => 3.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Amaro del Capo', 'prezzo' => 3.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Sambuca', 'prezzo' => 3.00, 'bar' => true, 'attivo' => false],
+                    ['nome' => 'Grappa', 'prezzo' => 3.00, 'bar' => true, 'attivo' => false],
                 ],
             ],
             [
@@ -82,6 +97,8 @@ class MenuSeeder extends Seeder
                     ['nome' => 'Popone (Melone)', 'prezzo' => 2.50],
                     ['nome' => 'Panna Cotta', 'prezzo' => 3.50],
                     ['nome' => 'Crema Catalana', 'prezzo' => 3.50],
+                    // Bar — non è una bevanda (categoria.is_bevande=false), ma bar=true per l'incasso
+                    ['nome' => 'Crepes con Nutella/Marmellata', 'prezzo' => 4.50, 'bar' => true, 'attivo' => false],
                 ],
             ],
             [
@@ -97,25 +114,29 @@ class MenuSeeder extends Seeder
         $catOrd = 1;
 
         foreach ($menu as $catData) {
-            $categoria = Categoria::query()->create([
-                'nome' => $catData['nome'],
-                'area_stampa' => $catData['area_stampa'],
-                'is_bevande' => ($catData['nome'] === 'Bevande'),
-                'ordinamento' => $catOrd++,
-            ]);
+            $categoria = Categoria::query()->updateOrCreate(
+                ['nome' => $catData['nome']],
+                [
+                    'area_stampa' => $catData['area_stampa'],
+                    'is_bevande' => ($catData['nome'] === 'Bevande'),
+                    'ordinamento' => $catOrd++,
+                ]
+            );
 
             foreach ($catData['voci'] as $voce) {
-                MenuItem::query()->create([
-                    'categoria_id' => $categoria->id,
-                    'nome' => $voce['nome'],
-                    'prezzo' => $voce['prezzo'],
-                    'attivo' => true,
-                    'piatto_del_giorno' => false,
-                    'bar' => false,
-                    'stock_default' => $voce['stock_default'] ?? null,
-                    'area_stampa' => $voce['area_stampa'] ?? null,
-                    'ordinamento' => $ordinamento++,
-                ]);
+                MenuItem::query()->updateOrCreate(
+                    ['nome' => $voce['nome']],
+                    [
+                        'categoria_id' => $categoria->id,
+                        'prezzo' => $voce['prezzo'],
+                        'attivo' => $voce['attivo'] ?? true,
+                        'piatto_del_giorno' => false,
+                        'bar' => $voce['bar'] ?? false,
+                        'stock_default' => $voce['stock_default'] ?? null,
+                        'area_stampa' => $voce['area_stampa'] ?? null,
+                        'ordinamento' => $ordinamento++,
+                    ]
+                );
             }
         }
     }
