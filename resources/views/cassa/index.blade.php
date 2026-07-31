@@ -105,13 +105,17 @@
                                 <div class="cassa-row-nome" x-text="item.nome"></div>
                                 <div
                                     class="cassa-row-stock"
-                                    :class="{ esaurito: item.stock_limitato && (stock[item.id] ?? 0) <= 0 }"
-                                    x-show="item.stock_limitato"
+                                    :class="stockStateClass(item)"
+                                    x-show="item.stock_limitato || !serataAperta"
                                     x-text="stockLabel(item)"
                                 ></div>
                             </div>
                             <div class="cassa-row-prezzo" x-text="formatEuro(item.prezzo)"></div>
-                            <div class="cassa-row-qty" x-text="qty[item.id] || ''"></div>
+                            <div
+                                class="cassa-row-qty"
+                                :class="{ blocked: isStockBlocked(item) }"
+                                x-text="qty[item.id] || ''"
+                            ></div>
                         </div>
                     </template>
                 </section>
@@ -445,9 +449,39 @@ function cassaApp(cfg) {
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
         },
 
+        stockResiduo(item) {
+            if (!item?.stock_limitato) return null;
+            if (!Object.prototype.hasOwnProperty.call(this.stock, item.id)
+                && !Object.prototype.hasOwnProperty.call(this.stock, String(item.id))) {
+                return null;
+            }
+            const r = this.stock[item.id] ?? this.stock[String(item.id)];
+            return r === undefined || r === null ? null : Number(r);
+        },
+
+        isStockBlocked(item) {
+            if (!this.serataAperta) return true;
+            if (!item?.stock_limitato) return false;
+            const r = this.stockResiduo(item);
+            return r === null || r <= 0;
+        },
+
+        stockStateClass(item) {
+            if (!this.serataAperta) return 'stato-noserata';
+            if (!item?.stock_limitato) return '';
+            const r = this.stockResiduo(item);
+            if (r === null) return 'stato-mancante';
+            if (r <= 0) return 'stato-esaurito';
+            return 'stato-ok';
+        },
+
         stockLabel(item) {
-            const r = this.stock[item.id];
-            if (r === undefined || r === null) return '';
+            if (!this.serataAperta) {
+                return item?.stock_limitato ? 'serata chiusa' : '';
+            }
+            if (!item?.stock_limitato) return '';
+            const r = this.stockResiduo(item);
+            if (r === null) return 'stock non impostato';
             if (r <= 0) return 'ESAURITO';
             return 'rimasti ' + r;
         },
@@ -472,12 +506,22 @@ function cassaApp(cfg) {
         changeQty(delta) {
             const item = this.menu.find(i => i.id === this.activeId);
             if (!item) return;
+            if (!this.serataAperta) {
+                this.errore = 'Nessuna serata aperta.';
+                return;
+            }
             let q = (this.qty[item.id] || 0) + delta;
             if (q < 0) q = 0;
             if (item.stock_limitato) {
-                const max = this.stock[item.id] ?? 0;
+                const max = this.stockResiduo(item);
+                if (max === null) {
+                    this.errore = `Stock non impostato per ${item.nome} — riapri/verifica la serata.`;
+                    return;
+                }
                 if (q > max) {
-                    this.errore = `Stock insufficiente per ${item.nome} (rimasti ${max})`;
+                    this.errore = max <= 0
+                        ? `${item.nome} esaurito`
+                        : `Stock insufficiente per ${item.nome} (rimasti ${max})`;
                     q = max;
                 } else {
                     this.errore = null;
@@ -532,7 +576,13 @@ function cassaApp(cfg) {
             }
             for (const r of this.righeOrdine) {
                 const item = this.menu.find(i => i.id === r.id);
-                if (item?.stock_limitato && r.q > (this.stock[item.id] ?? 0)) {
+                if (!item?.stock_limitato) continue;
+                const max = this.stockResiduo(item);
+                if (max === null) {
+                    this.errore = `Stock non impostato per ${item.nome}`;
+                    return;
+                }
+                if (r.q > max) {
                     this.errore = `Stock insufficiente per ${item.nome}`;
                     return;
                 }
@@ -769,9 +819,21 @@ function cassaApp(cfg) {
                 e.preventDefault();
                 const item = this.menu.find(i => i.id === this.activeId);
                 if (!item) return;
+                if (!this.serataAperta) {
+                    this.errore = 'Nessuna serata aperta.';
+                    return;
+                }
                 const cur = this.qty[item.id] || 0;
                 let next = cur * 10 + parseInt(e.key, 10);
-                if (item.stock_limitato) next = Math.min(next, this.stock[item.id] ?? 0);
+                if (item.stock_limitato) {
+                    const max = this.stockResiduo(item);
+                    if (max === null) {
+                        this.errore = `Stock non impostato per ${item.nome} — riapri/verifica la serata.`;
+                        return;
+                    }
+                    next = Math.min(next, max);
+                    if (max <= 0) this.errore = `${item.nome} esaurito`;
+                }
                 this.qty = { ...this.qty, [item.id]: next };
             }
         },

@@ -44,6 +44,11 @@ class Serata extends Model
 
     public static function corrente(): ?self
     {
-        return static::query()->where('stato', 'aperta')->latest('data')->first();
+        // Criterio = stato aperta, NON la data: serve anche nei collaudi
+        // fatti prima del giorno reale della sagra.
+        return static::query()
+            ->where('stato', 'aperta')
+            ->orderByDesc('id')
+            ->first();
     }
 }

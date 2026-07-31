@@ -41,9 +41,12 @@ class CassaController extends Controller
                 'piatto_del_giorno' => $item->piatto_del_giorno,
             ]);
 
-        $stock = $serata
-            ? app(StockService::class)->mappaResidui($serata->id)
-            : [];
+        $stock = [];
+        if ($serata) {
+            $stockService = app(StockService::class);
+            $stockService->assicuraStockLimitati($serata->id);
+            $stock = $stockService->mappaResidui($serata->id);
+        }
 
         $impostazioni = Impostazione::corrente();
         $prossimoNumero = (int) (Comanda::query()->max('numero_progressivo') ?? 0) + 1;
@@ -75,6 +78,8 @@ class CassaController extends Controller
         if (! $serata) {
             return response()->json(['stock' => []]);
         }
+
+        $stock->assicuraStockLimitati($serata->id);
 
         return response()->json(['stock' => $stock->mappaResidui($serata->id)]);
     }

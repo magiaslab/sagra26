@@ -385,9 +385,25 @@ a:hover { text-decoration: underline; }
   color: #6a7;
   margin-top: .05rem;
 }
+.cassa-row-stock.stato-ok { color: #2a6f5f; }
+.cassa-row-stock.stato-esaurito {
+  color: var(--danger);
+  font-weight: 700;
+}
+.cassa-row-stock.stato-mancante,
+.cassa-row-stock.stato-noserata {
+  color: var(--warn);
+  font-weight: 700;
+}
 .cassa-row-stock.esaurito {
   color: var(--danger);
   font-weight: 700;
+}
+
+.cassa-row-qty.blocked {
+  background: #f3f3f3;
+  border-color: #bbb;
+  color: #888;
 }
 
 .cassa-row-prezzo {
