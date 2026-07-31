@@ -1,0 +1,39 @@
+<?php
+
+use App\Http\Controllers\CassaController;
+use App\Http\Middleware\PinGestione;
+use App\Livewire\Gestione\ChiusuraForm;
+use App\Livewire\Gestione\Dashboard;
+use App\Livewire\Gestione\ImpostazioniPage;
+use App\Livewire\Gestione\MenuCrud;
+use App\Livewire\Gestione\Pin;
+use App\Livewire\Gestione\Serate;
+use App\Livewire\Report\ReportHub;
+use App\Livewire\RiepilogoLive;
+use App\Models\Impostazione;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/', function () {
+    return view('home', ['impostazioni' => Impostazione::corrente()]);
+})->name('home');
+
+Route::get('/cassa', [CassaController::class, 'index'])->name('cassa');
+Route::post('/cassa/postazione', [CassaController::class, 'setPostazione'])->name('cassa.postazione');
+Route::get('/cassa/stock', [CassaController::class, 'stock'])->name('cassa.stock');
+Route::post('/cassa/conferma', [CassaController::class, 'conferma'])->name('cassa.conferma');
+Route::get('/cassa/richiamo/{numero}', [CassaController::class, 'richiamo'])->name('cassa.richiamo');
+Route::get('/cassa/stampa/{comanda}', [CassaController::class, 'stampa'])->name('cassa.stampa');
+Route::post('/cassa/annulla/{comanda}', [CassaController::class, 'annulla'])->name('cassa.annulla');
+
+Route::get('/riepilogo', RiepilogoLive::class)->name('riepilogo');
+
+Route::get('/gestione/pin', Pin::class)->name('gestione.pin');
+
+Route::middleware(PinGestione::class)->prefix('gestione')->name('gestione.')->group(function () {
+    Route::get('/', Dashboard::class)->name('dashboard');
+    Route::get('/serate', Serate::class)->name('serate');
+    Route::get('/menu', MenuCrud::class)->name('menu');
+    Route::get('/chiusura', ChiusuraForm::class)->name('chiusura');
+    Route::get('/report', ReportHub::class)->name('report');
+    Route::get('/impostazioni', ImpostazioniPage::class)->name('impostazioni');
+});

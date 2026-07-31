@@ -1,0 +1,15 @@
+[Unit]
+Description=Sagra26 Cassa (Laravel)
+After=network.target
+
+[Service]
+Type=simple
+User=CHANGE_ME
+WorkingDirectory=/home/CHANGE_ME/cassa
+ExecStart=/usr/bin/php artisan serve --host=0.0.0.0 --port=8000
+Restart=always
+RestartSec=3
+Environment=APP_ENV=production
+
+[Install]
+WantedBy=multi-user.target
