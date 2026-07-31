@@ -4,6 +4,12 @@
         <div class="alert alert-warn">Nessuna serata aperta.</div>
     @else
         <p>Serata {{ $serata->data->format('d/m/Y') }} · aggiornamento automatico</p>
+        @if ($dati['correzioni_per_postazione']->isNotEmpty())
+            <p class="meta-small" style="margin-bottom:1rem">
+                Correzioni oggi:
+                {{ $dati['correzioni_per_postazione']->map(fn ($c) => $c['nome'].' '.$c['n'])->implode(' · ') }}
+            </p>
+        @endif
         <div class="grid-3" style="margin-bottom:1rem">
             <div class="kpi"><div class="lbl">Coperti</div><div class="val">{{ $dati['coperti'] }}</div></div>
             <div class="kpi">

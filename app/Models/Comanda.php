@@ -53,6 +53,11 @@ class Comanda extends Model
         return $this->hasMany(ComandaRiga::class);
     }
 
+    public function correzioni(): HasMany
+    {
+        return $this->hasMany(ComandaCorrezione::class);
+    }
+
     public function isAnnullata(): bool
     {
         return $this->stato === 'annullata';

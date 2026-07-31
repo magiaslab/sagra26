@@ -85,6 +85,7 @@ class CassaController extends Controller
             'importo_contante' => 'nullable|numeric',
             'importo_pos' => 'nullable|numeric',
             'comanda_id' => 'nullable|exists:comande,id',
+            'motivo' => 'nullable|string|max:255',
             'righe' => 'required|array|min:1',
             'righe.*.menu_item_id' => 'required|exists:menu_items,id',
             'righe.*.quantita' => 'required|integer|min:1',
@@ -109,6 +110,7 @@ class CassaController extends Controller
                 isset($data['importo_contante']) ? (float) $data['importo_contante'] : null,
                 isset($data['importo_pos']) ? (float) $data['importo_pos'] : null,
                 $esistente,
+                $data['motivo'] ?? null,
             );
 
             return response()->json([
@@ -144,6 +146,7 @@ class CassaController extends Controller
             'coperti' => $comanda->coperti,
             'metodo_pagamento' => $comanda->metodo_pagamento,
             'totale' => (float) $comanda->totale,
+            'correzioni_count' => $comanda->correzioni()->count(),
             'righe' => $comanda->righe->map(fn ($r) => [
                 'menu_item_id' => $r->menu_item_id,
                 'quantita' => $r->quantita,

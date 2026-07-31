@@ -3,6 +3,7 @@
 namespace App\Livewire;
 
 use App\Models\Comanda;
+use App\Models\ComandaCorrezione;
 use App\Models\ComandaRiga;
 use App\Models\Impostazione;
 use App\Models\Serata;
@@ -23,6 +24,7 @@ class RiepilogoLive extends Component
             'per_piatto' => collect(),
             'per_postazione' => collect(),
             'annullate' => collect(),
+            'correzioni_per_postazione' => collect(),
         ];
 
         if ($serata) {
@@ -59,6 +61,17 @@ class RiepilogoLive extends Component
                 ->where('stato', 'annullata')
                 ->orderByDesc('numero_progressivo')
                 ->get(['numero_progressivo', 'motivo_annullo', 'totale']);
+
+            $dati['correzioni_per_postazione'] = ComandaCorrezione::query()
+                ->select('postazione_id', DB::raw('COUNT(*) as n'))
+                ->whereHas('comanda', fn ($q) => $q->where('serata_id', $serata->id))
+                ->with('postazione')
+                ->groupBy('postazione_id')
+                ->get()
+                ->map(fn ($row) => [
+                    'nome' => $row->postazione->nome,
+                    'n' => (int) $row->n,
+                ]);
         }
 
         return view('livewire.riepilogo-live', [

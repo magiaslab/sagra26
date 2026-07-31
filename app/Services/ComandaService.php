@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Comanda;
+use App\Models\ComandaCorrezione;
 use App\Models\ComandaRiga;
 use App\Models\MenuItem;
 use App\Models\Postazione;
@@ -37,6 +38,7 @@ class ComandaService
         ?float $importoContante = null,
         ?float $importoPos = null,
         ?Comanda $esistente = null,
+        ?string $motivo = null,
     ): Comanda {
         if (! $serata->isAperta()) {
             throw new RuntimeException('Nessuna serata aperta.');
@@ -66,12 +68,27 @@ class ComandaService
             $importoContante,
             $importoPos,
             $esistente,
+            $motivo,
         ) {
             if ($esistente) {
-                $comanda = Comanda::query()->lockForUpdate()->findOrFail($esistente->id);
+                $comanda = Comanda::query()->with('righe.menuItem')->lockForUpdate()->findOrFail($esistente->id);
                 if ($comanda->isAnnullata()) {
                     throw new RuntimeException('Comanda annullata, non modificabile.');
                 }
+
+                ComandaCorrezione::query()->create([
+                    'comanda_id' => $comanda->id,
+                    'postazione_id' => $postazione->id,
+                    'righe_precedenti' => $comanda->righe->map(fn ($r) => [
+                        'menu_item_id' => $r->menu_item_id,
+                        'nome' => $r->menuItem->nome,
+                        'quantita' => $r->quantita,
+                        'prezzo_unitario' => (float) $r->prezzo_unitario,
+                    ])->all(),
+                    'totale_precedente' => $comanda->totale,
+                    'motivo' => $motivo,
+                ]);
+
                 $this->applicaDeltaStock($serata, $comanda, $righeNormalizzate);
                 $comanda->righe()->delete();
             } else {

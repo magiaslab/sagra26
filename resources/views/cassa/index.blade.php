@@ -82,6 +82,13 @@
             </div>
             <div x-show="comandaId" style="margin-top:.4rem;font-size:.85rem">
                 Modifica #<strong x-text="numeroRichiamato"></strong>
+                <span x-show="correzioniCount > 0" class="badge" style="margin-left:.35rem"
+                      x-text="'corretta ' + correzioniCount + (correzioniCount === 1 ? ' volta' : ' volte')"></span>
+            </div>
+            <div x-show="comandaId" class="field" style="margin-top:.6rem;text-align:left">
+                <label class="label">Motivo (facoltativo)</label>
+                <input class="input" type="text" maxlength="255" x-model="motivo"
+                       placeholder="Motivo (facoltativo)" autocomplete="off">
             </div>
         </div>
 
@@ -179,6 +186,8 @@ function cassaApp(cfg) {
         metodo: null,
         comandaId: null,
         numeroRichiamato: null,
+        correzioniCount: 0,
+        motivo: '',
         richiamoNumero: '',
         errore: null,
         messaggio: null,
@@ -290,6 +299,8 @@ function cassaApp(cfg) {
             this.qty = {};
             this.comandaId = null;
             this.numeroRichiamato = null;
+            this.correzioniCount = 0;
+            this.motivo = '';
             this.metodo = null;
             this.errore = null;
             this.messaggio = null;
@@ -348,6 +359,7 @@ function cassaApp(cfg) {
                         coperti: this.coperti,
                         metodo_pagamento: this.metodo,
                         comanda_id: this.comandaId,
+                        motivo: this.comandaId ? (this.motivo || null) : null,
                         righe: this.righeOrdine.map(r => ({
                             menu_item_id: r.id,
                             quantita: r.q,
@@ -396,8 +408,11 @@ function cassaApp(cfg) {
                 this.qty = q;
                 this.comandaId = data.comanda_id;
                 this.numeroRichiamato = data.numero;
+                this.correzioniCount = data.correzioni_count || 0;
+                this.motivo = '';
                 this.chiudiModal();
-                this.messaggio = 'Caricata comanda #' + data.numero;
+                this.messaggio = 'Caricata comanda #' + data.numero
+                    + (this.correzioniCount ? ' (già corretta ' + this.correzioniCount + '×)' : '');
             } catch (e) {
                 this.errore = e.message;
             }
