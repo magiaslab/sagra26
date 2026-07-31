@@ -29,7 +29,7 @@
             <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
                 <button class="btn btn-primary" wire:click="salva">Salva</button>
                 <button class="btn" wire:click="nuovo">Nuova</button>
-                <a class="btn" href="{{ route('gestione.menu.facsimile', ['print' => 1]) }}" target="_blank">Stampa facsimile</a>
+                <a class="btn" href="{{ route('gestione.menu.facsimile', ['print' => 1], absolute: false) }}" target="_blank">Stampa facsimile</a>
             </div>
 
             <hr style="margin:1.5rem 0;border:1px solid #ccc">

@@ -12,7 +12,7 @@
 @if (!$serata)
     <div class="alert alert-warn">
         Nessuna serata aperta. Apri una serata dall'area
-        <a href="{{ route('gestione.serate') }}">Gestione → Serate</a>.
+        <a href="{{ route('gestione.serate', absolute: false) }}">Gestione → Serate</a>.
     </div>
 @endif
 
@@ -25,12 +25,12 @@
         serataAperta: {{ $serata ? 'true' : 'false' }},
         csrf: '{{ csrf_token() }}',
         urls: {
-            conferma: '{{ route('cassa.conferma') }}',
-            stock: '{{ route('cassa.stock') }}',
-            richiamo: '{{ url('/cassa/richiamo') }}',
-            storico: '{{ route('cassa.storico') }}',
-            annulla: '{{ url('/cassa/annulla') }}',
-            postazione: '{{ route('cassa.postazione') }}'
+            conferma: '{{ route('cassa.conferma', absolute: false) }}',
+            stock: '{{ route('cassa.stock', absolute: false) }}',
+            richiamo: '/cassa/richiamo',
+            storico: '{{ route('cassa.storico', absolute: false) }}',
+            annulla: '/cassa/annulla',
+            postazione: '{{ route('cassa.postazione', absolute: false) }}'
         }
     })"
     @keydown.window="onKey($event)"

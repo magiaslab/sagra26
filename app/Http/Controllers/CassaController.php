@@ -121,7 +121,7 @@ class CassaController extends Controller
                 'comanda_id' => $comanda->id,
                 'numero' => $comanda->numero_progressivo,
                 'version' => $comanda->version,
-                'print_url' => route('cassa.stampa', $comanda),
+                'print_url' => route('cassa.stampa', $comanda, absolute: false),
                 'stock' => app(StockService::class)->mappaResidui($serata->id),
             ]);
         } catch (ComandaConflittoException $e) {

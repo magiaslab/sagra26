@@ -12,7 +12,7 @@
 
 <div class="no-print" style="padding:1rem;text-align:center">
     <button class="btn btn-primary" onclick="window.print()">Stampa</button>
-    <a class="btn" href="{{ route('cassa') }}">Torna alla cassa</a>
+    <a class="btn" href="{{ route('cassa', absolute: false) }}">Torna alla cassa</a>
     <p>Comanda #{{ $comanda->numero_progressivo }} — {{ number_format($comanda->totale, 2, ',', '.') }} €</p>
 </div>
 

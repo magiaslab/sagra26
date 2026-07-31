@@ -7,23 +7,23 @@
     @endif
 
     <div class="home-cards">
-        <a class="home-card" href="{{ route('gestione.serate') }}">
+        <a class="home-card" href="{{ route('gestione.serate', absolute: false) }}">
             <h2>Serate</h2>
             <p>Apertura, stock e chiusura serata</p>
         </a>
-        <a class="home-card" href="{{ route('gestione.menu') }}">
+        <a class="home-card" href="{{ route('gestione.menu', absolute: false) }}">
             <h2>Menù</h2>
             <p>Voci, prezzi, stock default, aree stampa</p>
         </a>
-        <a class="home-card" href="{{ route('gestione.chiusura') }}">
+        <a class="home-card" href="{{ route('gestione.chiusura', absolute: false) }}">
             <h2>Chiusura cassa</h2>
             <p>Conta pezzi e riconciliazione a tre vie</p>
         </a>
-        <a class="home-card" href="{{ route('gestione.report') }}">
+        <a class="home-card" href="{{ route('gestione.report', absolute: false) }}">
             <h2>Report / Stampe</h2>
             <p>Cucina, statistiche, economico, consegna</p>
         </a>
-        <a class="home-card" href="{{ route('gestione.impostazioni') }}">
+        <a class="home-card" href="{{ route('gestione.impostazioni', absolute: false) }}">
             <h2>Impostazioni</h2>
             <p>Postazioni, punti cassa, PIN, Chromium</p>
         </a>

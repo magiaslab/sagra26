@@ -5,7 +5,7 @@
 @section('content')
 <div class="no-print" style="padding:1rem;text-align:center">
     <button class="btn btn-primary" onclick="window.print()">Stampa</button>
-    <a class="btn" href="{{ route('gestione.menu') }}">Torna al menù</a>
+    <a class="btn" href="{{ route('gestione.menu', absolute: false) }}">Torna al menù</a>
 </div>
 
 <div class="facsimile-sheet">

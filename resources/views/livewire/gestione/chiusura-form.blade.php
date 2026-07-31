@@ -88,7 +88,7 @@
                 </table>
                 <p>Consegnato: <strong>{{ number_format($riconciliazione['contante_consegnato'], 2, ',', '.') }} €</strong>
                     · Incasso contante reale: <strong>{{ number_format($riconciliazione['incasso_contante_reale'], 2, ',', '.') }} €</strong></p>
-                <a class="btn" href="{{ route('gestione.report') }}?tipo=consegna">Foglio consegna</a>
+                <a class="btn" href="{{ route('gestione.report', absolute: false) }}?tipo=consegna">Foglio consegna</a>
             @endif
         </div>
     </div>
