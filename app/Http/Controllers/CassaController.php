@@ -131,6 +131,35 @@ class CassaController extends Controller
         }
     }
 
+    public function storico(): JsonResponse
+    {
+        $serata = Serata::corrente();
+        if (! $serata) {
+            return response()->json(['comande' => []]);
+        }
+
+        $comande = Comanda::query()
+            ->withCount('righe')
+            ->where('serata_id', $serata->id)
+            ->whereIn('stato', ['stampata', 'annullata'])
+            ->orderByDesc('numero_progressivo')
+            ->limit(40)
+            ->get()
+            ->map(fn (Comanda $c) => [
+                'comanda_id' => $c->id,
+                'numero' => $c->numero_progressivo,
+                'version' => $c->version,
+                'coperti' => $c->coperti,
+                'metodo_pagamento' => $c->metodo_pagamento,
+                'totale' => (float) $c->totale,
+                'stato' => $c->stato,
+                'motivo_annullo' => $c->motivo_annullo,
+                'n_righe' => $c->righe_count,
+            ]);
+
+        return response()->json(['comande' => $comande]);
+    }
+
     public function richiamo(int $numero): JsonResponse
     {
         $comanda = Comanda::query()

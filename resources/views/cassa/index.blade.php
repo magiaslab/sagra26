@@ -28,6 +28,8 @@
             conferma: '{{ route('cassa.conferma') }}',
             stock: '{{ route('cassa.stock') }}',
             richiamo: '{{ url('/cassa/richiamo') }}',
+            storico: '{{ route('cassa.storico') }}',
+            annulla: '{{ url('/cassa/annulla') }}',
             postazione: '{{ route('cassa.postazione') }}'
         }
     })"
@@ -149,14 +151,81 @@
 
     {{-- Modal richiamo --}}
     <div class="modal-backdrop" x-show="modalRichiamo" x-cloak>
-        <div class="modal" @click.stop>
+        <div class="modal modal-richiamo" @click.stop>
             <h2>Richiamo comanda</h2>
             <label class="label">Numero progressivo</label>
-            <input class="input" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
-                   @keydown.enter.prevent="eseguiRichiamo()">
-            <div style="display:flex;gap:.5rem;margin-top:1rem">
+            <div class="richiamo-cerca">
+                <input class="input" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
+                       @keydown.enter.prevent="eseguiRichiamo()" placeholder="Es. 42">
                 <button class="btn btn-primary" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
-                <button class="btn" type="button" @click="chiudiModal()">Annulla</button>
+            </div>
+
+            <h3 class="storico-titolo">Ultime comande</h3>
+            <div class="storico-lista" x-show="storico.length === 0">
+                <p class="storico-vuoto">Nessuna comanda stampata in questa serata.</p>
+            </div>
+            <div class="storico-lista" x-show="storico.length > 0">
+                <template x-for="c in storico" :key="c.comanda_id">
+                    <div class="storico-riga" :class="{ 'is-annullata': c.stato === 'annullata', 'is-confirming': annulloId === c.comanda_id }">
+                        <template x-if="annulloId !== c.comanda_id">
+                            <div class="storico-azioni">
+                                <button
+                                    type="button"
+                                    class="btn-correggi"
+                                    :disabled="c.stato === 'annullata'"
+                                    @click="c.stato !== 'annullata' && caricaDaStorico(c)"
+                                >
+                                    <span class="storico-num" :class="{ barrato: c.stato === 'annullata' }">
+                                        n.<span x-text="c.numero"></span>
+                                    </span>
+                                    <span class="storico-meta">
+                                        <span x-text="c.n_righe + ' voci · ' + c.coperti + ' cop.'"></span>
+                                        <span class="storico-totale" x-text="formatEuro(c.totale)"></span>
+                                        <span class="badge" x-text="c.metodo_pagamento === 'contante' ? 'CONT' : (c.metodo_pagamento === 'pos' ? 'POS' : 'MISTO')"></span>
+                                        <span class="badge badge-annullata" x-show="c.stato === 'annullata'">ANNULLATA</span>
+                                    </span>
+                                    <span class="storico-correggi-label" x-show="c.stato !== 'annullata'">Correggi</span>
+                                    <span class="storico-motivo" x-show="c.stato === 'annullata'" x-text="c.motivo_annullo || ''"></span>
+                                </button>
+                                <button
+                                    type="button"
+                                    class="btn-annulla-riga"
+                                    x-show="c.stato !== 'annullata'"
+                                    @click.stop="apriConfermaAnnullo(c)"
+                                    title="Annulla comanda"
+                                >Annulla</button>
+                            </div>
+                        </template>
+                        <template x-if="annulloId === c.comanda_id">
+                            <div class="annullo-conferma">
+                                <div class="annullo-testata">
+                                    Annullamento n.<strong x-text="c.numero"></strong>
+                                    — irreversibile
+                                </div>
+                                <label class="label">Motivo (obbligatorio)</label>
+                                <input class="input" type="text" maxlength="255"
+                                       x-model="annulloMotivo" x-ref="annulloMotivoInput"
+                                       placeholder="Perché annulli questa comanda?"
+                                       @keydown.enter.prevent="annulloMotivo.trim().length >= 2 && confermaAnnullo()">
+                                <div class="annullo-bottoni">
+                                    <button
+                                        type="button"
+                                        class="btn-conferma-annullo"
+                                        :disabled="annulloMotivo.trim().length < 2 || busy"
+                                        @click="confermaAnnullo()"
+                                    >Conferma annullamento</button>
+                                    <button type="button" class="btn" @click="chiudiConfermaAnnullo()">
+                                        Torna indietro
+                                    </button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+            </div>
+
+            <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end">
+                <button class="btn" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
             </div>
             <div x-show="errore" class="alert alert-danger" style="margin-top:1rem" x-text="errore"></div>
         </div>
@@ -165,7 +234,10 @@
 @endsection
 
 @push('head')
-<style>[x-cloak]{display:none!important} .cassa-main{max-width:none;padding:.5rem 1rem;}</style>
+<style>
+[x-cloak]{display:none!important}
+.cassa-main{max-width:none;padding:.5rem 1rem;}
+</style>
 @endpush
 
 @push('scripts')
@@ -190,6 +262,9 @@ function cassaApp(cfg) {
         correzioniCount: 0,
         motivo: '',
         richiamoNumero: '',
+        storico: [],
+        annulloId: null,
+        annulloMotivo: '',
         errore: null,
         messaggio: null,
         busy: false,
@@ -314,6 +389,8 @@ function cassaApp(cfg) {
             this.modalPagamento = false;
             this.modalAnteprima = false;
             this.modalRichiamo = false;
+            this.annulloId = null;
+            this.annulloMotivo = '';
             this.errore = null;
         },
 
@@ -407,8 +484,77 @@ function cassaApp(cfg) {
         apriRichiamo() {
             this.richiamoNumero = '';
             this.errore = null;
+            this.annulloId = null;
+            this.annulloMotivo = '';
             this.modalRichiamo = true;
+            this.caricaStorico();
             this.$nextTick(() => this.$refs.richiamoInput?.focus());
+        },
+
+        async caricaStorico() {
+            try {
+                const res = await fetch(this.urls.storico, {
+                    headers: { 'Accept': 'application/json' },
+                });
+                const data = await res.json();
+                this.storico = data.comande || [];
+            } catch (_) {
+                this.storico = [];
+            }
+        },
+
+        caricaDaStorico(c) {
+            if (!c || c.stato === 'annullata') return;
+            this.richiamoNumero = String(c.numero);
+            this.eseguiRichiamo();
+        },
+
+        apriConfermaAnnullo(c) {
+            if (!c || c.stato === 'annullata') return;
+            this.errore = null;
+            this.annulloId = c.comanda_id;
+            this.annulloMotivo = '';
+            this.$nextTick(() => this.$refs.annulloMotivoInput?.focus());
+        },
+
+        chiudiConfermaAnnullo() {
+            this.annulloId = null;
+            this.annulloMotivo = '';
+        },
+
+        async confermaAnnullo() {
+            const motivo = (this.annulloMotivo || '').trim();
+            if (motivo.length < 2 || !this.annulloId || this.busy) return;
+            this.busy = true;
+            this.errore = null;
+            const id = this.annulloId;
+            try {
+                const res = await fetch(this.urls.annulla + '/' + id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': this.csrf,
+                    },
+                    body: JSON.stringify({ motivo }),
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Annullamento fallito');
+                this.storico = this.storico.map(c =>
+                    c.comanda_id === id
+                        ? { ...c, stato: 'annullata', motivo_annullo: motivo }
+                        : c
+                );
+                if (this.comandaId === id) {
+                    this.resetComanda();
+                }
+                this.chiudiConfermaAnnullo();
+                this.messaggio = 'Comanda annullata.';
+            } catch (e) {
+                this.errore = e.message;
+            } finally {
+                this.busy = false;
+            }
         },
 
         async eseguiRichiamo() {
@@ -472,7 +618,11 @@ function cassaApp(cfg) {
                 return;
             }
             if (this.modalRichiamo) {
-                if (e.key === 'Escape') { e.preventDefault(); this.chiudiModal(); }
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    if (this.annulloId) this.chiudiConfermaAnnullo();
+                    else this.chiudiModal();
+                }
                 return;
             }
 

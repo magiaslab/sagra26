@@ -22,6 +22,7 @@ Route::get('/cassa', [CassaController::class, 'index'])->name('cassa');
 Route::post('/cassa/postazione', [CassaController::class, 'setPostazione'])->name('cassa.postazione');
 Route::get('/cassa/stock', [CassaController::class, 'stock'])->name('cassa.stock');
 Route::post('/cassa/conferma', [CassaController::class, 'conferma'])->name('cassa.conferma');
+Route::get('/cassa/storico', [CassaController::class, 'storico'])->name('cassa.storico');
 Route::get('/cassa/richiamo/{numero}', [CassaController::class, 'richiamo'])->name('cassa.richiamo');
 Route::get('/cassa/stampa/{comanda}', [CassaController::class, 'stampa'])->name('cassa.stampa');
 Route::post('/cassa/annulla/{comanda}', [CassaController::class, 'annulla'])->name('cassa.annulla');
