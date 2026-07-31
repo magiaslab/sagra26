@@ -10,11 +10,13 @@
     $metodo = $comanda->metodo_pagamento;
 @endphp
 
+@unless ($autoPrint)
 <div class="no-print" style="padding:1rem;text-align:center">
     <button class="btn btn-primary" onclick="window.print()">Stampa</button>
     <a class="btn" href="{{ route('cassa', absolute: false) }}">Torna alla cassa</a>
     <p>Comanda #{{ $comanda->numero_progressivo }} — {{ number_format($comanda->totale, 2, ',', '.') }} €</p>
 </div>
+@endunless
 
 <div class="print-sheet">
     {{-- CLIENTE --}}
@@ -110,13 +112,32 @@
     </div>
 </div>
 
-@if ($autoPrint)
 @push('scripts')
 <script>
-window.addEventListener('load', function () {
-    setTimeout(function () { window.print(); }, 200);
+window.__autoPrint = @json((bool) $autoPrint);
+
+let giaStampato = false;
+
+function avviaStampaAutomatica() {
+    if (giaStampato) return;
+    giaStampato = true;
+    window.print();
+}
+
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        // Pagina ripristinata dalla bfcache: non ristampare, torna subito alla cassa
+        window.location.replace('/cassa');
+        return;
+    }
+    if (window.__autoPrint) {
+        avviaStampaAutomatica();
+    }
+});
+
+window.addEventListener('afterprint', () => {
+    window.location.replace('/cassa');
 });
 </script>
 @endpush
-@endif
 @endsection

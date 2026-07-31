@@ -20,7 +20,7 @@ class FacsimileController extends Controller
         return view('print.facsimile', [
             'categorie' => $categorie,
             'impostazioni' => Impostazione::corrente(),
-            'autoPrint' => request()->boolean('print', true),
+            'autoPrint' => request()->boolean('print'),
         ]);
     }
 }

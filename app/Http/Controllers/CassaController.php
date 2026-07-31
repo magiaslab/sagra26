@@ -212,7 +212,7 @@ class CassaController extends Controller
             'comanda' => $comanda,
             'righe' => $righe,
             'impostazioni' => $impostazioni,
-            'autoPrint' => request()->boolean('print', true),
+            'autoPrint' => request()->boolean('print'),
         ]);
     }
 

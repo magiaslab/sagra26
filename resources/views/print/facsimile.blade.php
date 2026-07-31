@@ -3,10 +3,12 @@
 @section('title', 'Facsimile menù')
 
 @section('content')
+@unless ($autoPrint)
 <div class="no-print" style="padding:1rem;text-align:center">
     <button class="btn btn-primary" onclick="window.print()">Stampa</button>
     <a class="btn" href="{{ route('gestione.menu', absolute: false) }}">Torna al menù</a>
 </div>
+@endunless
 
 <div class="facsimile-sheet">
     @foreach ([1, 2] as $half)
@@ -37,13 +39,31 @@
     @endforeach
 </div>
 
-@if ($autoPrint)
 @push('scripts')
 <script>
-window.addEventListener('load', function () {
-    setTimeout(function () { window.print(); }, 200);
+window.__autoPrint = @json((bool) $autoPrint);
+
+let giaStampato = false;
+
+function avviaStampaAutomatica() {
+    if (giaStampato) return;
+    giaStampato = true;
+    window.print();
+}
+
+window.addEventListener('pageshow', (event) => {
+    if (event.persisted) {
+        window.location.replace('/gestione/menu');
+        return;
+    }
+    if (window.__autoPrint) {
+        avviaStampaAutomatica();
+    }
+});
+
+window.addEventListener('afterprint', () => {
+    window.location.replace('/gestione/menu');
 });
 </script>
 @endpush
-@endif
 @endsection
