@@ -12,8 +12,16 @@ class Categoria extends Model
     protected $fillable = [
         'nome',
         'area_stampa',
+        'is_bevande',
         'ordinamento',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_bevande' => 'boolean',
+        ];
+    }
 
     public function menuItems(): HasMany
     {

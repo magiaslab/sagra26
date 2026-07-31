@@ -1,11 +1,13 @@
 <div>
     <h1>Report / Stampe</h1>
-    <div class="panel" style="margin-bottom:1rem">
+    <div class="panel no-print" style="margin-bottom:1rem">
         <div class="grid-3">
             <div class="field">
                 <label class="label">Tipo</label>
                 <select class="input" wire:model.live="tipo">
                     <option value="cucina">Cucina</option>
+                    <option value="griglia">Griglia</option>
+                    <option value="bevande">Bevande</option>
                     <option value="statistiche">Statistiche</option>
                     <option value="economico">Economico</option>
                     <option value="consegna">Consegna incassi</option>
@@ -31,13 +33,15 @@
                 @endif
             </div>
         </div>
-        <button class="btn no-print" onclick="window.print()">Stampa / PDF</button>
+        <button class="btn" onclick="window.print()">Stampa / PDF</button>
     </div>
 
     @if (!$serata)
         <div class="alert alert-warn">Nessuna serata selezionata.</div>
-    @elseif ($tipo === 'cucina')
-        @include('livewire.report.partials.cucina', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
+    @elseif ($tipo === 'cucina' || $tipo === 'griglia')
+        @include('livewire.report.partials.reparto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
+    @elseif ($tipo === 'bevande')
+        @include('livewire.report.partials.bevande', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
     @elseif ($tipo === 'statistiche')
         @include('livewire.report.partials.statistiche', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni, 'completo' => $completo])
     @elseif ($tipo === 'economico')

@@ -15,12 +15,14 @@ class ComandaRiga extends Model
         'quantita',
         'prezzo_unitario',
         'qta_scalata',
+        'bar',
     ];
 
     protected function casts(): array
     {
         return [
             'prezzo_unitario' => 'decimal:2',
+            'bar' => 'boolean',
         ];
     }
 

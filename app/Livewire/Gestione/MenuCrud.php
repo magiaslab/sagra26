@@ -21,6 +21,8 @@ class MenuCrud extends Component
 
     public bool $piatto_del_giorno = false;
 
+    public bool $bar = false;
+
     public string $stock_default = '';
 
     public string $area_stampa = '';
@@ -38,6 +40,7 @@ class MenuCrud extends Component
         $this->categoria_id = $item->categoria_id;
         $this->attivo = $item->attivo;
         $this->piatto_del_giorno = $item->piatto_del_giorno;
+        $this->bar = (bool) $item->bar;
         $this->stock_default = $item->stock_default !== null ? (string) $item->stock_default : '';
         $this->area_stampa = $item->area_stampa ?? '';
     }
@@ -50,6 +53,7 @@ class MenuCrud extends Component
         $this->categoria_id = Categoria::query()->orderBy('ordinamento')->value('id');
         $this->attivo = true;
         $this->piatto_del_giorno = false;
+        $this->bar = false;
         $this->stock_default = '';
         $this->area_stampa = '';
     }
@@ -70,6 +74,7 @@ class MenuCrud extends Component
             'categoria_id' => $this->categoria_id,
             'attivo' => $this->attivo,
             'piatto_del_giorno' => $this->piatto_del_giorno,
+            'bar' => $this->bar,
             'stock_default' => $this->stock_default === '' ? null : (int) $this->stock_default,
             'area_stampa' => $this->area_stampa === '' ? null : $this->area_stampa,
         ];

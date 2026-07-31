@@ -25,9 +25,11 @@
             <div class="field"><label class="label">Stock default (vuoto = illimitato)</label><input class="input" type="number" wire:model="stock_default"></div>
             <label><input type="checkbox" wire:model="attivo"> Attivo</label>
             <label style="margin-left:1rem"><input type="checkbox" wire:model="piatto_del_giorno"> Piatto del giorno</label>
-            <div style="margin-top:1rem;display:flex;gap:.5rem">
+            <label style="margin-left:1rem"><input type="checkbox" wire:model="bar"> Voce Bar</label>
+            <div style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap">
                 <button class="btn btn-primary" wire:click="salva">Salva</button>
                 <button class="btn" wire:click="nuovo">Nuova</button>
+                <a class="btn" href="{{ route('gestione.menu.facsimile', ['print' => 1]) }}" target="_blank">Stampa facsimile</a>
             </div>
 
             <hr style="margin:1.5rem 0;border:1px solid #ccc">
@@ -54,6 +56,7 @@
                             <td>
                                 <strong>{{ $item->nome }}</strong>
                                 @if ($item->area_stampa)<span class="badge">{{ $item->area_stampa }}</span>@endif
+                                @if ($item->bar)<span class="badge">BAR</span>@endif
                                 @if ($item->stock_default !== null)<span class="meta-small"> stock {{ $item->stock_default }}</span>@endif
                             </td>
                             <td>{{ number_format($item->prezzo, 2, ',', '.') }} €</td>

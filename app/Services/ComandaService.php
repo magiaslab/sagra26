@@ -106,6 +106,7 @@ class ComandaService
                     'menu_item_id' => $item->id,
                     'quantita' => $riga['quantita'],
                     'prezzo_unitario' => $item->prezzo,
+                    'bar' => (bool) $item->bar,
                     'qta_scalata' => $item->stock_default !== null ? $riga['quantita'] : 0,
                 ]);
             }

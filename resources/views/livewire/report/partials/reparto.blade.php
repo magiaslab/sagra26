@@ -2,7 +2,7 @@
     <div style="display:flex;justify-content:space-between;align-items:baseline">
         <div>
             <h2 style="margin:0">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
-            <div class="meta-small">Report cucina — {{ $serata->data->format('d/m/Y') }}</div>
+            <div class="meta-small">Report {{ strtoupper($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
         </div>
         <div>
             <span class="badge">Coperti stasera {{ $dati['copertiStasera'] }}</span>
@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    @foreach ($dati['categorie'] as $cat)
+    @forelse ($dati['categorie'] as $cat)
         <h3 style="margin-top:1rem;border-bottom:2px solid #000">{{ $cat->nome }}</h3>
         <table class="table">
             <thead><tr><th>Piatto</th><th>Stasera</th><th>Cumulato</th><th></th></tr></thead>
@@ -31,5 +31,7 @@
             @endforeach
             </tbody>
         </table>
-    @endforeach
+    @empty
+        <p>Nessuna voce per questo reparto.</p>
+    @endforelse
 </div>

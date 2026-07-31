@@ -100,6 +100,7 @@ class MenuSeeder extends Seeder
             $categoria = Categoria::query()->create([
                 'nome' => $catData['nome'],
                 'area_stampa' => $catData['area_stampa'],
+                'is_bevande' => ($catData['nome'] === 'Bevande'),
                 'ordinamento' => $catOrd++,
             ]);
 
@@ -110,6 +111,7 @@ class MenuSeeder extends Seeder
                     'prezzo' => $voce['prezzo'],
                     'attivo' => true,
                     'piatto_del_giorno' => false,
+                    'bar' => false,
                     'stock_default' => $voce['stock_default'] ?? null,
                     'area_stampa' => $voce['area_stampa'] ?? null,
                     'ordinamento' => $ordinamento++,

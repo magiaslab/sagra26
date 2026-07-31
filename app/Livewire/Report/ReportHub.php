@@ -12,6 +12,7 @@ use App\Models\PuntoCassa;
 use App\Models\Serata;
 use App\Models\SerataStock;
 use App\Services\RiconciliazioneService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -45,15 +46,15 @@ class ReportHub extends Component
             $idsFino = $serateFino->pluck('id');
             $idsStasera = collect([$serata->id]);
 
-            if ($this->tipo === 'cucina') {
-                $dati = $this->datiCucina($idsStasera, $idsFino, $serata);
-            } elseif ($this->tipo === 'statistiche') {
-                $dati = $this->datiStatistiche($serateFino);
-            } elseif ($this->tipo === 'economico') {
-                $dati = $this->datiEconomico($serateFino);
-            } elseif ($this->tipo === 'consegna') {
-                $dati = $this->datiConsegna($serata);
-            }
+            $dati = match ($this->tipo) {
+                'cucina' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina'),
+                'griglia' => $this->datiReparto($idsStasera, $idsFino, $serata, 'griglia'),
+                'bevande' => $this->datiBevande($idsStasera, $idsFino),
+                'statistiche' => $this->datiStatistiche($serateFino),
+                'economico' => $this->datiEconomico($serateFino),
+                'consegna' => $this->datiConsegna($serata),
+                default => [],
+            };
         }
 
         return view('livewire.report.hub', [
@@ -65,29 +66,134 @@ class ReportHub extends Component
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
     }
 
-    private function venditePerItem($serataIds): array
+    /**
+     * @return array{qta: array<int, int>, incasso: array<int, float>}
+     */
+    private function venditeDettaglioPerItem($serataIds): array
     {
-        return ComandaRiga::query()
-            ->select('menu_item_id', DB::raw('SUM(quantita) as qta'), DB::raw('SUM(quantita * prezzo_unitario) as incasso'))
+        $rows = ComandaRiga::query()
+            ->select(
+                'menu_item_id',
+                DB::raw('SUM(quantita) as qta'),
+                DB::raw('SUM(quantita * prezzo_unitario) as incasso')
+            )
             ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata'))
             ->groupBy('menu_item_id')
-            ->pluck('qta', 'menu_item_id')
-            ->map(fn ($v) => (int) $v)
-            ->all();
+            ->get();
+
+        $qta = [];
+        $incasso = [];
+        foreach ($rows as $row) {
+            $qta[(int) $row->menu_item_id] = (int) $row->qta;
+            $incasso[(int) $row->menu_item_id] = round((float) $row->incasso, 2);
+        }
+
+        return ['qta' => $qta, 'incasso' => $incasso];
     }
 
-    private function datiCucina($idsStasera, $idsFino, Serata $serata): array
+    private function venditePerItem($serataIds): array
+    {
+        return $this->venditeDettaglioPerItem($serataIds)['qta'];
+    }
+
+    private function datiReparto($idsStasera, $idsFino, Serata $serata, string $area): array
     {
         $stasera = $this->venditePerItem($idsStasera);
         $cumulato = $this->venditePerItem($idsFino);
         $stock = SerataStock::query()->where('serata_id', $serata->id)->get()->keyBy('menu_item_id');
 
-        $categorie = Categoria::query()->with(['menuItems' => fn ($q) => $q->orderBy('ordinamento')])->orderBy('ordinamento')->get();
+        $categorie = Categoria::query()
+            ->with(['menuItems' => fn ($q) => $q->orderBy('ordinamento')])
+            ->orderBy('ordinamento')
+            ->get()
+            ->map(function (Categoria $cat) use ($area) {
+                $items = $cat->menuItems->filter(
+                    fn (MenuItem $item) => $item->areaStampaEffettiva() === $area
+                )->values();
+                $cat->setRelation('menuItems', $items);
+
+                return $cat;
+            })
+            ->filter(fn (Categoria $cat) => $cat->menuItems->isNotEmpty())
+            ->values();
 
         $copertiStasera = (int) Comanda::query()->whereIn('serata_id', $idsStasera)->where('stato', 'stampata')->sum('coperti');
         $copertiCum = (int) Comanda::query()->whereIn('serata_id', $idsFino)->where('stato', 'stampata')->sum('coperti');
 
-        return compact('categorie', 'stasera', 'cumulato', 'stock', 'copertiStasera', 'copertiCum');
+        return [
+            'area' => $area,
+            'categorie' => $categorie,
+            'stasera' => $stasera,
+            'cumulato' => $cumulato,
+            'stock' => $stock,
+            'copertiStasera' => $copertiStasera,
+            'copertiCum' => $copertiCum,
+        ];
+    }
+
+    private function datiBevande($idsStasera, $idsFino): array
+    {
+        $s = $this->venditeDettaglioPerItem($idsStasera);
+        $c = $this->venditeDettaglioPerItem($idsFino);
+
+        $items = MenuItem::query()
+            ->with('categoria')
+            ->whereHas('categoria', fn ($q) => $q->where('is_bevande', true))
+            ->orderBy('ordinamento')
+            ->get()
+            ->filter(function (MenuItem $item) use ($s, $c) {
+                if ($item->attivo) {
+                    return true;
+                }
+
+                return ($s['qta'][$item->id] ?? 0) > 0 || ($c['qta'][$item->id] ?? 0) > 0;
+            })
+            ->values();
+
+        $itemIds = $items->pluck('id');
+
+        $riepilogo = [
+            'bar_stasera' => $this->incassoBar($idsStasera, true, $itemIds),
+            'non_bar_stasera' => $this->incassoBar($idsStasera, false, $itemIds),
+            'bar_cumulato' => $this->incassoBar($idsFino, true, $itemIds),
+            'non_bar_cumulato' => $this->incassoBar($idsFino, false, $itemIds),
+        ];
+
+        return [
+            'items' => $items,
+            'stasera_qta' => $s['qta'],
+            'stasera_incasso' => $s['incasso'],
+            'cumulato_qta' => $c['qta'],
+            'cumulato_incasso' => $c['incasso'],
+            'riepilogo' => $riepilogo,
+        ];
+    }
+
+    private function incassoBar($serataIds, bool $bar, Collection $menuItemIds): float
+    {
+        if ($menuItemIds->isEmpty()) {
+            return 0.0;
+        }
+
+        $val = ComandaRiga::query()
+            ->where('bar', $bar)
+            ->whereIn('menu_item_id', $menuItemIds)
+            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata'))
+            ->selectRaw('COALESCE(SUM(quantita * prezzo_unitario), 0) as tot')
+            ->value('tot');
+
+        return round((float) $val, 2);
+    }
+
+    public static function totaleBarPerSerate($serataIds): float
+    {
+        $val = ComandaRiga::query()
+            ->where('bar', true)
+            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata'))
+            ->selectRaw('COALESCE(SUM(quantita * prezzo_unitario), 0) as tot')
+            ->value('tot');
+
+        return round((float) $val, 2);
     }
 
     private function datiStatistiche($serateFino): array
@@ -135,7 +241,6 @@ class ReportHub extends Component
 
     private function datiEconomico($serateFino): array
     {
-        $ric = app(RiconciliazioneService::class);
         $righe = [];
         $totC = 0;
         $totP = 0;
@@ -150,15 +255,18 @@ class ReportHub extends Component
                 'contante' => $c,
                 'pos' => $p,
                 'totale' => round($c + $p, 2),
+                'bar' => self::totaleBarPerSerate(collect([$s->id])),
             ];
         }
         $totale = round($totC + $totP, 2);
+        $ids = $serateFino->pluck('id');
 
         return [
             'righe' => $righe,
             'tot_contante' => round($totC, 2),
             'tot_pos' => round($totP, 2),
             'totale' => $totale,
+            'di_cui_bar' => self::totaleBarPerSerate($ids),
             'pct_contante' => $totale > 0 ? round($totC / $totale * 100, 1) : 0,
             'pct_pos' => $totale > 0 ? round($totP / $totale * 100, 1) : 0,
         ];

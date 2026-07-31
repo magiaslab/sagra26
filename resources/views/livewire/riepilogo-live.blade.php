@@ -6,7 +6,11 @@
         <p>Serata {{ $serata->data->format('d/m/Y') }} · aggiornamento automatico</p>
         <div class="grid-3" style="margin-bottom:1rem">
             <div class="kpi"><div class="lbl">Coperti</div><div class="val">{{ $dati['coperti'] }}</div></div>
-            <div class="kpi"><div class="lbl">Incasso</div><div class="val">{{ number_format($dati['incasso'], 2, ',', '.') }} €</div></div>
+            <div class="kpi">
+                <div class="lbl">Incasso</div>
+                <div class="val">{{ number_format($dati['incasso'], 2, ',', '.') }} €</div>
+                <div class="meta-small" style="margin-top:.25rem">di cui Bar: {{ number_format($dati['di_cui_bar'], 2, ',', '.') }} €</div>
+            </div>
             <div class="kpi"><div class="lbl">Contante / POS</div><div class="val" style="font-size:1.2rem">{{ number_format($dati['contante'], 2, ',', '.') }} / {{ number_format($dati['pos'], 2, ',', '.') }}</div></div>
         </div>
 

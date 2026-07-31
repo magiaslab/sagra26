@@ -20,4 +20,5 @@
         </tbody>
     </table>
     <p>Ripartizione: contante {{ $dati['pct_contante'] }}% · POS {{ $dati['pct_pos'] }}%</p>
+    <p><strong>di cui Bar: {{ number_format($dati['di_cui_bar'], 2, ',', '.') }} €</strong></p>
 </div>

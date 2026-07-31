@@ -19,6 +19,7 @@ class RiepilogoLive extends Component
             'incasso' => 0,
             'contante' => 0,
             'pos' => 0,
+            'di_cui_bar' => 0,
             'per_piatto' => collect(),
             'per_postazione' => collect(),
             'annullate' => collect(),
@@ -35,6 +36,7 @@ class RiepilogoLive extends Component
             $dati['incasso'] = round($comande->sum('totale'), 2);
             $dati['contante'] = round($comande->sum(fn ($c) => $c->importoContanteEffettivo()), 2);
             $dati['pos'] = round($comande->sum(fn ($c) => $c->importoPosEffettivo()), 2);
+            $dati['di_cui_bar'] = \App\Livewire\Report\ReportHub::totaleBarPerSerate(collect([$serata->id]));
 
             $dati['per_postazione'] = $comande->groupBy('postazione_id')->map(function ($group) {
                 return [

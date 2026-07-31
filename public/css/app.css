@@ -462,3 +462,77 @@ a:hover { text-decoration: underline; }
 .home-card:hover { background: var(--accent-soft); text-decoration: none; }
 .home-card h2 { margin: 0 0 .35rem; font-size: 1.2rem; }
 .home-card p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+/* ===== FACSIMILE MENU ===== */
+.facsimile-sheet {
+  width: 297mm;
+  height: 210mm;
+  margin: 1rem auto;
+  background: #fff;
+  border: 1px solid #000;
+  display: grid;
+  grid-template-columns: 1fr 0 1fr;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0,0,0,.12);
+}
+
+.facsimile-cut {
+  width: 0;
+  border-left: 2px dashed #000;
+  margin: 0 -1px;
+}
+
+.facsimile-half {
+  padding: 6mm 7mm;
+  overflow: hidden;
+  font-size: 10.5px;
+  box-sizing: border-box;
+}
+
+.facsimile-head {
+  text-align: center;
+  border-bottom: 2px solid #000;
+  padding-bottom: 2mm;
+  margin-bottom: 3mm;
+}
+.facsimile-title { font-size: 1.35em; font-weight: 800; }
+.facsimile-anno { font-size: 1.1em; font-weight: 700; }
+.facsimile-sub { font-size: .8em; margin-top: 1mm; }
+.facsimile-hint { font-size: .75em; margin-top: 1.5mm; text-transform: uppercase; letter-spacing: .04em; }
+
+.facsimile-cat {
+  font-weight: 800;
+  text-transform: uppercase;
+  border-bottom: 1.5px solid #000;
+  margin: 2.5mm 0 1mm;
+  padding-bottom: .5mm;
+  font-size: .85em;
+}
+
+.facsimile-row {
+  display: grid;
+  grid-template-columns: 14mm 1fr auto;
+  gap: 2mm;
+  align-items: end;
+  margin: 1.2mm 0;
+  line-height: 1.15;
+}
+
+.facsimile-qty {
+  display: block;
+  height: 4mm;
+  border-bottom: 1px solid #000;
+}
+
+.facsimile-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.facsimile-prezzo { font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+@media print {
+  .facsimile-sheet {
+    box-shadow: none !important;
+    margin: 0 !important;
+    border: none !important;
+    width: 297mm;
+    height: 210mm;
+  }
+}

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CassaController;
+use App\Http\Controllers\FacsimileController;
 use App\Http\Middleware\PinGestione;
 use App\Livewire\Gestione\ChiusuraForm;
 use App\Livewire\Gestione\Dashboard;
@@ -33,6 +34,7 @@ Route::middleware(PinGestione::class)->prefix('gestione')->name('gestione.')->gr
     Route::get('/', Dashboard::class)->name('dashboard');
     Route::get('/serate', Serate::class)->name('serate');
     Route::get('/menu', MenuCrud::class)->name('menu');
+    Route::get('/menu/facsimile', [FacsimileController::class, 'index'])->name('menu.facsimile');
     Route::get('/chiusura', ChiusuraForm::class)->name('chiusura');
     Route::get('/report', ReportHub::class)->name('report');
     Route::get('/impostazioni', ImpostazioniPage::class)->name('impostazioni');
