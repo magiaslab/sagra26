@@ -643,15 +643,10 @@ function cassaApp(cfg) {
                 if (data.stock) this.stock = data.stock;
                 if (data.numero) this.prossimoNumero = data.numero + 1;
                 this.chiudiModal();
-                this.messaggio = 'Comanda #' + data.numero + ' stampata';
-                this.resetComanda();
-                const w = window.open(data.print_url + '?print=1', '_blank');
-                if (!w) {
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = data.print_url + '?print=1';
-                    document.body.appendChild(iframe);
-                }
+                // Stessa finestra: non usare window.open/_blank, altrimenti
+                // Chrome --app/--kiosk-printing perde la modalità kiosk.
+                window.location.href = data.print_url + (data.print_url.includes('?') ? '&' : '?') + 'print=1';
+                return;
             } catch (e) {
                 this.errore = e.message;
             } finally {
