@@ -1,155 +1,266 @@
-@extends('layouts.app')
+@extends('layouts.cassa')
 
 @section('title', 'Cassa')
-@section('main_class', 'cassa-main')
 
 @section('content')
 @php
     $menuJson = $menu->values()->toJson(JSON_UNESCAPED_UNICODE);
     $stockJson = json_encode((object) $stock, JSON_UNESCAPED_UNICODE);
+    $postazioniJson = $postazioni->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome])->values()->toJson(JSON_UNESCAPED_UNICODE);
 @endphp
 
-@if (!$serata)
-    <div class="alert alert-warn">
-        Nessuna serata aperta. Apri una serata dall'area
-        <a href="{{ route('gestione.serate') }}">Gestione → Serate</a>.
-    </div>
-@endif
-
 <div
-    class="cassa-wrap"
+    class="cassa-app"
     x-data="cassaApp({
         menu: {{ $menuJson }},
         stock: {{ $stockJson }},
+        postazioni: {{ $postazioniJson }},
         postazioneId: {{ (int) $postazioneId }},
         serataAperta: {{ $serata ? 'true' : 'false' }},
+        prossimoNumero: {{ (int) $prossimoNumero }},
+        brand: @js(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? '')),
+        sottotitolo: @js($impostazioni->intestazione_sottotitolo ?? ''),
         csrf: '{{ csrf_token() }}',
         urls: {
-            conferma: '{{ route('cassa.conferma') }}',
-            stock: '{{ route('cassa.stock') }}',
-            richiamo: '{{ url('/cassa/richiamo') }}',
-            storico: '{{ route('cassa.storico') }}',
-            annulla: '{{ url('/cassa/annulla') }}',
-            postazione: '{{ route('cassa.postazione') }}'
+            conferma: '{{ route('cassa.conferma', absolute: false) }}',
+            stock: '{{ route('cassa.stock', absolute: false) }}',
+            richiamo: '/cassa/richiamo',
+            storico: '{{ route('cassa.storico', absolute: false) }}',
+            annulla: '/cassa/annulla',
+            postazione: '{{ route('cassa.postazione', absolute: false) }}',
+            gestione: '{{ route('gestione.dashboard', absolute: false) }}',
+            home: '{{ route('home', absolute: false) }}'
         }
     })"
     @keydown.window="onKey($event)"
 >
-    <div class="cassa-menu" x-ref="menuList">
-        <template x-for="(group, gIdx) in grouped" :key="group.categoria">
-            <div>
-                <div class="cat-header" x-text="group.categoria"></div>
-                <template x-for="item in group.items" :key="item.id">
-                    <div
-                        class="cassa-row"
-                        :class="{ active: activeId === item.id }"
-                        :data-id="item.id"
-                        @click="setActive(item.id)"
-                    >
-                        <div class="qty" x-text="qty[item.id] || ''"></div>
-                        <div>
-                            <div x-text="item.nome"></div>
-                            <div
-                                class="stock-info"
-                                :class="{ esaurito: item.stock_limitato && (stock[item.id] ?? 0) <= 0 }"
-                                x-show="item.stock_limitato"
-                                x-text="stockLabel(item)"
-                            ></div>
-                        </div>
-                        <div class="prezzo" x-text="formatEuro(item.prezzo)"></div>
-                        <div class="prezzo" x-text="qty[item.id] ? formatEuro(item.prezzo * qty[item.id]) : ''"></div>
-                    </div>
-                </template>
+    @if (!$serata)
+        <div class="cassa-banner-warn">
+            Nessuna serata aperta.
+            <a :href="urls.gestione">Apri da Gestione → Serate</a>
+        </div>
+    @endif
+
+    <header class="cassa-chrome">
+        <div class="cassa-chrome-left">
+            <label class="cassa-postazione">
+                <select x-model.number="postazioneId" @change="salvaPostazione()">
+                    <template x-for="p in postazioni" :key="p.id">
+                        <option :value="p.id" x-text="p.nome"></option>
+                    </template>
+                </select>
+            </label>
+            <span class="cassa-chrome-sep">·</span>
+            <span class="cassa-comanda-label">
+                COMANDA
+                <strong x-text="numeroDisplay"></strong>
+                <span class="cassa-edit-badge" x-show="comandaId" x-cloak
+                      x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"></span>
+            </span>
+        </div>
+
+        <a class="cassa-brand" :href="urls.gestione" title="Gestione">
+            <span class="cassa-brand-gear" aria-hidden="true">⚙</span>
+            <span x-text="brand"></span>
+        </a>
+
+        <div class="cassa-chrome-right">
+            <div class="cassa-kpi">
+                <span class="cassa-kpi-lbl">Coperti</span>
+                <span class="cassa-kpi-val" x-text="coperti"></span>
             </div>
-        </template>
+            <div class="cassa-kpi cassa-kpi-totale">
+                <span class="cassa-kpi-lbl">Totale</span>
+                <span class="cassa-kpi-val" x-text="formatEuro(totale)"></span>
+            </div>
+        </div>
+    </header>
+
+    <div class="cassa-shortcuts" aria-hidden="true">
+        <span><kbd>↓</kbd> / <kbd>Invio</kbd> riga dopo</span>
+        <span><kbd>↑</kbd> riga prima</span>
+        <span><kbd>+</kbd> / <kbd>-</kbd> quantità</span>
+        <span><kbd>Canc</kbd> azzera riga</span>
+        <span><kbd>F9</kbd> conferma + stampa</span>
+        <span><kbd>F2</kbd> richiama comanda</span>
+        <span><kbd>Esc</kbd> annulla comanda</span>
     </div>
 
-    <aside class="cassa-side">
-        <div class="panel" style="padding:.75rem">
-            <label class="label">Postazione</label>
-            <select class="input" x-model.number="postazioneId" @change="salvaPostazione()">
-                @foreach ($postazioni as $p)
-                    <option value="{{ $p->id }}">{{ $p->nome }}</option>
-                @endforeach
-            </select>
+    <div class="cassa-body-panel">
+        <div class="cassa-menu-grid" x-ref="menuList">
+            <template x-for="group in grouped" :key="group.categoria">
+                <section class="cassa-cat">
+                    <h2 class="cassa-cat-title" x-text="group.categoria"></h2>
+                    <template x-for="item in group.items" :key="item.id">
+                        <div
+                            class="cassa-row"
+                            :class="{
+                                active: activeId === item.id,
+                                filled: (qty[item.id] || 0) > 0
+                            }"
+                            :data-id="item.id"
+                            @click="setActive(item.id)"
+                        >
+                            <div class="cassa-row-main">
+                                <div class="cassa-row-nome" x-text="item.nome"></div>
+                                <div
+                                    class="cassa-row-stock"
+                                    :class="stockStateClass(item)"
+                                    x-show="item.stock_limitato || !serataAperta"
+                                    x-text="stockLabel(item)"
+                                ></div>
+                            </div>
+                            <div class="cassa-row-prezzo" x-text="formatEuro(item.prezzo)"></div>
+                            <div
+                                class="cassa-row-qty"
+                                :class="{ blocked: isStockBlocked(item) }"
+                                x-text="qty[item.id] || ''"
+                            ></div>
+                        </div>
+                    </template>
+                </section>
+            </template>
         </div>
+    </div>
 
-        <div class="cassa-totale">
-            <div class="lbl" style="font-size:.8rem;text-transform:uppercase;color:#555">Totale</div>
-            <div class="cifra" x-text="formatEuro(totale)"></div>
-            <div style="margin-top:.5rem">
-                Coperti:
-                <strong x-text="coperti"></strong>
-                <span style="color:#555;font-size:.8rem">(voce Coperto)</span>
-            </div>
-            <div x-show="comandaId" style="margin-top:.4rem;font-size:.85rem">
-                Modifica #<strong x-text="numeroRichiamato"></strong>
-                <span x-show="correzioniCount > 0" class="badge" style="margin-left:.35rem"
-                      x-text="'corretta ' + correzioniCount + (correzioniCount === 1 ? ' volta' : ' volte')"></span>
-            </div>
-            <div x-show="comandaId" class="field" style="margin-top:.6rem;text-align:left">
-                <label class="label">Motivo (facoltativo)</label>
-                <input class="input" type="text" maxlength="255" x-model="motivo"
-                       placeholder="Motivo (facoltativo)" autocomplete="off">
-            </div>
+    <footer class="cassa-footer">
+        <div class="cassa-footer-meta">
+            <span x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
+            <span x-show="comandaId" class="cassa-footer-motivo" x-cloak>
+                <input class="input input-motivo" type="text" maxlength="255" x-model="motivo"
+                       placeholder="Motivo correzione (facoltativo)" autocomplete="off">
+            </span>
+            <span class="cassa-flash alert-danger" x-show="errore" x-text="errore" x-cloak></span>
+            <span class="cassa-flash alert-ok" x-show="messaggio" x-text="messaggio" x-cloak></span>
         </div>
-
-        <div class="help-keys">
-            <div><kbd>↑</kbd>/<kbd>↓</kbd>/<kbd>Invio</kbd> naviga</div>
-            <div><kbd>+</kbd>/<kbd>-</kbd> quantità · <kbd>Canc</kbd> azzera</div>
-            <div><kbd>F9</kbd> conferma · <kbd>F2</kbd> richiama</div>
-            <div><kbd>Esc</kbd> reset / chiudi</div>
+        <div class="cassa-footer-actions">
+            <button type="button" class="btn btn-primary btn-cassa-main" @click="apriPagamento()" :disabled="!serataAperta">
+                Conferma e stampa <kbd>F9</kbd>
+            </button>
+            <button type="button" class="btn" @click="apriRichiamo()">Richiama <kbd>F2</kbd></button>
+            <button type="button" class="btn" @click="resetComanda()">Annulla <kbd>Esc</kbd></button>
+            <a class="btn btn-ghost" :href="urls.home">Home</a>
         </div>
-
-        <div x-show="errore" class="alert alert-danger" x-text="errore" style="margin:0"></div>
-        <div x-show="messaggio" class="alert alert-ok" x-text="messaggio" style="margin:0"></div>
-    </aside>
+    </footer>
 
     {{-- Modal pagamento --}}
     <div class="modal-backdrop" x-show="modalPagamento" x-cloak @keydown.escape.window="chiudiModal()">
-        <div class="modal" @click.stop>
-            <h2>Metodo di pagamento</h2>
-            <p>Totale: <strong x-text="formatEuro(totale)"></strong></p>
+        <div class="modal modal-pay" @click.stop>
+            <h2>
+                COMANDA N.<span x-text="numeroDisplay"></span>
+                <span class="modal-pay-tot">· <span x-text="formatEuro(totale)"></span></span>
+            </h2>
+            <p class="modal-pay-q">Come paga il cliente?</p>
             <div class="pay-choices">
-                <button type="button" :class="{ 'selected-contante': metodo === 'contante' }" @click="scegliMetodo('contante')">
-                    <kbd>C</kbd><br>€ CONTANTE
+                <button type="button" class="pay-btn pay-contante" @click="scegliMetodo('contante')">
+                    <span class="pay-key">C</span>
+                    <span class="pay-label">Contante</span>
                 </button>
-                <button type="button" :class="{ 'selected-pos': metodo === 'pos' }" @click="scegliMetodo('pos')">
-                    <kbd>P</kbd><br>▭ POS
+                <button type="button" class="pay-btn pay-pos" @click="scegliMetodo('pos')">
+                    <span class="pay-key">P</span>
+                    <span class="pay-label">POS</span>
                 </button>
             </div>
-            <p style="font-size:.85rem;color:#555">Premi <kbd>C</kbd> o <kbd>P</kbd>, poi anteprima.</p>
-            <button class="btn" type="button" @click="chiudiModal()">Annulla (Esc)</button>
+            <p class="modal-pay-hint">Esc per annullare</p>
         </div>
     </div>
 
-    {{-- Modal anteprima --}}
+    {{-- Modal anteprima A4 --}}
     <div class="modal-backdrop" x-show="modalAnteprima" x-cloak @keydown.escape.window="chiudiModal()">
-        <div class="modal" style="min-width:min(640px,94vw)" @click.stop>
-            <h2>Anteprima stampa — Invio conferma</h2>
-            <p>
-                Metodo:
+        <div class="modal modal-a4" @click.stop>
+            <div class="modal-a4-head">
+                <h2>Anteprima A4 — 27 cm utili (297 mm meno margini di stampa)</h2>
                 <span class="badge" :class="metodo === 'contante' ? 'badge-double' : ''"
-                      x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></span>
-                · Totale <strong x-text="formatEuro(totale)"></strong>
-            </p>
-            <ul style="columns:2;font-size:.9rem">
-                <template x-for="r in righeOrdine" :key="r.id">
-                    <li><strong x-text="r.q"></strong> × <span x-text="r.nome"></span>
-                        — <span x-text="formatEuro(r.importo)"></span></li>
-                </template>
-            </ul>
-            <div style="display:flex;gap:.5rem;margin-top:1rem">
-                <button class="btn btn-primary" type="button" @click="inviaConferma()" :disabled="busy">
-                    Conferma e stampa (Invio)
-                </button>
-                <button class="btn" type="button" @click="chiudiModal()">Indietro</button>
+                      x-text="metodo === 'contante' ? 'CONTANTE' : 'POS'"></span>
             </div>
-            <div x-show="errore" class="alert alert-danger" style="margin-top:1rem" x-text="errore"></div>
+
+            <div class="a4-preview">
+                <div class="a4-sheet">
+                    <section class="a4-tag a4-cliente">
+                        <div class="a4-brand" x-text="brand"></div>
+                        <div class="a4-sub" x-text="sottotitolo" x-show="sottotitolo"></div>
+                        <div class="a4-head">
+                            <span class="a4-role">CLIENTE</span>
+                            <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                        </div>
+                        <template x-for="r in righeOrdine" :key="'c-'+r.id">
+                            <div class="a4-line">
+                                <strong x-text="r.q"></strong>
+                                <span x-text="r.nome"></span>
+                                <span x-text="formatEuro(r.importo).replace(/\s/g,'')"></span>
+                            </div>
+                        </template>
+                        <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
+                        <div class="a4-pay" :class="metodo === 'contante' ? 'a4-pay--contante' : 'a4-pay--pos'"
+                             x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
+                    </section>
+
+                    <div class="a4-right">
+                        <div class="a4-top">
+                            <section class="a4-tag a4-cucina">
+                                <div class="a4-brand" x-text="brand"></div>
+                                <div class="a4-head">
+                                    <span class="a4-role">CUCINA</span>
+                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                </div>
+                                <template x-for="r in righeCucina" :key="'k-'+r.id">
+                                    <div class="a4-check">
+                                        <span class="a4-box"></span>
+                                        <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
+                                    </div>
+                                </template>
+                                <div class="a4-empty" x-show="righeCucina.length === 0">—</div>
+                                <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
+                            </section>
+
+                            <section class="a4-tag a4-cameriere">
+                                <div class="a4-brand" x-text="brand"></div>
+                                <div class="a4-head">
+                                    <span class="a4-role">CAMERIERE</span>
+                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                </div>
+                                <div class="a4-mano a4-mano--top"><span>Tavolo</span><span class="a4-linea"></span></div>
+                                <template x-for="r in righeOrdine" :key="'w-'+r.id">
+                                    <div class="a4-check">
+                                        <span class="a4-box"></span>
+                                        <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
+                                    </div>
+                                </template>
+                            </section>
+                        </div>
+
+                        <section class="a4-tag a4-griglia">
+                            <div class="a4-griglia-head">
+                                <div>
+                                    <div class="a4-brand" x-text="brand"></div>
+                                    <div class="a4-role">GRIGLIA</div>
+                                </div>
+                                <div class="a4-mano a4-mano--inline"><span>Cameriere</span><span class="a4-linea"></span></div>
+                                <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                            </div>
+                            <template x-for="r in righeGriglia" :key="'g-'+r.id">
+                                <div class="a4-line-griglia">
+                                    <strong x-text="r.q"></strong>
+                                    <span x-text="r.nome"></span>
+                                </div>
+                            </template>
+                            <div class="a4-empty" x-show="righeGriglia.length === 0">—</div>
+                        </section>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-a4-actions">
+                <button class="btn" type="button" @click="chiudiModal()">Annulla (Esc)</button>
+                <button class="btn btn-primary" type="button" @click="inviaConferma()" :disabled="busy">
+                    Stampa <kbd>Invio</kbd>
+                </button>
+            </div>
+            <div x-show="errore" class="alert alert-danger" style="margin-top:.75rem" x-text="errore"></div>
         </div>
     </div>
 
-    {{-- Modal richiamo — pattern RigaStorico del prototipo shell-navigazione --}}
+    {{-- Modal richiamo --}}
     <div class="modal-backdrop" x-show="modalRichiamo" x-cloak>
         <div class="modal modal-richiamo" @click.stop>
             <h2>Richiama una comanda</h2>
@@ -171,7 +282,6 @@
             <div class="storico-lista storico-lista--righe" x-show="storico.length > 0">
                 <template x-for="c in storico" :key="c.comanda_id">
                     <div class="storico-riga" :class="{ 'is-annullata': c.stato === 'annullata', 'is-confirming': annulloId === c.comanda_id }">
-                        {{-- Comanda già annullata: sola lettura, non richiamabile --}}
                         <template x-if="c.stato === 'annullata'">
                             <div class="storico-annullata">
                                 <div class="storico-annullata-top">
@@ -184,7 +294,6 @@
                             </div>
                         </template>
 
-                        {{-- Attiva: Correggi (maggior parte) + Annulla (bordo doppio rosso) --}}
                         <template x-if="c.stato !== 'annullata'">
                             <div>
                                 <div class="storico-azioni">
@@ -243,10 +352,7 @@
 @endsection
 
 @push('head')
-<style>
-[x-cloak]{display:none!important}
-.cassa-main{max-width:none;padding:.5rem 1rem;}
-</style>
+<style>[x-cloak]{display:none!important}</style>
 @endpush
 
 @push('scripts')
@@ -255,10 +361,14 @@ function cassaApp(cfg) {
     return {
         menu: cfg.menu,
         stock: cfg.stock || {},
+        postazioni: cfg.postazioni || [],
         qty: {},
         activeId: cfg.menu[0]?.id ?? null,
         postazioneId: cfg.postazioneId,
         serataAperta: cfg.serataAperta,
+        prossimoNumero: cfg.prossimoNumero || 1,
+        brand: cfg.brand,
+        sottotitolo: cfg.sottotitolo || '',
         csrf: cfg.csrf,
         urls: cfg.urls,
         modalPagamento: false,
@@ -288,6 +398,10 @@ function cassaApp(cfg) {
             return [...map.entries()].map(([categoria, items]) => ({ categoria, items }));
         },
 
+        get numeroDisplay() {
+            return this.numeroRichiamato ?? this.prossimoNumero;
+        },
+
         get totale() {
             let t = 0;
             for (const item of this.menu) {
@@ -314,6 +428,14 @@ function cassaApp(cfg) {
                 }));
         },
 
+        get righeCucina() {
+            return this.righeOrdine.filter(r => r.area_stampa === 'cucina');
+        },
+
+        get righeGriglia() {
+            return this.righeOrdine.filter(r => r.area_stampa === 'griglia');
+        },
+
         get flatIds() {
             return this.menu.map(i => i.id);
         },
@@ -327,9 +449,39 @@ function cassaApp(cfg) {
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
         },
 
+        stockResiduo(item) {
+            if (!item?.stock_limitato) return null;
+            if (!Object.prototype.hasOwnProperty.call(this.stock, item.id)
+                && !Object.prototype.hasOwnProperty.call(this.stock, String(item.id))) {
+                return null;
+            }
+            const r = this.stock[item.id] ?? this.stock[String(item.id)];
+            return r === undefined || r === null ? null : Number(r);
+        },
+
+        isStockBlocked(item) {
+            if (!this.serataAperta) return true;
+            if (!item?.stock_limitato) return false;
+            const r = this.stockResiduo(item);
+            return r === null || r <= 0;
+        },
+
+        stockStateClass(item) {
+            if (!this.serataAperta) return 'stato-noserata';
+            if (!item?.stock_limitato) return '';
+            const r = this.stockResiduo(item);
+            if (r === null) return 'stato-mancante';
+            if (r <= 0) return 'stato-esaurito';
+            return 'stato-ok';
+        },
+
         stockLabel(item) {
-            const r = this.stock[item.id];
-            if (r === undefined || r === null) return '';
+            if (!this.serataAperta) {
+                return item?.stock_limitato ? 'serata chiusa' : '';
+            }
+            if (!item?.stock_limitato) return '';
+            const r = this.stockResiduo(item);
+            if (r === null) return 'stock non impostato';
             if (r <= 0) return 'ESAURITO';
             return 'rimasti ' + r;
         },
@@ -354,12 +506,22 @@ function cassaApp(cfg) {
         changeQty(delta) {
             const item = this.menu.find(i => i.id === this.activeId);
             if (!item) return;
+            if (!this.serataAperta) {
+                this.errore = 'Nessuna serata aperta.';
+                return;
+            }
             let q = (this.qty[item.id] || 0) + delta;
             if (q < 0) q = 0;
             if (item.stock_limitato) {
-                const max = this.stock[item.id] ?? 0;
+                const max = this.stockResiduo(item);
+                if (max === null) {
+                    this.errore = `Stock non impostato per ${item.nome} — riapri/verifica la serata.`;
+                    return;
+                }
                 if (q > max) {
-                    this.errore = `Stock insufficiente per ${item.nome} (rimasti ${max})`;
+                    this.errore = max <= 0
+                        ? `${item.nome} esaurito`
+                        : `Stock insufficiente per ${item.nome} (rimasti ${max})`;
                     q = max;
                 } else {
                     this.errore = null;
@@ -414,7 +576,13 @@ function cassaApp(cfg) {
             }
             for (const r of this.righeOrdine) {
                 const item = this.menu.find(i => i.id === r.id);
-                if (item?.stock_limitato && r.q > (this.stock[item.id] ?? 0)) {
+                if (!item?.stock_limitato) continue;
+                const max = this.stockResiduo(item);
+                if (max === null) {
+                    this.errore = `Stock non impostato per ${item.nome}`;
+                    return;
+                }
+                if (r.q > max) {
                     this.errore = `Stock insufficiente per ${item.nome}`;
                     return;
                 }
@@ -473,16 +641,12 @@ function cassaApp(cfg) {
                 }
                 if (!res.ok) throw new Error(data.error || 'Errore salvataggio');
                 if (data.stock) this.stock = data.stock;
+                if (data.numero) this.prossimoNumero = data.numero + 1;
                 this.chiudiModal();
-                this.messaggio = 'Comanda #' + data.numero + ' stampata';
-                this.resetComanda();
-                const w = window.open(data.print_url + '?print=1', '_blank');
-                if (!w) {
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    iframe.src = data.print_url + '?print=1';
-                    document.body.appendChild(iframe);
-                }
+                // Stessa finestra: non usare window.open/_blank, altrimenti
+                // Chrome --app/--kiosk-printing perde la modalità kiosk.
+                window.location.href = data.print_url + (data.print_url.includes('?') ? '&' : '?') + 'print=1';
+                return;
             } catch (e) {
                 this.errore = e.message;
             } finally {
@@ -650,9 +814,21 @@ function cassaApp(cfg) {
                 e.preventDefault();
                 const item = this.menu.find(i => i.id === this.activeId);
                 if (!item) return;
+                if (!this.serataAperta) {
+                    this.errore = 'Nessuna serata aperta.';
+                    return;
+                }
                 const cur = this.qty[item.id] || 0;
                 let next = cur * 10 + parseInt(e.key, 10);
-                if (item.stock_limitato) next = Math.min(next, this.stock[item.id] ?? 0);
+                if (item.stock_limitato) {
+                    const max = this.stockResiduo(item);
+                    if (max === null) {
+                        this.errore = `Stock non impostato per ${item.nome} — riapri/verifica la serata.`;
+                        return;
+                    }
+                    next = Math.min(next, max);
+                    if (max <= 0) this.errore = `${item.nome} esaurito`;
+                }
                 this.qty = { ...this.qty, [item.id]: next };
             }
         },

@@ -19,6 +19,6 @@ class PinGestione
             return $next($request);
         }
 
-        return redirect()->route('gestione.pin');
+        return redirect()->to(route('gestione.pin', absolute: false));
     }
 }

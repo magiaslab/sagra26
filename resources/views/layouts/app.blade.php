@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Sagra26') — {{ $impostazioni->intestazione_nome ?? 'Cassa' }}</title>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="/css/app.css">
     @livewireStyles
     @stack('head')
 </head>
@@ -14,10 +14,10 @@
     <header class="topbar no-print">
         <div class="brand">{{ $impostazioni->intestazione_nome ?? 'Sagra' }} {{ $impostazioni->intestazione_anno ?? '' }}</div>
         <nav>
-            <a href="{{ route('home') }}" @class(['active' => request()->routeIs('home')])>Home</a>
-            <a href="{{ route('cassa') }}" @class(['active' => request()->routeIs('cassa*')])>Cassa</a>
-            <a href="{{ route('riepilogo') }}" @class(['active' => request()->routeIs('riepilogo')])>Riepilogo</a>
-            <a href="{{ route('gestione.dashboard') }}" @class(['active' => request()->is('gestione*')])>Gestione</a>
+            <a href="{{ route('home', absolute: false) }}" @class(['active' => request()->routeIs('home')])>Home</a>
+            <a href="{{ route('cassa', absolute: false) }}" @class(['active' => request()->routeIs('cassa*')])>Cassa</a>
+            <a href="{{ route('riepilogo', absolute: false) }}" @class(['active' => request()->routeIs('riepilogo')])>Riepilogo</a>
+            <a href="{{ route('gestione.dashboard', absolute: false) }}" @class(['active' => request()->is('gestione*')])>Gestione</a>
         </nav>
     </header>
     <main class="main @yield('main_class')">

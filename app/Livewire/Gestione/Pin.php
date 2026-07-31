@@ -63,7 +63,7 @@ class Pin extends Component
         if (hash_equals((string) $atteso, $this->pin)) {
             RateLimiter::clear($key);
             session(['gestione_sbloccata' => true]);
-            $this->redirect(route('gestione.dashboard'), navigate: true);
+            $this->redirect(route('gestione.dashboard', absolute: false), navigate: true);
 
             return;
         }
@@ -117,7 +117,7 @@ class Pin extends Component
         ]);
 
         session(['gestione_sbloccata' => true]);
-        $this->redirect(route('gestione.dashboard'), navigate: true);
+        $this->redirect(route('gestione.dashboard', absolute: false), navigate: true);
     }
 
     private function rateLimitKey(string $scope): string

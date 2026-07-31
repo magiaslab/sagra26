@@ -50,7 +50,7 @@ class Serate extends Component
             }
             $service->apri($this->data, $this->note ?: null, $this->stockOverrides, $fondi);
             session()->flash('status', 'Serata aperta.');
-            $this->redirect(route('gestione.serate'), navigate: true);
+            $this->redirect(route('gestione.serate', absolute: false), navigate: true);
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
         }

@@ -41,11 +41,15 @@ class CassaController extends Controller
                 'piatto_del_giorno' => $item->piatto_del_giorno,
             ]);
 
-        $stock = $serata
-            ? app(StockService::class)->mappaResidui($serata->id)
-            : [];
+        $stock = [];
+        if ($serata) {
+            $stockService = app(StockService::class);
+            $stockService->assicuraStockLimitati($serata->id);
+            $stock = $stockService->mappaResidui($serata->id);
+        }
 
         $impostazioni = Impostazione::corrente();
+        $prossimoNumero = (int) (Comanda::query()->max('numero_progressivo') ?? 0) + 1;
 
         return view('cassa.index', [
             'serata' => $serata,
@@ -54,6 +58,7 @@ class CassaController extends Controller
             'menu' => $menu,
             'stock' => $stock,
             'impostazioni' => $impostazioni,
+            'prossimoNumero' => $prossimoNumero,
         ]);
     }
 
@@ -73,6 +78,8 @@ class CassaController extends Controller
         if (! $serata) {
             return response()->json(['stock' => []]);
         }
+
+        $stock->assicuraStockLimitati($serata->id);
 
         return response()->json(['stock' => $stock->mappaResidui($serata->id)]);
     }
@@ -121,7 +128,7 @@ class CassaController extends Controller
                 'comanda_id' => $comanda->id,
                 'numero' => $comanda->numero_progressivo,
                 'version' => $comanda->version,
-                'print_url' => route('cassa.stampa', $comanda),
+                'print_url' => route('cassa.stampa', $comanda, absolute: false),
                 'stock' => app(StockService::class)->mappaResidui($serata->id),
             ]);
         } catch (ComandaConflittoException $e) {
@@ -210,7 +217,7 @@ class CassaController extends Controller
             'comanda' => $comanda,
             'righe' => $righe,
             'impostazioni' => $impostazioni,
-            'autoPrint' => request()->boolean('print', true),
+            'autoPrint' => request()->boolean('print'),
         ]);
     }
 

@@ -12,15 +12,15 @@
 </div>
 
 <div class="home-cards">
-    <a class="home-card" href="{{ route('cassa') }}">
+    <a class="home-card" href="{{ route('cassa', absolute: false) }}">
         <h2>Cassa</h2>
         <p>Inserimento comande da tastiera e stampa</p>
     </a>
-    <a class="home-card" href="{{ route('riepilogo') }}">
+    <a class="home-card" href="{{ route('riepilogo', absolute: false) }}">
         <h2>Riepilogo live</h2>
         <p>Coperti, vendite e incassi in tempo reale</p>
     </a>
-    <a class="home-card" href="{{ route('gestione.dashboard') }}">
+    <a class="home-card" href="{{ route('gestione.dashboard', absolute: false) }}">
         <h2>Gestione</h2>
         <p>Serate, menù, chiusura, report (PIN)</p>
     </a>

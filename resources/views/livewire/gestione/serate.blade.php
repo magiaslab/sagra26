@@ -8,7 +8,7 @@
         <div class="panel" style="margin-bottom:1rem">
             <h2>Serata aperta: {{ $serata->data->format('d/m/Y') }}</h2>
             <button class="btn btn-danger" wire:click="chiudi" wire:confirm="Chiudere la serata?">Chiudi serata</button>
-            <a class="btn" href="{{ route('gestione.chiusura') }}">Vai a chiusura cassa</a>
+            <a class="btn" href="{{ route('gestione.chiusura', absolute: false) }}">Vai a chiusura cassa</a>
         </div>
     @else
         <div class="panel" style="margin-bottom:1rem">

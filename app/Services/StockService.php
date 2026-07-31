@@ -59,4 +59,32 @@ class StockService
             ->map(fn ($v) => (int) $v)
             ->all();
     }
+
+    /**
+     * Crea le righe serata_stock mancanti per voci con stock_default
+     * (es. serata aperta senza passare da SerataService::apri).
+     */
+    public function assicuraStockLimitati(int $serataId): void
+    {
+        $esistenti = SerataStock::query()
+            ->where('serata_id', $serataId)
+            ->pluck('menu_item_id')
+            ->all();
+
+        $mancanti = \App\Models\MenuItem::query()
+            ->where('attivo', true)
+            ->whereNotNull('stock_default')
+            ->when($esistenti !== [], fn ($q) => $q->whereNotIn('id', $esistenti))
+            ->get();
+
+        foreach ($mancanti as $item) {
+            $iniziale = (int) $item->stock_default;
+            SerataStock::query()->create([
+                'serata_id' => $serataId,
+                'menu_item_id' => $item->id,
+                'stock_iniziale' => $iniziale,
+                'stock_residuo' => $iniziale,
+            ]);
+        }
+    }
 }
