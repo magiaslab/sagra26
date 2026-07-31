@@ -17,6 +17,7 @@ class Comanda extends Model
         'punto_cassa_id',
         'coperti',
         'stato',
+        'version',
         'metodo_pagamento',
         'importo_contante',
         'importo_pos',

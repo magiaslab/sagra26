@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\ComandaConflittoException;
 use App\Models\Comanda;
 use App\Models\ComandaCorrezione;
 use App\Models\ComandaRiga;
@@ -39,6 +40,7 @@ class ComandaService
         ?float $importoPos = null,
         ?Comanda $esistente = null,
         ?string $motivo = null,
+        ?int $versionAttesa = null,
     ): Comanda {
         if (! $serata->isAperta()) {
             throw new RuntimeException('Nessuna serata aperta.');
@@ -69,11 +71,18 @@ class ComandaService
             $importoPos,
             $esistente,
             $motivo,
+            $versionAttesa,
         ) {
             if ($esistente) {
                 $comanda = Comanda::query()->with('righe.menuItem')->lockForUpdate()->findOrFail($esistente->id);
                 if ($comanda->isAnnullata()) {
                     throw new RuntimeException('Comanda annullata, non modificabile.');
+                }
+
+                if ($versionAttesa !== null && (int) $comanda->version !== (int) $versionAttesa) {
+                    throw new ComandaConflittoException(
+                        'Questa comanda è stata modificata da un\'altra postazione nel frattempo. Ricarica e riprova.'
+                    );
                 }
 
                 ComandaCorrezione::query()->create([
@@ -101,6 +110,7 @@ class ComandaService
                     'serata_id' => $serata->id,
                     'postazione_id' => $postazione->id,
                     'punto_cassa_id' => $puntoCassa->id,
+                    'version' => 1,
                 ]);
             }
 
@@ -111,6 +121,9 @@ class ComandaService
             $comanda->importo_contante = $metodoPagamento === 'misto' ? $importoContante : null;
             $comanda->importo_pos = $metodoPagamento === 'misto' ? $importoPos : null;
             $comanda->totale = 0;
+            if ($esistente) {
+                $comanda->version = (int) $comanda->version + 1;
+            }
             $comanda->save();
 
             foreach ($righeNormalizzate as $riga) {

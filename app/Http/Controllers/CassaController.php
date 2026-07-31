@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\ComandaConflittoException;
 use App\Models\Comanda;
 use App\Models\Impostazione;
 use App\Models\MenuItem;
@@ -86,6 +87,7 @@ class CassaController extends Controller
             'importo_pos' => 'nullable|numeric',
             'comanda_id' => 'nullable|exists:comande,id',
             'motivo' => 'nullable|string|max:255',
+            'version' => 'nullable|integer|min:1',
             'righe' => 'required|array|min:1',
             'righe.*.menu_item_id' => 'required|exists:menu_items,id',
             'righe.*.quantita' => 'required|integer|min:1',
@@ -111,15 +113,19 @@ class CassaController extends Controller
                 isset($data['importo_pos']) ? (float) $data['importo_pos'] : null,
                 $esistente,
                 $data['motivo'] ?? null,
+                isset($data['version']) ? (int) $data['version'] : null,
             );
 
             return response()->json([
                 'ok' => true,
                 'comanda_id' => $comanda->id,
                 'numero' => $comanda->numero_progressivo,
+                'version' => $comanda->version,
                 'print_url' => route('cassa.stampa', $comanda),
                 'stock' => app(StockService::class)->mappaResidui($serata->id),
             ]);
+        } catch (ComandaConflittoException $e) {
+            return response()->json(['error' => $e->getMessage(), 'conflitto' => true], 409);
         } catch (Throwable $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
@@ -143,6 +149,7 @@ class CassaController extends Controller
         return response()->json([
             'comanda_id' => $comanda->id,
             'numero' => $comanda->numero_progressivo,
+            'version' => $comanda->version,
             'coperti' => $comanda->coperti,
             'metodo_pagamento' => $comanda->metodo_pagamento,
             'totale' => (float) $comanda->totale,

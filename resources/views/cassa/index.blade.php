@@ -186,6 +186,7 @@ function cassaApp(cfg) {
         metodo: null,
         comandaId: null,
         numeroRichiamato: null,
+        comandaVersion: null,
         correzioniCount: 0,
         motivo: '',
         richiamoNumero: '',
@@ -299,6 +300,7 @@ function cassaApp(cfg) {
             this.qty = {};
             this.comandaId = null;
             this.numeroRichiamato = null;
+            this.comandaVersion = null;
             this.correzioniCount = 0;
             this.motivo = '';
             this.metodo = null;
@@ -347,6 +349,20 @@ function cassaApp(cfg) {
             this.busy = true;
             this.errore = null;
             try {
+                const payload = {
+                    postazione_id: this.postazioneId,
+                    coperti: this.coperti,
+                    metodo_pagamento: this.metodo,
+                    comanda_id: this.comandaId,
+                    motivo: this.comandaId ? (this.motivo || null) : null,
+                    righe: this.righeOrdine.map(r => ({
+                        menu_item_id: r.id,
+                        quantita: r.q,
+                    })),
+                };
+                if (this.comandaId && this.comandaVersion != null) {
+                    payload.version = this.comandaVersion;
+                }
                 const res = await fetch(this.urls.conferma, {
                     method: 'POST',
                     headers: {
@@ -354,19 +370,21 @@ function cassaApp(cfg) {
                         'Accept': 'application/json',
                         'X-CSRF-TOKEN': this.csrf,
                     },
-                    body: JSON.stringify({
-                        postazione_id: this.postazioneId,
-                        coperti: this.coperti,
-                        metodo_pagamento: this.metodo,
-                        comanda_id: this.comandaId,
-                        motivo: this.comandaId ? (this.motivo || null) : null,
-                        righe: this.righeOrdine.map(r => ({
-                            menu_item_id: r.id,
-                            quantita: r.q,
-                        })),
-                    }),
+                    body: JSON.stringify(payload),
                 });
                 const data = await res.json();
+                if (res.status === 409 || data.conflitto) {
+                    this.errore = data.error || 'Qualcuno ha già corretto questa comanda nel frattempo';
+                    const num = this.numeroRichiamato;
+                    this.chiudiModal();
+                    this.messaggio = null;
+                    if (num) {
+                        this.richiamoNumero = String(num);
+                        await this.eseguiRichiamo();
+                        this.messaggio = 'Comanda ricaricata — controlla lo stato aggiornato prima di riprovare.';
+                    }
+                    return;
+                }
                 if (!res.ok) throw new Error(data.error || 'Errore salvataggio');
                 if (data.stock) this.stock = data.stock;
                 this.chiudiModal();
@@ -374,7 +392,6 @@ function cassaApp(cfg) {
                 this.resetComanda();
                 const w = window.open(data.print_url + '?print=1', '_blank');
                 if (!w) {
-                    // popup bloccato: naviga nella stessa finestra in iframe nascosto
                     const iframe = document.createElement('iframe');
                     iframe.style.display = 'none';
                     iframe.src = data.print_url + '?print=1';
@@ -408,6 +425,7 @@ function cassaApp(cfg) {
                 this.qty = q;
                 this.comandaId = data.comanda_id;
                 this.numeroRichiamato = data.numero;
+                this.comandaVersion = data.version ?? 1;
                 this.correzioniCount = data.correzioni_count || 0;
                 this.motivo = '';
                 this.chiudiModal();
