@@ -75,13 +75,16 @@ class ComandaService
                 $this->applicaDeltaStock($serata, $comanda, $righeNormalizzate);
                 $comanda->righe()->delete();
             } else {
+                // Stock PRIMA del numero: nextNumero() usa autoincrement su comanda_numeri
+                // che non torna indietro al rollback → altrimenti bruceremmo progressivi.
+                $this->applicaDeltaStock($serata, null, $righeNormalizzate);
+
                 $comanda = new Comanda([
                     'numero_progressivo' => $this->nextNumero(),
                     'serata_id' => $serata->id,
                     'postazione_id' => $postazione->id,
                     'punto_cassa_id' => $puntoCassa->id,
                 ]);
-                $this->applicaDeltaStock($serata, null, $righeNormalizzate);
             }
 
             $totale = 0.0;

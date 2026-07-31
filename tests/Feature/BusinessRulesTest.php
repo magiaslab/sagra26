@@ -98,6 +98,54 @@ it('calcola la riconciliazione a tre vie', function () {
         ->and($ric['contante_consegnato'])->toBe(6.0);
 });
 
+it('non brucia il numero progressivo se lo stock è esaurito', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->first();
+    $service = app(ComandaService::class);
+
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+    $cacciucco = MenuItem::query()->where('nome', 'Cacciucchetto')->firstOrFail();
+
+    // Una comanda valida: consuma il primo numero progressivo
+    $prima = $service->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+        0,
+        'contante',
+    );
+    $ultimoUsato = $prima->numero_progressivo;
+    $comandePrima = Comanda::query()->count();
+
+    // Stock già a zero: il tentativo deve fallire
+    SerataStock::query()
+        ->where('serata_id', $serata->id)
+        ->where('menu_item_id', $cacciucco->id)
+        ->update(['stock_iniziale' => 1, 'stock_residuo' => 0]);
+
+    expect(fn () => $service->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $cacciucco->id, 'quantita' => 1]],
+        0,
+        'contante',
+    ))->toThrow(RuntimeException::class);
+
+    expect(Comanda::query()->count())->toBe($comandePrima);
+
+    // Il numero successivo non deve saltare: il fallimento non ha bruciato progressivi
+    $dopo = $service->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+        0,
+        'contante',
+    );
+
+    expect($dopo->numero_progressivo)->toBe($ultimoUsato + 1);
+});
+
 it('precompila il fondo iniziale dalla chiusura precedente', function () {
     $punto = PuntoCassa::query()->first();
     $s1 = app(SerataService::class)->apri(now()->subDay()->toDateString(), null, [], [$punto->id => 80]);
