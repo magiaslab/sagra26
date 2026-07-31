@@ -173,12 +173,11 @@
             <div class="a4-preview">
                 <div class="a4-sheet">
                     <section class="a4-tag a4-cliente">
-                        <div class="a4-tag-head">
-                            <div>
-                                <div class="a4-brand" x-text="brand"></div>
-                                <div class="a4-sub" x-text="sottotitolo" x-show="sottotitolo"></div>
-                                <div class="a4-role">CLIENTE <span x-text="'n. ' + numeroDisplay"></span></div>
-                            </div>
+                        <div class="a4-brand" x-text="brand"></div>
+                        <div class="a4-sub" x-text="sottotitolo" x-show="sottotitolo"></div>
+                        <div class="a4-head">
+                            <span class="a4-role">CLIENTE</span>
+                            <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
                         </div>
                         <template x-for="r in righeOrdine" :key="'c-'+r.id">
                             <div class="a4-line">
@@ -188,55 +187,62 @@
                             </div>
                         </template>
                         <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
-                        <div class="a4-pay" x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
+                        <div class="a4-pay" :class="metodo === 'contante' ? 'a4-pay--contante' : 'a4-pay--pos'"
+                             x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
                     </section>
 
-                    <section class="a4-tag a4-cucina">
-                        <div class="a4-tag-head">
-                            <div class="a4-brand" x-text="brand"></div>
-                            <div class="a4-role">CUCINA <span x-text="'n. ' + numeroDisplay"></span></div>
-                        </div>
-                        <template x-for="r in righeCucina" :key="'k-'+r.id">
-                            <div class="a4-check">
-                                <span class="a4-box"></span>
-                                <span><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
-                            </div>
-                        </template>
-                        <div class="a4-empty" x-show="righeCucina.length === 0">—</div>
-                        <div class="a4-mano">CAMERIERE <span class="a4-linea"></span></div>
-                    </section>
-
-                    <section class="a4-tag a4-cameriere">
-                        <div class="a4-tag-head">
-                            <div class="a4-brand" x-text="brand"></div>
-                            <div class="a4-role">CAMERIERE <span x-text="'n. ' + numeroDisplay"></span></div>
-                        </div>
-                        <div class="a4-mano">TAVOLO <span class="a4-linea"></span></div>
-                        <template x-for="r in righeOrdine" :key="'w-'+r.id">
-                            <div class="a4-check">
-                                <span class="a4-box"></span>
-                                <span><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
-                            </div>
-                        </template>
-                    </section>
-
-                    <section class="a4-tag a4-griglia">
-                        <div class="a4-tag-head a4-tag-head-row">
-                            <div>
+                    <div class="a4-right">
+                        <div class="a4-top">
+                            <section class="a4-tag a4-cucina">
                                 <div class="a4-brand" x-text="brand"></div>
-                                <div class="a4-role">GRIGLIA</div>
-                            </div>
-                            <div class="a4-mano" style="margin:0;flex:1">CAMERIERE <span class="a4-linea"></span></div>
-                            <span x-text="'n. ' + numeroDisplay"></span>
+                                <div class="a4-head">
+                                    <span class="a4-role">CUCINA</span>
+                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                </div>
+                                <template x-for="r in righeCucina" :key="'k-'+r.id">
+                                    <div class="a4-check">
+                                        <span class="a4-box"></span>
+                                        <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
+                                    </div>
+                                </template>
+                                <div class="a4-empty" x-show="righeCucina.length === 0">—</div>
+                                <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
+                            </section>
+
+                            <section class="a4-tag a4-cameriere">
+                                <div class="a4-brand" x-text="brand"></div>
+                                <div class="a4-head">
+                                    <span class="a4-role">CAMERIERE</span>
+                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                </div>
+                                <div class="a4-mano a4-mano--top"><span>Tavolo</span><span class="a4-linea"></span></div>
+                                <template x-for="r in righeOrdine" :key="'w-'+r.id">
+                                    <div class="a4-check">
+                                        <span class="a4-box"></span>
+                                        <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
+                                    </div>
+                                </template>
+                            </section>
                         </div>
-                        <template x-for="r in righeGriglia" :key="'g-'+r.id">
-                            <div class="a4-check">
-                                <span class="a4-box"></span>
-                                <span><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
+
+                        <section class="a4-tag a4-griglia">
+                            <div class="a4-griglia-head">
+                                <div>
+                                    <div class="a4-brand" x-text="brand"></div>
+                                    <div class="a4-role">GRIGLIA</div>
+                                </div>
+                                <div class="a4-mano a4-mano--inline"><span>Cameriere</span><span class="a4-linea"></span></div>
+                                <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
                             </div>
-                        </template>
-                        <div class="a4-empty" x-show="righeGriglia.length === 0"></div>
-                    </section>
+                            <template x-for="r in righeGriglia" :key="'g-'+r.id">
+                                <div class="a4-line-griglia">
+                                    <strong x-text="r.q"></strong>
+                                    <span x-text="r.nome"></span>
+                                </div>
+                            </template>
+                            <div class="a4-empty" x-show="righeGriglia.length === 0">—</div>
+                        </section>
+                    </div>
                 </div>
             </div>
 

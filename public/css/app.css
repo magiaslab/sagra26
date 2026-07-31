@@ -553,35 +553,63 @@ a:hover { text-decoration: underline; }
 }
 .a4-sheet {
   width: 270mm;
-  min-height: 170mm;
+  height: 190mm;
   margin: 0 auto;
   background: #fff;
   border: 1px solid #999;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  grid-template-rows: 1fr auto;
+  grid-template-columns: 30% 70%;
   font-size: 11px;
   color: #111;
+  overflow: hidden;
+  box-sizing: border-box;
 }
-.a4-tag {
-  padding: 3.5mm;
-  border-right: 1px dashed #888;
-  border-bottom: 1px dashed #888;
-  min-height: 95mm;
+.a4-tag { padding: 3mm; overflow: hidden; }
+.a4-cliente {
+  border-right: 2px dashed #888;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
-.a4-cliente { grid-column: 1; grid-row: 1; }
-.a4-cucina { grid-column: 2; grid-row: 1; }
-.a4-cameriere { grid-column: 3; grid-row: 1; border-right: 0; }
+.a4-right {
+  display: grid;
+  grid-template-rows: 1fr 20%;
+  min-height: 0;
+  overflow: hidden;
+}
+.a4-top {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 2px dashed #888;
+  min-height: 0;
+  overflow: hidden;
+}
+.a4-cucina, .a4-cameriere {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.a4-cucina { border-right: 2px dashed #888; }
 .a4-griglia {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  border-right: 0;
-  border-bottom: 0;
-  min-height: 42mm;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding-top: 2mm;
 }
 .a4-brand { font-weight: 700; font-size: 11px; }
-.a4-sub { font-size: 8px; color: #555; margin-bottom: 1mm; }
-.a4-role { font-weight: 800; margin: 1.5mm 0 2mm; letter-spacing: .04em; }
+.a4-sub { font-size: 8px; color: #555; margin: 0.5mm 0 1mm; }
+.a4-role { font-weight: 800; letter-spacing: .04em; }
+.a4-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  border-bottom: 1.5px solid #000;
+  margin: 1mm 0 2mm;
+  padding-bottom: 1mm;
+}
+.a4-num { font-weight: 900; font-size: 1.2em; }
 .a4-line {
   display: grid;
   grid-template-columns: 1.4em 1fr auto;
@@ -589,51 +617,71 @@ a:hover { text-decoration: underline; }
   padding: .6mm 0;
   border-bottom: 1px dotted #ccc;
 }
+.a4-line-griglia {
+  display: grid;
+  grid-template-columns: 1.4em 1fr;
+  gap: 1.5mm;
+  padding: .6mm 0;
+}
 .a4-totale {
-  margin-top: 3mm;
+  margin-top: auto;
   font-weight: 800;
   font-size: 12px;
+  border-top: 1.5px solid #000;
+  padding-top: 1.5mm;
 }
 .a4-pay {
   margin-top: 2mm;
-  border: 2px solid #000;
   padding: 2mm;
   text-align: center;
   font-weight: 800;
-  font-size: 14px;
+  font-size: 13px;
+  background: transparent;
 }
+.a4-pay--contante { border: 4px double #000; }
+.a4-pay--pos { border: 2px solid #000; }
 .a4-check {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 10px 1fr;
   gap: 2mm;
+  align-items: center;
   padding: 1mm 0;
-  border-bottom: 1px dotted #bbb;
 }
 .a4-box {
-  width: 3.2mm;
-  height: 3.2mm;
-  border: 1px solid #000;
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid #000;
+  background: transparent;
   flex-shrink: 0;
-  margin-top: .6mm;
+}
+.a4-dotted {
+  border-bottom: 1px dotted #000;
+  min-height: 1em;
 }
 .a4-mano {
   display: flex;
   align-items: flex-end;
   gap: 2mm;
-  margin-top: 3mm;
+  margin-top: auto;
+  padding-top: 2mm;
   font-size: 9px;
   font-weight: 700;
+  text-transform: uppercase;
 }
+.a4-mano--top { margin-top: 0; margin-bottom: 1.5mm; padding-top: 0; }
+.a4-mano--inline { margin: 0; flex: 1; min-width: 0; }
 .a4-linea {
   flex: 1;
   border-bottom: 1px solid #000;
   min-height: 3mm;
 }
-.a4-tag-head-row {
+.a4-griglia-head {
   display: flex;
   align-items: flex-end;
   gap: 3mm;
-  margin-bottom: 2mm;
+  border-bottom: 1px solid #000;
+  padding-bottom: 1mm;
+  margin-bottom: 1.5mm;
 }
 .a4-empty { color: #999; min-height: 1em; }
 
@@ -884,28 +932,36 @@ a:hover { text-decoration: underline; }
 .print-sheet {
   width: 270mm;
   height: 190mm;
+  max-width: 270mm;
+  max-height: 190mm;
   border: 1px solid #000;
   margin: 1rem auto;
   background: #fff;
+  color: #000;
   overflow: hidden;
   display: grid;
   grid-template-columns: 30% 70%;
   font-size: 12px;
+  line-height: 1.25;
   box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  box-sizing: border-box;
 }
 
 .tag-cliente {
   border-right: 2px dashed #000;
-  padding: 4mm;
+  padding: 3.5mm 4mm;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-height: 0;
+  font-size: 11px;
 }
 
 .tag-right {
   display: grid;
-  grid-template-rows: 78% 22%;
+  grid-template-rows: minmax(0, 1fr) 20%;
   overflow: hidden;
+  min-height: 0;
 }
 
 .tag-top {
@@ -913,16 +969,43 @@ a:hover { text-decoration: underline; }
   grid-template-columns: 1fr 1fr;
   border-bottom: 2px dashed #000;
   overflow: hidden;
+  min-height: 0;
 }
 
-.tag-cucina, .tag-cameriere {
+.tag-cucina,
+.tag-cameriere {
   padding: 3mm;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  font-size: 12px;
 }
 .tag-cucina { border-right: 2px dashed #000; }
+
 .tag-griglia {
   padding: 2mm 3mm;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  font-size: 12px;
+}
+
+.tag-brand {
+  font-weight: 800;
+  font-size: 11px;
+  line-height: 1.15;
+}
+.tag-sub {
+  font-size: 8.5px;
+  margin: 0.5mm 0 1.5mm;
+  line-height: 1.2;
+}
+.tag-role {
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
 }
 
 .tag-head {
@@ -930,32 +1013,43 @@ a:hover { text-decoration: underline; }
   justify-content: space-between;
   align-items: baseline;
   border-bottom: 2px solid #000;
-  margin-bottom: 2mm;
+  margin: 1mm 0 2mm;
   padding-bottom: 1mm;
-  font-weight: 800;
-  text-transform: uppercase;
+  gap: 2mm;
 }
 
 .tag-num {
-  font-size: 1.4em;
+  font-size: 1.35em;
   font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.tag-body {
+  flex: 1 1 auto;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .tag-line {
   display: grid;
-  grid-template-columns: 22px 1fr auto;
+  grid-template-columns: 1.6em 1fr auto;
   gap: 2mm;
   align-items: baseline;
-  margin: 1mm 0;
-  line-height: 1.2;
+  margin: 0.8mm 0;
+}
+
+.tag-importo {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .tag-line-check {
   display: grid;
-  grid-template-columns: 14px 1fr;
-  gap: 2mm;
-  align-items: baseline;
-  margin: 1.2mm 0;
+  grid-template-columns: 12px 1fr;
+  gap: 2.2mm;
+  align-items: center;
+  margin: 1.4mm 0;
 }
 
 .check-box {
@@ -963,45 +1057,101 @@ a:hover { text-decoration: underline; }
   width: 11px;
   height: 11px;
   border: 1.5px solid #000;
+  background: transparent;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .dotted {
   border-bottom: 1px dotted #000;
-  min-height: 1em;
+  min-height: 1.15em;
+  padding-bottom: 0.4mm;
+}
+
+.tag-line-griglia {
+  display: grid;
+  grid-template-columns: 1.6em 1fr;
+  gap: 2mm;
+  align-items: baseline;
+  margin: 1mm 0;
+}
+
+.tag-griglia-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 3mm;
+  border-bottom: 1.5px solid #000;
+  padding-bottom: 1mm;
+  margin-bottom: 1.5mm;
+}
+.tag-griglia-brand {
+  flex: 0 0 auto;
+}
+.tag-griglia-brand .tag-role {
+  display: block;
+  margin-top: 0.5mm;
 }
 
 .campo-mano {
-  margin-top: 3mm;
-  border-top: 1px solid #000;
-  padding-top: 2mm;
-  font-size: .9em;
+  margin-top: 2.5mm;
+  flex-shrink: 0;
 }
-.campo-mano .linea {
+.campo-mano--top {
+  margin-top: 0;
+  margin-bottom: 1.5mm;
+}
+.campo-mano--full {
+  display: flex;
+  align-items: flex-end;
+  gap: 2mm;
+  width: 100%;
+}
+.campo-mano--inline {
+  flex: 1 1 auto;
+  margin-top: 0;
+  min-width: 0;
+}
+.campo-mano-lbl {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.campo-mano-linea {
+  flex: 1 1 auto;
   border-bottom: 1px solid #000;
-  min-height: 14px;
-  margin-top: 2mm;
+  min-height: 3.5mm;
+  min-width: 20mm;
 }
 
 .pay-badge {
-  display: inline-block;
-  margin-top: 3mm;
+  display: block;
+  margin-top: 2.5mm;
   padding: 2mm 3mm;
   font-weight: 800;
   text-transform: uppercase;
+  text-align: center;
+  background: transparent !important;
+  color: #000;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
 }
-.pay-badge.contante { border: 4px double #000; }
-.pay-badge.pos { border: 2px solid #000; }
+.pay-badge--contante { border: 4px double #000; }
+.pay-badge--pos { border: 2px solid #000; }
+.pay-badge--misto { border: 2px solid #000; }
 
 .totale-print {
   margin-top: auto;
   border-top: 2px solid #000;
   padding-top: 2mm;
   font-weight: 800;
-  font-size: 1.15em;
+  font-size: 1.1em;
+  flex-shrink: 0;
 }
 
-.meta-small { font-size: .85em; color: #000; }
+.meta-small { font-size: .85em; color: #000; margin-bottom: 1.5mm; }
+
 
 .home-cards {
   display: grid;
