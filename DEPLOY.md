@@ -29,6 +29,7 @@ php artisan key:generate
 #   DB_CONNECTION=sqlite
 #   DB_DATABASE=/home/<utente>/cassa/database/database.sqlite
 #   CHROMIUM_PATH=/usr/bin/chromium-browser
+#   PIN_MASTER_RESET=<codice-segreto-non-default>
 
 touch database/database.sqlite
 php artisan migrate --seed --force
@@ -71,3 +72,22 @@ I file finiscono in `storage/backups/`.
 
 Sui notebook Windows apri Chrome su `http://<server>:8000/cassa`, seleziona la
 postazione (Cassa A / Cassa B) e usa la stampa su fogli A4 orizzontali.
+
+## 7. PIN gestione e recupero
+
+Al primo deploy, imposta in `.env` un valore reale per `PIN_MASTER_RESET`
+(diverso dal placeholder), e **annotalo qui sotto o in un posto sicuro non digitale**:
+
+    Codice master: ____________________
+
+Se il PIN operativo (quello a 4 cifre usato quotidianamente) viene dimenticato:
+apri `/gestione/pin`, tocca "PIN dimenticato?", inserisci il codice master
+sopra e imposta un nuovo PIN direttamente dal browser — nessun terminale necessario.
+
+### Se anche il codice master è perso (ultima risorsa, da terminale)
+
+    sqlite3 ~/cassa/database/database.sqlite "SELECT pin_gestione FROM impostazioni;"
+    sqlite3 ~/cassa/database/database.sqlite "UPDATE impostazioni SET pin_gestione='1234' WHERE id=1;"
+
+Il PIN è salvato in chiaro (non hashato) di proposito: serve solo a tenere fuori
+un cassiere per sbaglio dall'area gestionale, non è una barriera di sicurezza vera.
