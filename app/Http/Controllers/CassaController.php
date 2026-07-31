@@ -46,6 +46,7 @@ class CassaController extends Controller
             : [];
 
         $impostazioni = Impostazione::corrente();
+        $prossimoNumero = (int) (Comanda::query()->max('numero_progressivo') ?? 0) + 1;
 
         return view('cassa.index', [
             'serata' => $serata,
@@ -54,6 +55,7 @@ class CassaController extends Controller
             'menu' => $menu,
             'stock' => $stock,
             'impostazioni' => $impostazioni,
+            'prossimoNumero' => $prossimoNumero,
         ]);
     }
 

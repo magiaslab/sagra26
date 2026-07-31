@@ -1,45 +1,43 @@
-@extends('layouts.cassa')
+<?php $__env->startSection('title', 'Cassa'); ?>
 
-@section('title', 'Cassa')
-
-@section('content')
-@php
+<?php $__env->startSection('content'); ?>
+<?php
     $menuJson = $menu->values()->toJson(JSON_UNESCAPED_UNICODE);
     $stockJson = json_encode((object) $stock, JSON_UNESCAPED_UNICODE);
     $postazioniJson = $postazioni->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome])->values()->toJson(JSON_UNESCAPED_UNICODE);
-@endphp
+?>
 
 <div
     class="cassa-app"
     x-data="cassaApp({
-        menu: {{ $menuJson }},
-        stock: {{ $stockJson }},
-        postazioni: {{ $postazioniJson }},
-        postazioneId: {{ (int) $postazioneId }},
-        serataAperta: {{ $serata ? 'true' : 'false' }},
-        prossimoNumero: {{ (int) $prossimoNumero }},
-        brand: @js(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? '')),
-        sottotitolo: @js($impostazioni->intestazione_sottotitolo ?? ''),
-        csrf: '{{ csrf_token() }}',
+        menu: <?php echo e($menuJson); ?>,
+        stock: <?php echo e($stockJson); ?>,
+        postazioni: <?php echo e($postazioniJson); ?>,
+        postazioneId: <?php echo e((int) $postazioneId); ?>,
+        serataAperta: <?php echo e($serata ? 'true' : 'false'); ?>,
+        prossimoNumero: <?php echo e((int) $prossimoNumero); ?>,
+        brand: <?php echo \Illuminate\Support\Js::from(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? ''))->toHtml() ?>,
+        sottotitolo: <?php echo \Illuminate\Support\Js::from($impostazioni->intestazione_sottotitolo ?? '')->toHtml() ?>,
+        csrf: '<?php echo e(csrf_token()); ?>',
         urls: {
-            conferma: '{{ route('cassa.conferma', absolute: false) }}',
-            stock: '{{ route('cassa.stock', absolute: false) }}',
+            conferma: '<?php echo e(route('cassa.conferma', absolute: false)); ?>',
+            stock: '<?php echo e(route('cassa.stock', absolute: false)); ?>',
             richiamo: '/cassa/richiamo',
-            storico: '{{ route('cassa.storico', absolute: false) }}',
+            storico: '<?php echo e(route('cassa.storico', absolute: false)); ?>',
             annulla: '/cassa/annulla',
-            postazione: '{{ route('cassa.postazione', absolute: false) }}',
-            gestione: '{{ route('gestione.dashboard', absolute: false) }}',
-            home: '{{ route('home', absolute: false) }}'
+            postazione: '<?php echo e(route('cassa.postazione', absolute: false)); ?>',
+            gestione: '<?php echo e(route('gestione.dashboard', absolute: false)); ?>',
+            home: '<?php echo e(route('home', absolute: false)); ?>'
         }
     })"
     @keydown.window="onKey($event)"
 >
-    @if (!$serata)
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!$serata): ?>
         <div class="cassa-banner-warn">
             Nessuna serata aperta.
             <a :href="urls.gestione">Apri da Gestione → Serate</a>
         </div>
-    @endif
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
 
     <header class="cassa-chrome">
         <div class="cassa-chrome-left">
@@ -139,7 +137,7 @@
         </div>
     </footer>
 
-    {{-- Modal pagamento --}}
+    
     <div class="modal-backdrop" x-show="modalPagamento" x-cloak @keydown.escape.window="chiudiModal()">
         <div class="modal modal-pay" @click.stop>
             <h2>
@@ -161,7 +159,7 @@
         </div>
     </div>
 
-    {{-- Modal anteprima A4 --}}
+    
     <div class="modal-backdrop" x-show="modalAnteprima" x-cloak @keydown.escape.window="chiudiModal()">
         <div class="modal modal-a4" @click.stop>
             <div class="modal-a4-head">
@@ -250,7 +248,7 @@
         </div>
     </div>
 
-    {{-- Modal richiamo --}}
+    
     <div class="modal-backdrop" x-show="modalRichiamo" x-cloak>
         <div class="modal modal-richiamo" @click.stop>
             <h2>Richiama una comanda</h2>
@@ -339,13 +337,13 @@
         </div>
     </div>
 </div>
-@endsection
+<?php $__env->stopSection(); ?>
 
-@push('head')
+<?php $__env->startPush('head'); ?>
 <style>[x-cloak]{display:none!important}</style>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@push('scripts')
+<?php $__env->startPush('scripts'); ?>
 <script>
 function cassaApp(cfg) {
     return {
@@ -772,4 +770,6 @@ function cassaApp(cfg) {
     };
 }
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
+
+<?php echo $__env->make('layouts.cassa', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH /workspace/resources/views/cassa/index.blade.php ENDPATH**/ ?>
