@@ -149,10 +149,14 @@
         </div>
     </div>
 
-    {{-- Modal richiamo --}}
+    {{-- Modal richiamo — pattern RigaStorico del prototipo shell-navigazione --}}
     <div class="modal-backdrop" x-show="modalRichiamo" x-cloak>
         <div class="modal modal-richiamo" @click.stop>
-            <h2>Richiamo comanda</h2>
+            <h2>Richiama una comanda</h2>
+            <p class="richiamo-hint">
+                Tocca la riga per correggerla. «Annulla» è un'altra cosa: da usare solo se l'ordine non va più fatto — richiede un motivo e non si torna indietro.
+            </p>
+
             <label class="label">Numero progressivo</label>
             <div class="richiamo-cerca">
                 <input class="input" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
@@ -162,62 +166,67 @@
 
             <h3 class="storico-titolo">Ultime comande</h3>
             <div class="storico-lista" x-show="storico.length === 0">
-                <p class="storico-vuoto">Nessuna comanda stampata in questa serata.</p>
+                <p class="storico-vuoto">Nessuna comanda stampata ancora in questa serata.</p>
             </div>
-            <div class="storico-lista" x-show="storico.length > 0">
+            <div class="storico-lista storico-lista--righe" x-show="storico.length > 0">
                 <template x-for="c in storico" :key="c.comanda_id">
                     <div class="storico-riga" :class="{ 'is-annullata': c.stato === 'annullata', 'is-confirming': annulloId === c.comanda_id }">
-                        <template x-if="annulloId !== c.comanda_id">
-                            <div class="storico-azioni">
-                                <button
-                                    type="button"
-                                    class="btn-correggi"
-                                    :disabled="c.stato === 'annullata'"
-                                    @click="c.stato !== 'annullata' && caricaDaStorico(c)"
-                                >
-                                    <span class="storico-num" :class="{ barrato: c.stato === 'annullata' }">
-                                        n.<span x-text="c.numero"></span>
-                                    </span>
-                                    <span class="storico-meta">
-                                        <span x-text="c.n_righe + ' voci · ' + c.coperti + ' cop.'"></span>
-                                        <span class="storico-totale" x-text="formatEuro(c.totale)"></span>
-                                        <span class="badge" x-text="c.metodo_pagamento === 'contante' ? 'CONT' : (c.metodo_pagamento === 'pos' ? 'POS' : 'MISTO')"></span>
-                                        <span class="badge badge-annullata" x-show="c.stato === 'annullata'">ANNULLATA</span>
-                                    </span>
-                                    <span class="storico-correggi-label" x-show="c.stato !== 'annullata'">Correggi</span>
-                                    <span class="storico-motivo" x-show="c.stato === 'annullata'" x-text="c.motivo_annullo || ''"></span>
-                                </button>
-                                <button
-                                    type="button"
-                                    class="btn-annulla-riga"
-                                    x-show="c.stato !== 'annullata'"
-                                    @click.stop="apriConfermaAnnullo(c)"
-                                    title="Annulla comanda"
-                                >Annulla</button>
+                        {{-- Comanda già annullata: sola lettura, non richiamabile --}}
+                        <template x-if="c.stato === 'annullata'">
+                            <div class="storico-annullata">
+                                <div class="storico-annullata-top">
+                                    <span class="storico-num barrato">n.<span x-text="c.numero"></span></span>
+                                    <span class="badge badge-annullata">ANNULLATA</span>
+                                </div>
+                                <div class="storico-motivo">
+                                    Motivo: <span x-text="c.motivo_annullo || '—'"></span>
+                                </div>
                             </div>
                         </template>
-                        <template x-if="annulloId === c.comanda_id">
-                            <div class="annullo-conferma">
-                                <div class="annullo-testata">
-                                    Annullamento n.<strong x-text="c.numero"></strong>
-                                    — irreversibile
-                                </div>
-                                <label class="label">Motivo (obbligatorio)</label>
-                                <input class="input" type="text" maxlength="255"
-                                       x-model="annulloMotivo" x-ref="annulloMotivoInput"
-                                       placeholder="Perché annulli questa comanda?"
-                                       @keydown.enter.prevent="annulloMotivo.trim().length >= 2 && confermaAnnullo()">
-                                <div class="annullo-bottoni">
+
+                        {{-- Attiva: Correggi (maggior parte) + Annulla (bordo doppio rosso) --}}
+                        <template x-if="c.stato !== 'annullata'">
+                            <div>
+                                <div class="storico-azioni">
+                                    <button type="button" class="btn-correggi" @click="caricaDaStorico(c)">
+                                        <span class="storico-num">n.<span x-text="c.numero"></span></span>
+                                        <span class="storico-meta">
+                                            <span x-text="c.n_righe + ' voci · ' + c.coperti + ' cop.'"></span>
+                                            <span class="badge" x-text="c.metodo_pagamento === 'contante' ? 'CONT' : (c.metodo_pagamento === 'pos' ? 'POS' : 'MISTO')"></span>
+                                        </span>
+                                        <span class="storico-totale" x-text="formatEuro(c.totale)"></span>
+                                        <span class="storico-correggi-label">Correggi →</span>
+                                    </button>
                                     <button
                                         type="button"
-                                        class="btn-conferma-annullo"
-                                        :disabled="annulloMotivo.trim().length < 2 || busy"
-                                        @click="confermaAnnullo()"
-                                    >Conferma annullamento</button>
-                                    <button type="button" class="btn" @click="chiudiConfermaAnnullo()">
-                                        Torna indietro
-                                    </button>
+                                        class="btn-annulla-riga"
+                                        @click.stop="apriConfermaAnnullo(c)"
+                                        title="Annulla comanda (irreversibile)"
+                                    >Annulla</button>
                                 </div>
+                                <template x-if="annulloId === c.comanda_id">
+                                    <div class="annullo-conferma">
+                                        <p class="annullo-testata">
+                                            Annullare definitivamente la comanda n.<strong x-text="c.numero"></strong>?
+                                            Non sarà più possibile richiamarla né correggerla.
+                                        </p>
+                                        <input class="input input-annullo" type="text" maxlength="255"
+                                               x-model="annulloMotivo" x-ref="annulloMotivoInput"
+                                               placeholder="Motivo (obbligatorio)"
+                                               @keydown.enter.prevent="annulloMotivo.trim().length >= 2 && confermaAnnullo()">
+                                        <div class="annullo-bottoni">
+                                            <button type="button" class="btn" @click="chiudiConfermaAnnullo()">
+                                                Torna indietro
+                                            </button>
+                                            <button
+                                                type="button"
+                                                class="btn-conferma-annullo"
+                                                :disabled="annulloMotivo.trim().length < 2 || busy"
+                                                @click="confermaAnnullo()"
+                                            >Conferma annullamento</button>
+                                        </div>
+                                    </div>
+                                </template>
                             </div>
                         </template>
                     </div>
