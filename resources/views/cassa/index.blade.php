@@ -85,14 +85,29 @@
         </div>
     </header>
 
-    <div class="flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-sagra-line bg-white px-4 py-2 text-[0.78rem] font-medium text-sagra-muted" aria-hidden="true">
-        <span class="inline-flex items-center gap-1 px-2 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>↑</kbd> riga prima</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>+</kbd><kbd>-</kbd> quantità</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Canc</kbd> azzera</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F9</kbd> conferma</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F2</kbd> richiama</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Esc</kbd> annulla</span>
+    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-sagra-line bg-white px-4 py-2">
+        <div class="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1 text-[0.78rem] font-medium text-sagra-muted" aria-hidden="true">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
+            <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>↑</kbd> riga prima</span>
+            <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>+</kbd><kbd>-</kbd> quantità</span>
+            <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Canc</kbd> azzera</span>
+            <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F9</kbd> conferma</span>
+            <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F2</kbd> richiama</span>
+            <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Esc</kbd> annulla</span>
+        </div>
+        <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <span class="mr-1 whitespace-nowrap text-sm font-medium text-sagra-muted" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
+            <div class="w-44 min-h-9" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
+                <input class="block h-9 w-full rounded-md bg-white px-2.5 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
+                       placeholder="Motivo correzione" autocomplete="off"
+                       :tabindex="comandaId ? 0 : -1" :aria-hidden="!comandaId">
+            </div>
+            <button type="button" class="inline-flex h-9 items-center rounded-md bg-sagra px-3.5 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" @click="apriPagamento()" :disabled="!serataAperta">
+                Conferma e stampa <kbd class="ml-1.5 border-white/40 bg-black/15 text-inherit">F9</kbd>
+            </button>
+            <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <kbd class="ml-1">F2</kbd></button>
+            <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <kbd class="ml-1">Esc</kbd></button>
+        </div>
     </div>
 
     <div class="flex-1 overflow-auto bg-sagra-bg px-4 py-4">
@@ -133,24 +148,6 @@
             </template>
         </div>
     </div>
-
-    <footer class="flex flex-col items-stretch justify-between gap-3 border-t border-sagra-line bg-white px-4 py-3 lg:flex-row lg:items-center">
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 text-sm text-sagra-muted">
-            <span class="whitespace-nowrap font-medium" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
-            <div class="w-full max-w-xs min-h-10" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
-                <input class="block h-10 w-full rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
-                       placeholder="Motivo correzione (facoltativo)" autocomplete="off"
-                       :tabindex="comandaId ? 0 : -1" :aria-hidden="!comandaId">
-            </div>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-            <button type="button" class="inline-flex h-11 items-center rounded-md bg-sagra px-5 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" @click="apriPagamento()" :disabled="!serataAperta">
-                Conferma e stampa <kbd class="ml-1.5 border-white/40 bg-black/15 text-inherit">F9</kbd>
-            </button>
-            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <kbd class="ml-1">F2</kbd></button>
-            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <kbd class="ml-1">Esc</kbd></button>
-        </div>
-    </footer>
 
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalPagamento" x-cloak @keydown.escape.window="chiudiModal()">
         <div class="w-[min(420px,92vw)] rounded-lg bg-white p-6 text-center shadow-xl ring-1 ring-sagra-line" @click.stop>
