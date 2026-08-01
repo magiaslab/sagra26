@@ -15,6 +15,10 @@
   --accent-softer: #eef6f1;
   --warn: #8a4b00;
   --warn-soft: #fff3cd;
+  /* Solo cursore riga in Cassa (non riusare --warn: non è un avviso). */
+  --amber: #b45309;
+  --amber-soft: #fef3c7;
+  --amber-ring: #f59e0b;
   --danger: #8b1515;
   --danger-soft: #fceaea;
   --focus: #0b5fff;
@@ -392,6 +396,14 @@ textarea:focus-visible {
   letter-spacing: 0;
 }
 
+.cassa-chrome-center {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  flex-wrap: wrap;
+}
+
 .cassa-brand {
   display: inline-flex;
   align-items: center;
@@ -417,6 +429,21 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 .cassa-brand-gear { font-size: 1rem; opacity: .9; }
+
+/* Uscita rara: vicino al brand, non in competizione con F9/F2/Esc. */
+.cassa-home-link {
+  color: rgba(255,255,255,.88);
+  font-size: .82rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: .25rem .4rem;
+}
+.cassa-home-link:hover { color: #fff; text-decoration: underline; }
+.cassa-home-link:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
 
 .cassa-chrome-right {
   display: flex;
@@ -513,11 +540,11 @@ textarea:focus-visible {
   background: var(--accent-softer);
 }
 
-/* Riga attiva: molto evidente (verde chiaro + barra sinistra) */
+/* Riga a fuoco (cursore tastiera): amber, distinto dal teal "compilata". */
 .cassa-row.active {
-  background: var(--accent-soft);
-  border-left-color: var(--accent);
-  box-shadow: inset 0 0 0 1px rgba(30, 92, 67, .28);
+  background: var(--amber-soft);
+  border-left-color: var(--amber);
+  box-shadow: inset 0 0 0 2px var(--amber-ring);
 }
 
 .cassa-row-main { min-width: 0; }
@@ -582,10 +609,10 @@ textarea:focus-visible {
 
 .cassa-footer {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: .85rem;
+  gap: 1rem;
   padding: .75rem 1.1rem;
   background: #fff;
   border-top: 1px solid var(--line);
@@ -595,14 +622,31 @@ textarea:focus-visible {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: .85rem;
+  gap: .75rem 1rem;
   font-size: .95rem;
   color: var(--muted);
   font-weight: 600;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cassa-footer-count { white-space: nowrap; }
+
+/* Spazio riservato: non salta il layout quando compare in correzione. */
+.cassa-footer-motivo {
+  width: min(16rem, 42vw);
+  min-height: 2.35rem;
+  visibility: hidden;
+  pointer-events: none;
+}
+.cassa-footer-motivo.is-visible {
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .input-motivo {
-  min-width: 14rem;
+  width: 100%;
+  min-width: 0;
   padding: .4rem .55rem;
   font-size: .95rem;
   min-height: 2.35rem;
@@ -617,14 +661,26 @@ textarea:focus-visible {
 
 .cassa-footer-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: .5rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: .75rem;
+  flex: 0 0 auto;
+}
+
+.cassa-footer-actions-secondary {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: .35rem;
 }
 
 .btn-cassa-main {
   background: var(--accent);
   border-color: var(--accent-dark);
   color: #fff;
+  min-height: 2.75rem;
+  padding: .55rem 1.15rem;
+  font-size: 1.05rem;
 }
 .btn-cassa-main:hover { background: var(--accent-dark); color: #fff; }
 .btn-cassa-main kbd,
@@ -642,6 +698,19 @@ textarea:focus-visible {
   color: #333;
   border-bottom-width: 3px;
   box-shadow: inset 0 1px 0 #fff;
+}
+
+@media (max-width: 1100px) {
+  .cassa-footer {
+    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .cassa-footer-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .cassa-footer-motivo { width: min(20rem, 100%); }
 }
 .btn-ghost {
   border-color: #b0bab4;

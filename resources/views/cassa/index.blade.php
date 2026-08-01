@@ -59,10 +59,13 @@
             </span>
         </div>
 
-        <a class="cassa-brand" :href="urls.gestione" title="Gestione">
-            <span class="cassa-brand-gear" aria-hidden="true">⚙</span>
-            <span x-text="brand"></span>
-        </a>
+        <div class="cassa-chrome-center">
+            <a class="cassa-brand" :href="urls.gestione" title="Gestione">
+                <span class="cassa-brand-gear" aria-hidden="true">⚙</span>
+                <span x-text="brand"></span>
+            </a>
+            <a class="cassa-home-link" :href="urls.home" title="Torna alla home">Home</a>
+        </div>
 
         <div class="cassa-chrome-right">
             <div class="cassa-kpi">
@@ -125,11 +128,12 @@
 
     <footer class="cassa-footer">
         <div class="cassa-footer-meta">
-            <span x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
-            <span x-show="comandaId" class="cassa-footer-motivo" x-cloak>
+            <span class="cassa-footer-count" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
+            <div class="cassa-footer-motivo" :class="{ 'is-visible': comandaId }">
                 <input class="input input-motivo" type="text" maxlength="255" x-model="motivo"
-                       placeholder="Motivo correzione (facoltativo)" autocomplete="off">
-            </span>
+                       placeholder="Motivo correzione (facoltativo)" autocomplete="off"
+                       :tabindex="comandaId ? 0 : -1" :aria-hidden="!comandaId">
+            </div>
             <span class="cassa-flash alert-danger" x-show="errore" x-text="errore" x-cloak></span>
             <span class="cassa-flash alert-ok" x-show="messaggio" x-text="messaggio" x-cloak></span>
         </div>
@@ -137,9 +141,10 @@
             <button type="button" class="btn btn-primary btn-cassa-main" @click="apriPagamento()" :disabled="!serataAperta">
                 Conferma e stampa <kbd>F9</kbd>
             </button>
-            <button type="button" class="btn" @click="apriRichiamo()">Richiama <kbd>F2</kbd></button>
-            <button type="button" class="btn" @click="resetComanda()">Annulla <kbd>Esc</kbd></button>
-            <a class="btn btn-ghost" :href="urls.home">Home</a>
+            <div class="cassa-footer-actions-secondary">
+                <button type="button" class="btn btn-sm" @click="apriRichiamo()">Richiama <kbd>F2</kbd></button>
+                <button type="button" class="btn btn-sm" @click="resetComanda()">Annulla <kbd>Esc</kbd></button>
+            </div>
         </div>
     </footer>
 
