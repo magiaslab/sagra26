@@ -8,14 +8,14 @@
         ['label' => 'Impostazioni', 'route' => 'gestione.impostazioni', 'match' => 'gestione.impostazioni'],
     ];
 @endphp
-<nav class="no-print mb-4 flex flex-wrap gap-1 border-b border-sagra-line pb-3" aria-label="Sezioni gestione">
+<nav class="no-print mb-6 flex gap-6 border-b border-sagra-line" aria-label="Sezioni gestione">
     @foreach ($links as $link)
         <a
             href="{{ route($link['route'], absolute: false) }}"
             @class([
-                'inline-flex min-h-9 items-center rounded-full px-3.5 py-1.5 text-sm font-bold no-underline transition',
-                'bg-sagra text-white' => request()->routeIs($link['match']),
-                'text-sagra-muted hover:bg-sagra/10 hover:text-sagra-ink' => ! request()->routeIs($link['match']),
+                'inline-flex items-center border-b-2 px-0.5 py-2.5 text-sm font-medium no-underline',
+                'border-sagra text-sagra-ink' => request()->routeIs($link['match']),
+                'border-transparent text-sagra-muted hover:border-sagra-line hover:text-sagra-ink' => ! request()->routeIs($link['match']),
             ])
         >{{ $link['label'] }}</a>
     @endforeach

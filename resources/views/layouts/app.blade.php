@@ -9,36 +9,31 @@
     @livewireStyles
     @stack('head')
 </head>
-<body class="min-h-screen">
+<body class="min-h-screen bg-sagra-bg">
 <div class="flex min-h-screen flex-col">
-    <header class="no-print flex items-center gap-4 bg-sagra px-4 py-3 text-white">
-        <div class="text-lg font-extrabold tracking-wide">
-            {{ $impostazioni->intestazione_nome ?? 'Sagra' }} {{ $impostazioni->intestazione_anno ?? '' }}
+    <header class="no-print border-b border-sagra-dark/20 bg-sagra">
+        <div class="mx-auto flex h-14 max-w-[1400px] items-center justify-between gap-6 px-4">
+            <a href="{{ route('home', absolute: false) }}" class="truncate text-sm font-semibold tracking-wide text-white no-underline hover:text-white">
+                {{ $impostazioni->intestazione_nome ?? 'Sagra' }} {{ $impostazioni->intestazione_anno ?? '' }}
+            </a>
+            <nav class="flex h-full items-stretch gap-1" aria-label="Principale">
+                @foreach ([
+                    ['Home', 'home', request()->routeIs('home')],
+                    ['Cassa', 'cassa', request()->routeIs('cassa*')],
+                    ['Riepilogo', 'riepilogo', request()->routeIs('riepilogo')],
+                    ['Gestione', 'gestione.dashboard', request()->is('gestione*')],
+                ] as [$label, $route, $active])
+                    <a href="{{ route($route, absolute: false) }}"
+                       @class([
+                           'inline-flex items-center border-b-2 px-3 text-sm font-medium no-underline transition',
+                           'border-white text-white' => $active,
+                           'border-transparent text-white/75 hover:border-white/40 hover:text-white' => ! $active,
+                       ])>{{ $label }}</a>
+                @endforeach
+            </nav>
         </div>
-        <nav class="ml-auto flex flex-wrap gap-2">
-            <a href="{{ route('home', absolute: false) }}"
-               @class([
-                   'inline-flex min-h-9 items-center rounded-md border border-white/45 px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-white/15',
-                   'bg-white/15' => request()->routeIs('home'),
-               ])>Home</a>
-            <a href="{{ route('cassa', absolute: false) }}"
-               @class([
-                   'inline-flex min-h-9 items-center rounded-md border border-white/45 px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-white/15',
-                   'bg-white/15' => request()->routeIs('cassa*'),
-               ])>Cassa</a>
-            <a href="{{ route('riepilogo', absolute: false) }}"
-               @class([
-                   'inline-flex min-h-9 items-center rounded-md border border-white/45 px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-white/15',
-                   'bg-white/15' => request()->routeIs('riepilogo'),
-               ])>Riepilogo</a>
-            <a href="{{ route('gestione.dashboard', absolute: false) }}"
-               @class([
-                   'inline-flex min-h-9 items-center rounded-md border border-white/45 px-3 py-1.5 text-sm font-semibold text-white no-underline hover:bg-white/15',
-                   'bg-white/15' => request()->is('gestione*'),
-               ])>Gestione</a>
-        </nav>
     </header>
-    <main class="mx-auto w-full max-w-[1400px] flex-1 p-4 @yield('main_class')">
+    <main class="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 @yield('main_class')">
         @yield('content')
         {{ $slot ?? '' }}
     </main>

@@ -5,34 +5,43 @@
         return str_repeat('█', $filled) . str_repeat('░', $width - $filled);
     };
 @endphp
-<div class="panel">
-    <h2 class="mt-0 text-xl font-extrabold">{{ $impostazioni->intestazione_nome }} — Statistiche {{ $completo ? '(completo)' : 'fino al '.$serata->data->format('d/m/Y') }}</h2>
-    <div class="grid-3 my-4">
-        <div class="kpi"><div class="lbl">Coperti</div><div class="val">{{ $dati['coperti'] }}</div></div>
-        <div class="kpi"><div class="lbl">Incasso</div><div class="val">{{ number_format($dati['incasso'], 2, ',', '.') }} €</div></div>
-        <div class="kpi"><div class="lbl">Media coperti/sera</div><div class="val">{{ $dati['mediaCoperti'] }}</div></div>
+<div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
+    <h2 class="mt-0 text-xl font-semibold text-sagra-ink">{{ $impostazioni->intestazione_nome }} — Statistiche {{ $completo ? '(completo)' : 'fino al '.$serata->data->format('d/m/Y') }}</h2>
+    <div class="my-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <div class="rounded-lg bg-sagra-softer px-4 py-3">
+            <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Coperti</div>
+            <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ $dati['coperti'] }}</div>
+        </div>
+        <div class="rounded-lg bg-sagra-softer px-4 py-3">
+            <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Incasso</div>
+            <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ number_format($dati['incasso'], 2, ',', '.') }} €</div>
+        </div>
+        <div class="rounded-lg bg-sagra-softer px-4 py-3">
+            <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Media coperti/sera</div>
+            <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ $dati['mediaCoperti'] }}</div>
+        </div>
     </div>
 
-    <h3 class="mt-4 mb-2 text-base font-extrabold">Coperti per serata</h3>
+    <h3 class="mb-2 mt-4 text-base font-semibold text-sagra-ink">Coperti per serata</h3>
     @foreach ($dati['perSerata'] as $r)
-        <div class="bar-text">{{ $r['data'] }} {{ $bar($r['coperti'], $dati['maxCoperti']) }} {{ $r['coperti'] }}</div>
+        <div class="font-mono text-sm text-sagra-ink">{{ $r['data'] }} {{ $bar($r['coperti'], $dati['maxCoperti']) }} {{ $r['coperti'] }}</div>
     @endforeach
 
-    <h3 class="mt-4 mb-2 text-base font-extrabold">Flusso orario (n° comande)</h3>
+    <h3 class="mb-2 mt-4 text-base font-semibold text-sagra-ink">Flusso orario (n° comande)</h3>
     @forelse ($dati['ore'] as $h => $n)
-        <div class="bar-text">{{ $h }}:00 {{ $bar($n, $dati['maxOre']) }} {{ $n }}</div>
+        <div class="font-mono text-sm text-sagra-ink">{{ $h }}:00 {{ $bar($n, $dati['maxOre']) }} {{ $n }}</div>
     @empty
-        <p>Nessun dato.</p>
+        <p class="text-sm text-sagra-muted">Nessun dato.</p>
     @endforelse
 
-    <h3 class="mt-4 mb-2 text-base font-extrabold">Piatti più venduti</h3>
-    <ol>
+    <h3 class="mb-2 mt-4 text-base font-semibold text-sagra-ink">Piatti più venduti</h3>
+    <ol class="list-decimal pl-5 text-sm text-sagra-ink">
         @foreach ($dati['top'] as $t)
             <li>{{ $t->menuItem->nome }} — {{ $t->qta }}</li>
         @endforeach
     </ol>
 
     @if ($dati['record'])
-        <p>Serata record: <strong>{{ $dati['record']['data'] }}</strong> — {{ number_format($dati['record']['incasso'], 2, ',', '.') }} €</p>
+        <p class="text-sm text-sagra-ink">Serata record: <strong>{{ $dati['record']['data'] }}</strong> — {{ number_format($dati['record']['incasso'], 2, ',', '.') }} €</p>
     @endif
 </div>

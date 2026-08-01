@@ -12,7 +12,7 @@
     --color-sagra-ink: #1a1f1c;
     --color-sagra-muted: #5a635e;
     --color-sagra-line: #c5cdc8;
-    --color-sagra-bg: #f2efe8;
+    --color-sagra-bg: #f4f6f4;
     --color-sagra-bg2: #e8eee9;
     --color-sagra: #1e5c43;
     --color-sagra-dark: #143d2d;
@@ -33,117 +33,20 @@
     }
 
     body {
-        @apply min-h-full font-sans;
-        background-image:
-            radial-gradient(1200px 600px at 10% -10%, #dce8e1 0%, transparent 55%),
-            radial-gradient(900px 500px at 100% 0%, #efe6d6 0%, transparent 50%);
+        @apply min-h-full font-sans bg-sagra-bg;
     }
 
     :focus { outline: none; }
     :focus-visible {
-        @apply outline-3 outline-offset-2 outline-sagra-focus;
+        @apply outline-2 outline-offset-2 outline-sagra-focus;
     }
 
     [x-cloak] { display: none !important; }
-
-    kbd {
-        @apply inline-block rounded border border-sagra-line border-b-2 bg-white px-1.5 py-0.5
-            font-mono text-[0.72em] font-semibold text-sagra-ink shadow-[inset_0_1px_0_#fff];
-    }
 }
 
 @layer components {
-    .btn {
-        @apply inline-flex min-h-10 items-center justify-center gap-1.5 rounded-md border-2
-            border-sagra-ink bg-white px-4 py-2 text-base font-bold text-sagra-ink
-            hover:bg-sagra-softer disabled:cursor-not-allowed disabled:opacity-50;
-    }
-    .btn-primary {
-        @apply border-sagra-dark bg-sagra text-white hover:bg-sagra-dark;
-    }
-    .btn-danger {
-        @apply border-sagra-danger text-sagra-danger hover:bg-sagra-danger-soft;
-    }
-    .btn-ghost {
-        @apply border-sagra-line text-sagra-muted hover:bg-sagra-bg2;
-    }
-    .btn-sm {
-        @apply min-h-9 px-3 py-1.5 text-sm;
-    }
-
-    .input {
-        @apply w-full min-h-10 max-w-full rounded-md border-2 border-sagra-ink bg-white
-            px-3 py-2 text-base text-sagra-ink;
-    }
-    .input:focus-visible {
-        @apply border-sagra-focus outline-3 outline-offset-1 outline-sagra-focus;
-    }
-    .label {
-        @apply mb-1 block text-sm font-bold;
-    }
-    .field {
-        @apply mb-3;
-    }
-
-    .panel {
-        @apply rounded-md border border-sagra-line bg-white p-4 shadow-sm;
-    }
-
-    .table {
-        @apply w-full border-collapse text-base;
-    }
-    .table th,
-    .table td {
-        @apply border border-sagra-line px-2.5 py-2 text-left;
-    }
-    .table th {
-        @apply bg-sagra-softer font-bold;
-    }
-
-    .badge {
-        @apply inline-block rounded border-2 border-sagra-ink px-1.5 py-0.5
-            text-[0.78rem] font-extrabold uppercase tracking-wide;
-    }
-    .badge-double { @apply border-4 border-double; }
-
-    .grid-2 { @apply grid grid-cols-1 gap-4 md:grid-cols-2; }
-    .grid-3 { @apply grid grid-cols-1 gap-4 md:grid-cols-3; }
-
-    .kpi {
-        @apply rounded-md border border-sagra-line bg-white p-3 shadow-sm;
-    }
-    .kpi .val {
-        @apply text-2xl font-extrabold tabular-nums text-sagra-dark;
-    }
-    .kpi .lbl {
-        @apply text-xs font-bold uppercase tracking-wide text-sagra-muted;
-    }
-    .bar-text {
-        @apply font-mono tracking-tight whitespace-nowrap;
-    }
-
-    .badge-esaurito {
-        @apply border-sagra-danger text-sagra-danger;
-    }
-
-    .meta-small {
-        @apply text-sm text-sagra-muted;
-    }
-
-    /* Select postazione in header cassa (freccia custom) */
-    .cassa-postazione-select {
-        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='white' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
-        background-repeat: no-repeat;
-        background-position: right 0.55rem center;
-        background-size: 0.7rem;
-    }
-
     @media print {
         .no-print { display: none !important; }
-        body {
-            background: #fff !important;
-            background-image: none !important;
-        }
-        .panel { box-shadow: none; }
+        body { background: #fff !important; }
     }
 }

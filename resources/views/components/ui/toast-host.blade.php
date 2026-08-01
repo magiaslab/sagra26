@@ -5,12 +5,12 @@
 >
     <template x-for="t in $store.toasts.items" :key="t.id">
         <div
-            class="pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-lg border px-3.5 py-3 shadow-lg"
+            class="pointer-events-auto flex w-full max-w-md items-start gap-3 rounded-md px-3.5 py-3 shadow-lg ring-1"
             :class="{
-                'border-sagra bg-sagra-softer text-sagra-dark': t.type === 'ok',
-                'border-sagra-warn bg-sagra-warn-soft text-sagra-warn': t.type === 'warn',
-                'border-sagra-danger bg-sagra-danger-soft text-sagra-danger': t.type === 'danger',
-                'border-sagra-line bg-white text-sagra-ink': !['ok','warn','danger'].includes(t.type),
+                'bg-sagra-softer text-sagra-dark ring-sagra/30': t.type === 'ok',
+                'bg-sagra-warn-soft text-sagra-warn ring-sagra-warn/30': t.type === 'warn',
+                'bg-sagra-danger-soft text-sagra-danger ring-sagra-danger/30': t.type === 'danger',
+                'bg-white text-sagra-ink ring-sagra-line': !['ok','warn','danger'].includes(t.type),
             }"
             role="status"
             x-show="true"

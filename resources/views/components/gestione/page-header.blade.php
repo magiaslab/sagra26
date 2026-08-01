@@ -2,11 +2,11 @@
     'title',
     'subtitle' => null,
 ])
-<header {{ $attributes->class('mb-4 flex flex-wrap items-start justify-between gap-3') }}>
+<div {{ $attributes->class('mb-6 flex flex-wrap items-center justify-between gap-3') }}>
     <div class="min-w-0">
-        <h1 class="m-0 text-2xl font-extrabold leading-tight text-sagra-ink">{{ $title }}</h1>
+        <h1 class="text-2xl font-semibold tracking-tight text-sagra-ink">{{ $title }}</h1>
         @if ($subtitle)
-            <p class="mt-1 text-sm font-semibold text-sagra-muted">{{ $subtitle }}</p>
+            <p class="mt-1 text-sm text-sagra-muted">{{ $subtitle }}</p>
         @endif
     </div>
     @isset($actions)
@@ -14,4 +14,4 @@
             {{ $actions }}
         </div>
     @endisset
-</header>
+</div>

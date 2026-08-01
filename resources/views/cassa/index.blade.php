@@ -42,60 +42,57 @@
         </div>
     @endif
 
-    <header class="grid grid-cols-1 items-center gap-3 bg-sagra px-4 py-3 text-white md:grid-cols-[1.2fr_1fr_1.2fr]">
-        <div class="flex min-w-0 items-center gap-2.5 text-base font-extrabold uppercase tracking-wide">
-            <label class="inline-flex min-w-0 flex-col gap-0.5">
-                <span class="text-[0.62rem] font-bold tracking-wider text-white/75">Postazione</span>
+    <header class="border-b border-sagra-dark/20 bg-sagra text-white">
+        <div class="flex h-14 items-center gap-4 px-4">
+            <div class="flex min-w-0 items-center gap-3">
                 <select
                     x-model.number="postazioneId"
                     @change="salvaPostazione()"
                     aria-label="Seleziona postazione cassa"
-                    class="cassa-postazione-select min-h-9 max-w-[11rem] cursor-pointer appearance-none rounded-md border-[1.5px] border-white/55 bg-black/20 px-2.5 py-1.5 pr-7 font-extrabold uppercase text-white hover:bg-black/30"
+                    class="h-9 max-w-[10rem] cursor-pointer rounded-md border-0 bg-white/10 px-2.5 text-sm font-semibold uppercase text-white ring-1 ring-inset ring-white/30 focus:outline-none focus:ring-2 focus:ring-white/60"
                 >
                     <template x-for="p in postazioni" :key="p.id">
                         <option :value="p.id" x-text="p.nome" class="text-black"></option>
                     </template>
                 </select>
-            </label>
-            <span class="self-center opacity-55" aria-hidden="true">·</span>
-            <span class="self-center">
-                COMANDA
-                <strong class="ml-1 text-xl" x-text="numeroDisplay"></strong>
-                <span class="ml-1 inline-block rounded border border-white/45 px-1.5 py-0.5 text-[0.7rem] font-bold normal-case tracking-normal"
-                      x-show="comandaId" x-cloak
-                      x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"></span>
-            </span>
-        </div>
-
-        <div class="flex min-w-0 flex-col items-start gap-0.5 md:items-center">
-            <div class="max-w-full truncate text-center text-base font-bold tracking-wide opacity-95" x-text="brand"></div>
-            <nav class="flex items-center justify-center gap-0.5" aria-label="Uscita cassa">
-                <a class="rounded px-2 py-0.5 text-sm font-semibold text-white/90 no-underline hover:bg-white/15 hover:text-white" :href="urls.gestione">Gestione</a>
-                <span class="px-0.5 text-sm opacity-45" aria-hidden="true">·</span>
-                <a class="rounded px-2 py-0.5 text-sm font-semibold text-white/90 no-underline hover:bg-white/15 hover:text-white" :href="urls.home">Home</a>
-            </nav>
-        </div>
-
-        <div class="flex flex-wrap items-center justify-start gap-5 md:justify-end">
-            <div class="text-right leading-tight">
-                <span class="block text-[0.68rem] font-bold uppercase tracking-wider text-white/85">Coperti</span>
-                <span class="text-2xl font-extrabold tabular-nums" x-text="coperti"></span>
+                <div class="flex items-baseline gap-2 whitespace-nowrap text-sm font-semibold">
+                    <span class="text-white/70">Comanda</span>
+                    <span class="text-xl font-bold tabular-nums" x-text="numeroDisplay"></span>
+                    <span class="text-xs font-medium text-white/70"
+                          x-show="comandaId" x-cloak
+                          x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"></span>
+                </div>
             </div>
-            <div class="text-right leading-tight">
-                <span class="block text-[0.68rem] font-bold uppercase tracking-wider text-white/85">Totale</span>
-                <span class="text-3xl font-extrabold tabular-nums" x-text="formatEuro(totale)"></span>
+
+            <div class="mx-auto hidden min-w-0 items-center gap-4 sm:flex">
+                <span class="truncate text-sm font-semibold tracking-wide" x-text="brand"></span>
+                <nav class="flex items-center gap-3 text-sm" aria-label="Uscita cassa">
+                    <a class="font-medium text-white/75 no-underline hover:text-white" :href="urls.gestione">Gestione</a>
+                    <a class="font-medium text-white/75 no-underline hover:text-white" :href="urls.home">Home</a>
+                </nav>
+            </div>
+
+            <div class="ml-auto flex items-center gap-6">
+                <div class="text-right">
+                    <div class="text-[0.7rem] font-medium uppercase tracking-wide text-white/70">Coperti</div>
+                    <div class="text-xl font-bold tabular-nums leading-none" x-text="coperti"></div>
+                </div>
+                <div class="text-right">
+                    <div class="text-[0.7rem] font-medium uppercase tracking-wide text-white/70">Totale</div>
+                    <div class="text-2xl font-bold tabular-nums leading-none" x-text="formatEuro(totale)"></div>
+                </div>
             </div>
         </div>
     </header>
 
-    <div class="flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-sagra-line bg-sagra-bg2 px-4 py-1.5 text-[0.78rem] font-medium text-sagra-muted" aria-hidden="true">
-        <span class="inline-flex items-center gap-1 border-sagra-line px-2 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>↑</kbd> riga prima</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>+</kbd><kbd>-</kbd> quantità</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Canc</kbd> azzera</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F9</kbd> conferma</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F2</kbd> richiama</span>
-        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Esc</kbd> annulla</span>
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-sagra-line bg-white px-4 py-1.5 text-xs text-sagra-muted" aria-hidden="true">
+        <span><span class="font-mono text-sagra-ink">↓/Invio</span> riga dopo</span>
+        <span><span class="font-mono text-sagra-ink">↑</span> riga prima</span>
+        <span><span class="font-mono text-sagra-ink">+/-</span> quantità</span>
+        <span><span class="font-mono text-sagra-ink">Canc</span> azzera</span>
+        <span><span class="font-mono text-sagra-ink">F9</span> conferma</span>
+        <span><span class="font-mono text-sagra-ink">F2</span> richiama</span>
+        <span><span class="font-mono text-sagra-ink">Esc</span> annulla</span>
     </div>
 
     <div class="flex-1 overflow-auto p-4">
@@ -143,48 +140,49 @@
         <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 text-sm font-semibold text-sagra-muted">
             <span class="whitespace-nowrap" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
             <div class="w-full max-w-xs min-h-10" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
-                <input class="input" type="text" maxlength="255" x-model="motivo"
+                <input class="block h-10 w-full rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
                        placeholder="Motivo correzione (facoltativo)" autocomplete="off"
                        :tabindex="comandaId ? 0 : -1" :aria-hidden="!comandaId">
             </div>
         </div>
         <div class="flex flex-wrap items-center gap-3">
-            <button type="button" class="btn btn-primary min-h-11 px-5 text-[1.05rem]" @click="apriPagamento()" :disabled="!serataAperta">
-                Conferma e stampa <kbd class="ml-1 border-white/40 bg-black/15 text-inherit">F9</kbd>
+            <button type="button" class="inline-flex h-11 items-center rounded-md bg-sagra px-5 text-base font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" @click="apriPagamento()" :disabled="!serataAperta">
+                Conferma e stampa <span class="ml-2 font-mono text-sm text-white/80">F9</span>
             </button>
-            <div class="flex items-center gap-1.5">
-                <button type="button" class="btn btn-sm" @click="apriRichiamo()">Richiama <kbd>F2</kbd></button>
-                <button type="button" class="btn btn-sm" @click="resetComanda()">Annulla <kbd>Esc</kbd></button>
+            <div class="flex items-center gap-2">
+                <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <span class="ml-1 font-mono text-xs text-sagra-muted">F2</span></button>
+                <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <span class="ml-1 font-mono text-xs text-sagra-muted">Esc</span></button>
             </div>
         </div>
     </footer>
 
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalPagamento" x-cloak @keydown.escape.window="chiudiModal()">
-        <div class="modal-pay w-[min(440px,92vw)] rounded-lg border-2 border-sagra-ink bg-white p-5 text-center shadow-xl" @click.stop>
-            <h2 class="mt-0 text-xl font-extrabold">
-                COMANDA N.<span x-text="numeroDisplay"></span>
-                <span class="text-sagra"> · <span x-text="formatEuro(totale)"></span></span>
+        <div class="w-[min(420px,92vw)] rounded-lg bg-white p-6 text-center shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <h2 class="text-lg font-semibold text-sagra-ink">
+                Comanda n.<span x-text="numeroDisplay"></span>
+                <span class="text-sagra-muted"> · <span x-text="formatEuro(totale)"></span></span>
             </h2>
-            <p class="my-3 text-lg font-semibold">Come paga il cliente?</p>
-            <div class="my-4 flex gap-3">
-                <button type="button" class="flex flex-1 flex-col items-center gap-2 rounded-md border-[3px] border-sagra bg-white px-3 py-4 font-extrabold text-sagra-dark hover:bg-sagra-softer" @click="scegliMetodo('contante')">
-                    <span class="inline-flex h-8 w-8 items-center justify-center rounded border border-current border-b-[3px] bg-gradient-to-b from-white to-neutral-200 font-mono text-sm">C</span>
-                    <span class="text-xl">Contante</span>
+            <p class="mt-2 text-sm text-sagra-muted">Come paga il cliente?</p>
+            <div class="mt-5 grid grid-cols-2 gap-3">
+                <button type="button" class="rounded-md bg-sagra px-3 py-4 text-base font-semibold text-white hover:bg-sagra-dark" @click="scegliMetodo('contante')">
+                    <span class="block font-mono text-xs text-white/70">C</span>
+                    Contante
                 </button>
-                <button type="button" class="flex flex-1 flex-col items-center gap-2 rounded-md border-[3px] border-[#4a3f6e] bg-white px-3 py-4 font-extrabold text-[#4a3f6e] hover:bg-violet-50" @click="scegliMetodo('pos')">
-                    <span class="inline-flex h-8 w-8 items-center justify-center rounded border border-current border-b-[3px] bg-gradient-to-b from-white to-neutral-200 font-mono text-sm">P</span>
-                    <span class="text-xl">POS</span>
+                <button type="button" class="rounded-md bg-white px-3 py-4 text-base font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="scegliMetodo('pos')">
+                    <span class="block font-mono text-xs text-sagra-muted">P</span>
+                    POS
                 </button>
             </div>
-            <p class="mt-3 text-sm text-sagra-muted">Esc per annullare</p>
+            <p class="mt-4 text-xs text-sagra-muted">Esc per annullare</p>
         </div>
     </div>
 
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-2 sm:p-3" x-show="modalAnteprima" x-cloak @keydown.escape.window="chiudiModal()">
-        <div class="flex h-[96vh] w-[min(1100px,98vw)] flex-col overflow-hidden rounded-lg border-2 border-sagra-ink bg-white shadow-xl" @click.stop>
+        <div class="flex h-[96vh] w-[min(1100px,98vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line" @click.stop>
             <div class="flex shrink-0 items-center justify-between gap-3 border-b border-sagra-line px-4 py-2.5">
                 <h2 class="m-0 text-sm font-bold sm:text-base">Anteprima stampa — Invio per confermare</h2>
-                <span class="badge" :class="metodo === 'contante' ? 'badge-double' : ''"
+                <span class="rounded bg-sagra-softer px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-sagra"
+                      :class="metodo === 'contante' ? 'ring-2 ring-sagra-ink' : ''"
                       x-text="metodo === 'contante' ? 'CONTANTE' : 'POS'"></span>
             </div>
             <div class="a4-preview min-h-0 flex-1" x-ref="a4Fit">
@@ -262,25 +260,25 @@
                 </div>
             </div>
             <div class="flex shrink-0 justify-end gap-2 border-t border-sagra-line bg-white px-4 py-3">
-                <button class="btn" type="button" @click="chiudiModal()">Annulla (Esc)</button>
-                <button class="btn btn-primary" type="button" @click="inviaConferma()" :disabled="busy">
-                    Conferma e stampa <kbd class="ml-1 border-white/40 bg-black/15 text-inherit">Invio</kbd>
+                <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" @click="chiudiModal()">Annulla (Esc)</button>
+                <button class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" type="button" @click="inviaConferma()" :disabled="busy">
+                    Conferma e stampa <span class="ml-2 font-mono text-xs text-white/80">Invio</span>
                 </button>
             </div>
         </div>
     </div>
 
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalRichiamo" x-cloak>
-        <div class="max-h-[90vh] w-[min(27rem,94vw)] overflow-auto rounded-lg border-2 border-sagra-ink bg-white p-5 shadow-xl" @click.stop>
-            <h2 class="mt-0 text-xl font-extrabold">Richiama una comanda</h2>
+        <div class="max-h-[90vh] w-[min(27rem,94vw)] overflow-auto rounded-lg bg-white p-5 shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <h2 class="text-lg font-semibold text-sagra-ink">Richiama una comanda</h2>
             <p class="mb-3 text-xs leading-relaxed text-sagra-muted">
                 Tocca la riga per correggerla. «Annulla» è un'altra cosa: da usare solo se l'ordine non va più fatto — richiede un motivo e non si torna indietro.
             </p>
-            <label class="label">Numero progressivo</label>
+            <label class="mb-1 block text-sm font-medium text-sagra-ink">Numero progressivo</label>
             <div class="mb-2 flex gap-2">
-                <input class="input flex-1" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
+                <input class="block h-10 min-w-0 flex-1 rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
                        @keydown.enter.prevent="eseguiRichiamo()" placeholder="Es. 42">
-                <button class="btn btn-primary shrink-0" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
+                <button class="inline-flex shrink-0 items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
             </div>
             <h3 class="mb-2 mt-3 text-sm font-extrabold uppercase tracking-wide text-sagra-muted">Ultime comande</h3>
             <div class="max-h-[42vh] overflow-auto" x-show="storico.length === 0">
@@ -288,13 +286,13 @@
             </div>
             <div class="flex max-h-[42vh] flex-col gap-2 overflow-auto" x-show="storico.length > 0">
                 <template x-for="c in storico" :key="c.comanda_id">
-                    <div class="overflow-hidden rounded-md border border-sagra-line bg-white"
-                         :class="{ 'opacity-65 bg-neutral-100': c.stato === 'annullata', 'border-sagra-danger': annulloId === c.comanda_id }">
+                    <div class="overflow-hidden rounded-md bg-white ring-1 ring-sagra-line"
+                         :class="{ 'opacity-60 bg-neutral-50': c.stato === 'annullata', 'ring-sagra-danger': annulloId === c.comanda_id }">
                         <template x-if="c.stato === 'annullata'">
                             <div class="px-3 py-2">
                                 <div class="flex items-center justify-between gap-2">
-                                    <span class="font-mono text-lg font-extrabold line-through text-neutral-500">n.<span x-text="c.numero"></span></span>
-                                    <span class="badge border-neutral-500 text-neutral-600">ANNULLATA</span>
+                                    <span class="font-mono text-base font-semibold line-through text-neutral-500">n.<span x-text="c.numero"></span></span>
+                                    <span class="text-xs font-medium text-neutral-500">Annullata</span>
                                 </div>
                                 <div class="mt-1 text-xs text-neutral-500">Motivo: <span x-text="c.motivo_annullo || '—'"></span></div>
                             </div>
@@ -303,30 +301,30 @@
                             <div>
                                 <div class="flex items-stretch">
                                     <button type="button" class="flex min-h-10 flex-1 flex-wrap items-center gap-2 bg-white px-3 py-2 text-left hover:bg-sagra-softer" @click="caricaDaStorico(c)">
-                                        <span class="font-mono text-lg font-extrabold">n.<span x-text="c.numero"></span></span>
+                                        <span class="font-mono text-base font-semibold">n.<span x-text="c.numero"></span></span>
                                         <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-xs text-sagra-muted">
                                             <span x-text="c.n_righe + ' voci · ' + c.coperti + ' cop.'"></span>
-                                            <span class="badge" x-text="c.metodo_pagamento === 'contante' ? 'CONT' : (c.metodo_pagamento === 'pos' ? 'POS' : 'MISTO')"></span>
+                                            <span class="text-xs font-medium text-sagra" x-text="c.metodo_pagamento === 'contante' ? 'CONT' : (c.metodo_pagamento === 'pos' ? 'POS' : 'MISTO')"></span>
                                         </span>
-                                        <span class="font-mono text-base font-bold tabular-nums" x-text="formatEuro(c.totale)"></span>
-                                        <span class="ml-auto whitespace-nowrap text-xs font-extrabold text-sagra">Correggi →</span>
+                                        <span class="font-mono text-sm font-semibold tabular-nums" x-text="formatEuro(c.totale)"></span>
+                                        <span class="ml-auto whitespace-nowrap text-xs font-medium text-sagra">Correggi →</span>
                                     </button>
-                                    <button type="button" class="min-w-[4.5rem] border-0 border-l-[4px] border-double border-l-sagra-danger bg-sagra-danger-soft px-3 text-xs font-extrabold uppercase tracking-wide text-sagra-danger hover:bg-red-200"
+                                    <button type="button" class="min-w-[4.5rem] border-l border-sagra-line bg-white px-3 text-xs font-semibold text-sagra-danger hover:bg-sagra-danger-soft"
                                             @click.stop="apriConfermaAnnullo(c)" title="Annulla comanda (irreversibile)">Annulla</button>
                                 </div>
                                 <template x-if="annulloId === c.comanda_id">
-                                    <div class="border-t-[4px] border-double border-sagra-danger bg-sagra-danger-soft p-3">
-                                        <p class="mb-2 text-xs font-extrabold leading-snug text-red-900">
+                                    <div class="border-t border-sagra-danger/30 bg-sagra-danger-soft p-3">
+                                        <p class="mb-2 text-xs font-medium leading-snug text-sagra-danger">
                                             Annullare definitivamente la comanda n.<strong x-text="c.numero"></strong>?
                                             Non sarà più possibile richiamarla né correggerla.
                                         </p>
-                                        <input class="input mb-2 border-red-400!" type="text" maxlength="255"
+                                        <input class="mb-2 block h-10 w-full rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-danger focus:ring-2 focus:ring-sagra-danger" type="text" maxlength="255"
                                                x-model="annulloMotivo" x-ref="annulloMotivoInput"
                                                placeholder="Motivo (obbligatorio)"
                                                @keydown.enter.prevent="annulloMotivo.trim().length >= 2 && confermaAnnullo()">
                                         <div class="mt-1 flex flex-wrap justify-end gap-2">
-                                            <button type="button" class="btn" @click="chiudiConfermaAnnullo()">Torna indietro</button>
-                                            <button type="button" class="btn border-[4px] border-double border-red-950 bg-sagra-danger text-white hover:bg-red-950"
+                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="chiudiConfermaAnnullo()">Torna indietro</button>
+                                            <button type="button" class="inline-flex items-center rounded-md bg-sagra-danger px-3 py-2 text-sm font-semibold text-white hover:bg-red-950"
                                                     :disabled="annulloMotivo.trim().length < 2 || busy"
                                                     @click="confermaAnnullo()">Conferma annullamento</button>
                                         </div>
@@ -338,7 +336,7 @@
                 </template>
             </div>
             <div class="mt-4 flex justify-end gap-2">
-                <button class="btn" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
+                <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
             </div>
         </div>
     </div>

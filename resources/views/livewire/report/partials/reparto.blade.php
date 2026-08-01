@@ -1,37 +1,46 @@
-<div class="panel">
+<div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-            <h2 class="m-0 text-xl font-extrabold">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
-            <div class="meta-small">Report {{ strtoupper($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
+            <h2 class="m-0 text-xl font-semibold text-sagra-ink">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
+            <div class="text-xs text-sagra-muted">Report {{ strtoupper($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
         </div>
-        <div class="flex flex-wrap gap-1.5">
-            <span class="badge">Coperti stasera {{ $dati['copertiStasera'] }}</span>
-            <span class="badge">Cumulato {{ $dati['copertiCum'] }}</span>
+        <div class="flex flex-wrap gap-2">
+            <span class="text-xs font-medium text-sagra-muted">Coperti stasera {{ $dati['copertiStasera'] }}</span>
+            <span class="text-xs font-medium text-sagra-muted">Cumulato {{ $dati['copertiCum'] }}</span>
         </div>
     </div>
 
     @forelse ($dati['categorie'] as $cat)
-        <h3 class="mt-4 mb-2 border-b-2 border-sagra-ink pb-1 text-base font-extrabold">{{ $cat->nome }}</h3>
-        <table class="table">
-            <thead><tr><th>Piatto</th><th>Stasera</th><th>Cumulato</th><th></th></tr></thead>
-            <tbody>
-            @foreach ($cat->menuItems as $item)
-                @php
-                    $qS = $dati['stasera'][$item->id] ?? 0;
-                    $qC = $dati['cumulato'][$item->id] ?? 0;
-                    $st = $dati['stock'][$item->id] ?? null;
-                    $esaurito = $st && $st->stock_residuo <= 0;
-                @endphp
-                <tr>
-                    <td>{{ $item->nome }}</td>
-                    <td>{{ $qS }}</td>
-                    <td>{{ $qC }}</td>
-                    <td>@if($esaurito)<span class="badge badge-esaurito">ESAURITO</span>@endif</td>
-                </tr>
-            @endforeach
-            </tbody>
-        </table>
+        <h3 class="mb-2 mt-4 border-b border-sagra-line pb-1 text-base font-semibold text-sagra-ink">{{ $cat->nome }}</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-sagra-line text-sm">
+                <thead>
+                    <tr class="bg-sagra-softer">
+                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Piatto</th>
+                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Stasera</th>
+                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Cumulato</th>
+                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink"></th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-sagra-line">
+                @foreach ($cat->menuItems as $item)
+                    @php
+                        $qS = $dati['stasera'][$item->id] ?? 0;
+                        $qC = $dati['cumulato'][$item->id] ?? 0;
+                        $st = $dati['stock'][$item->id] ?? null;
+                        $esaurito = $st && $st->stock_residuo <= 0;
+                    @endphp
+                    <tr>
+                        <td class="px-3 py-2">{{ $item->nome }}</td>
+                        <td class="px-3 py-2">{{ $qS }}</td>
+                        <td class="px-3 py-2">{{ $qC }}</td>
+                        <td class="px-3 py-2">@if($esaurito)<span class="rounded bg-sagra-danger-soft px-1.5 py-0.5 text-xs font-medium text-sagra-danger">ESAURITO</span>@endif</td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        </div>
     @empty
-        <p>Nessuna voce per questo reparto.</p>
+        <p class="text-sm text-sagra-muted">Nessuna voce per questo reparto.</p>
     @endforelse
 </div>
