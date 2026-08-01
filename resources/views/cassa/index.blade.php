@@ -579,6 +579,16 @@ function cassaApp(cfg) {
             this.setActive(ids[next]);
         },
 
+        moveCategory(delta) {
+            const groups = this.grouped;
+            if (!groups.length) return;
+            let gi = groups.findIndex(g => g.items.some(i => i.id === this.activeId));
+            if (gi < 0) gi = 0;
+            const next = Math.max(0, Math.min(groups.length - 1, gi + delta));
+            const first = groups[next]?.items?.[0];
+            if (first) this.setActive(first.id);
+        },
+
         changeQty(delta) {
             const item = this.menu.find(i => i.id === this.activeId);
             if (!item) return;
@@ -888,6 +898,8 @@ function cassaApp(cfg) {
 
             if (e.key === 'ArrowDown' || e.key === 'Enter') { e.preventDefault(); this.move(1); }
             else if (e.key === 'ArrowUp') { e.preventDefault(); this.move(-1); }
+            else if (e.key === 'ArrowRight') { e.preventDefault(); this.moveCategory(1); }
+            else if (e.key === 'ArrowLeft') { e.preventDefault(); this.moveCategory(-1); }
             else if (e.key === '+' || e.key === '=') { e.preventDefault(); this.changeQty(1); }
             else if (e.key === '-' || e.key === '_') { e.preventDefault(); this.changeQty(-1); }
             else if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); this.azzeraRiga(); }
