@@ -412,8 +412,9 @@ function cassaApp(cfg) {
         },
 
         get coperti() {
-            const coperto = this.menu.find(i => i.nome === 'Coperto');
-            return coperto ? (this.qty[coperto.id] || 0) : 0;
+            return this.menu
+                .filter(i => i.is_coperto)
+                .reduce((sum, i) => sum + (this.qty[i.id] || 0), 0);
         },
 
         get righeOrdine() {

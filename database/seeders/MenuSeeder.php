@@ -15,7 +15,7 @@ class MenuSeeder extends Seeder
                 'nome' => 'Coperto',
                 'area_stampa' => 'cliente',
                 'voci' => [
-                    ['nome' => 'Coperto', 'prezzo' => 1.50],
+                    ['nome' => 'Coperto', 'prezzo' => 1.50, 'is_coperto' => true],
                 ],
             ],
             [
@@ -132,6 +132,7 @@ class MenuSeeder extends Seeder
                         'attivo' => $voce['attivo'] ?? true,
                         'piatto_del_giorno' => false,
                         'bar' => $voce['bar'] ?? false,
+                        'is_coperto' => $voce['is_coperto'] ?? false,
                         'stock_default' => $voce['stock_default'] ?? null,
                         'area_stampa' => $voce['area_stampa'] ?? null,
                         'ordinamento' => $ordinamento++,

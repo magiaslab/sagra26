@@ -7,7 +7,6 @@
             <div class="field"><label class="label">Anno</label><input class="input" wire:model="intestazione_anno"></div>
             <div class="field"><label class="label">Sottotitolo</label><input class="input" wire:model="intestazione_sottotitolo"></div>
             <div class="field"><label class="label">PIN gestione</label><input class="input" wire:model="pin_gestione"></div>
-            <div class="field"><label class="label">Path Chromium</label><input class="input" wire:model="chromium_path" placeholder="/usr/bin/chromium-browser"></div>
             <button class="btn btn-primary" wire:click="salvaIntestazione">Salva</button>
         </div>
         <div class="panel">

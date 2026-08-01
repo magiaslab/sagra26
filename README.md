@@ -13,7 +13,6 @@ solo il file `.env`.
 - PHP 8.3+
 - Composer 2
 - Estensioni: sqlite3, mbstring, xml, curl, zip, bcmath
-- (Opzionale) Chromium/Chrome per export PDF dei report
 
 ## Setup sviluppo locale
 

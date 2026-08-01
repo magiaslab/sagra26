@@ -5,6 +5,7 @@ namespace App\Livewire\Gestione;
 use App\Models\Categoria;
 use App\Models\Impostazione;
 use App\Models\MenuItem;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 class MenuCrud extends Component
@@ -22,6 +23,8 @@ class MenuCrud extends Component
     public bool $piatto_del_giorno = false;
 
     public bool $bar = false;
+
+    public bool $is_coperto = false;
 
     public string $stock_default = '';
 
@@ -41,6 +44,7 @@ class MenuCrud extends Component
         $this->attivo = $item->attivo;
         $this->piatto_del_giorno = $item->piatto_del_giorno;
         $this->bar = (bool) $item->bar;
+        $this->is_coperto = (bool) $item->is_coperto;
         $this->stock_default = $item->stock_default !== null ? (string) $item->stock_default : '';
         $this->area_stampa = $item->area_stampa ?? '';
     }
@@ -54,6 +58,7 @@ class MenuCrud extends Component
         $this->attivo = true;
         $this->piatto_del_giorno = false;
         $this->bar = false;
+        $this->is_coperto = false;
         $this->stock_default = '';
         $this->area_stampa = '';
     }
@@ -66,6 +71,8 @@ class MenuCrud extends Component
             'categoria_id' => 'required|exists:categorie,id',
         ]);
 
+        $this->assertUnicoCopertoAttivo($this->editingId, $this->is_coperto, $this->attivo);
+
         $maxOrd = (int) MenuItem::query()->max('ordinamento');
 
         $data = [
@@ -75,6 +82,7 @@ class MenuCrud extends Component
             'attivo' => $this->attivo,
             'piatto_del_giorno' => $this->piatto_del_giorno,
             'bar' => $this->bar,
+            'is_coperto' => $this->is_coperto,
             'stock_default' => $this->stock_default === '' ? null : (int) $this->stock_default,
             'area_stampa' => $this->area_stampa === '' ? null : $this->area_stampa,
         ];
@@ -97,7 +105,32 @@ class MenuCrud extends Component
 
     public function attiva(int $id): void
     {
-        MenuItem::query()->whereKey($id)->update(['attivo' => true]);
+        $item = MenuItem::query()->findOrFail($id);
+        $this->assertUnicoCopertoAttivo($item->id, (bool) $item->is_coperto, true);
+        $item->update(['attivo' => true]);
+    }
+
+    /**
+     * Al massimo una voce attiva con is_coperto: il conteggio coperti in cassa/report
+     * somma tutte le quantità flaggate; più voci attive sarebbero ambigue in UI.
+     */
+    private function assertUnicoCopertoAttivo(?int $escludiId, bool $isCoperto, bool $attivo): void
+    {
+        if (! $isCoperto || ! $attivo) {
+            return;
+        }
+
+        $altro = MenuItem::query()
+            ->where('is_coperto', true)
+            ->where('attivo', true)
+            ->when($escludiId, fn ($q) => $q->where('id', '!=', $escludiId))
+            ->exists();
+
+        if ($altro) {
+            throw ValidationException::withMessages([
+                'is_coperto' => 'Esiste già una voce attiva marcata come Coperto.',
+            ]);
+        }
     }
 
     public function sposta(int $id, string $dir): void

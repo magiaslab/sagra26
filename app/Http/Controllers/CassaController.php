@@ -39,6 +39,7 @@ class CassaController extends Controller
                 'stock_limitato' => $item->stock_default !== null,
                 'ordinamento' => $item->ordinamento,
                 'piatto_del_giorno' => $item->piatto_del_giorno,
+                'is_coperto' => (bool) $item->is_coperto,
             ]);
 
         $stock = [];
@@ -169,9 +170,16 @@ class CassaController extends Controller
 
     public function richiamo(int $numero): JsonResponse
     {
+        $serata = Serata::corrente();
+        if (! $serata) {
+            // Stesso 404 della comanda assente: non rivelare comande di altre serate.
+            return response()->json(['error' => 'Comanda non trovata.'], 404);
+        }
+
         $comanda = Comanda::query()
             ->with(['righe.menuItem'])
             ->where('numero_progressivo', $numero)
+            ->where('serata_id', $serata->id)
             ->first();
 
         if (! $comanda) {

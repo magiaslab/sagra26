@@ -25,7 +25,7 @@
         </a>
         <a class="home-card" href="{{ route('gestione.impostazioni', absolute: false) }}">
             <h2>Impostazioni</h2>
-            <p>Postazioni, punti cassa, PIN, Chromium</p>
+            <p>Postazioni, punti cassa, PIN</p>
         </a>
     </div>
 </div>

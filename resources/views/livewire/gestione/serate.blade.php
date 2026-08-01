@@ -7,8 +7,26 @@
     @if ($serata)
         <div class="panel" style="margin-bottom:1rem">
             <h2>Serata aperta: {{ $serata->data->format('d/m/Y') }}</h2>
-            <button class="btn btn-danger" wire:click="chiudi" wire:confirm="Chiudere la serata?">Chiudi serata</button>
-            <a class="btn" href="{{ route('gestione.chiusura', absolute: false) }}">Vai a chiusura cassa</a>
+            @if (count($puntiCassaMancanti) > 0)
+                <div class="alert alert-warn" style="margin-top:.75rem">
+                    <strong>Chiusure cassa incomplete.</strong>
+                    Questi punti cassa non hanno ancora una chiusura con <code>chiusa_at</code>:
+                    <ul style="margin:.5rem 0 0 1.1rem">
+                        @foreach ($puntiCassaMancanti as $nome)
+                            <li>{{ $nome }}</li>
+                        @endforeach
+                    </ul>
+                    <p style="margin:.75rem 0 .5rem">Puoi chiudere comunque la serata, ma i totali di cassa resteranno incompleti.</p>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                        <button class="btn btn-danger" wire:click="forzaChiusura">Chiudi comunque</button>
+                        <button class="btn" wire:click="annullaChiusura">Annulla</button>
+                        <a class="btn" href="{{ route('gestione.chiusura', absolute: false) }}">Vai a chiusura cassa</a>
+                    </div>
+                </div>
+            @else
+                <button class="btn btn-danger" wire:click="chiudi">Chiudi serata</button>
+                <a class="btn" href="{{ route('gestione.chiusura', absolute: false) }}">Vai a chiusura cassa</a>
+            @endif
         </div>
     @else
         <div class="panel" style="margin-bottom:1rem">

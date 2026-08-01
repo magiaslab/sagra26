@@ -25,6 +25,9 @@ class Serate extends Component
 
     public ?string $errore = null;
 
+    /** @var list<string> Nomi punti cassa senza chiusura completata (chiusa_at). */
+    public array $puntiCassaMancanti = [];
+
     public function mount(RiconciliazioneService $ric): void
     {
         $this->data = now()->toDateString();
@@ -59,10 +62,63 @@ class Serate extends Component
     public function chiudi(SerataService $service): void
     {
         $serata = Serata::corrente();
-        if ($serata) {
-            $service->chiudi($serata);
-            session()->flash('status', 'Serata chiusa.');
+        if (! $serata) {
+            return;
         }
+
+        $mancanti = $this->puntiCassaSenzaChiusura($serata);
+        if ($mancanti !== []) {
+            // Non chiude ancora: la UI chiede conferma esplicita (forzaChiusura).
+            $this->puntiCassaMancanti = $mancanti;
+
+            return;
+        }
+
+        $this->eseguiChiusura($service, $serata);
+    }
+
+    public function forzaChiusura(SerataService $service): void
+    {
+        $serata = Serata::corrente();
+        if (! $serata) {
+            return;
+        }
+
+        $this->eseguiChiusura($service, $serata);
+    }
+
+    public function annullaChiusura(): void
+    {
+        $this->puntiCassaMancanti = [];
+    }
+
+    private function eseguiChiusura(SerataService $service, Serata $serata): void
+    {
+        $service->chiudi($serata);
+        $this->puntiCassaMancanti = [];
+        session()->flash('status', 'Serata chiusa.');
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function puntiCassaSenzaChiusura(Serata $serata): array
+    {
+        $puntiAttivi = PuntoCassa::query()->where('attivo', true)->orderBy('id')->get();
+        $mancanti = [];
+
+        foreach ($puntiAttivi as $punto) {
+            $chiusura = Chiusura::query()
+                ->where('serata_id', $serata->id)
+                ->where('punto_cassa_id', $punto->id)
+                ->first();
+
+            if (! $chiusura || $chiusura->chiusa_at === null) {
+                $mancanti[] = $punto->nome;
+            }
+        }
+
+        return $mancanti;
     }
 
     public function render()

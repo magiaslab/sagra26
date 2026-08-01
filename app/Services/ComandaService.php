@@ -29,6 +29,7 @@ class ComandaService
 
     /**
      * @param  array<int, array{menu_item_id: int, quantita: int}>  $righe
+     * @param  int  $coperti  Ignorato: ricalcolato server-side dalle voci is_coperto (compat API client).
      */
     public function confermaEStampa(
         Serata $serata,
@@ -60,6 +61,9 @@ class ComandaService
             throw new RuntimeException('Comanda vuota.');
         }
 
+        // Coperti: ricalcolo server da voci is_coperto (il valore client è ignorato).
+        $coperti = $this->calcolaCoperti($righeNormalizzate);
+
         return DB::transaction(function () use (
             $serata,
             $postazione,
@@ -77,6 +81,11 @@ class ComandaService
                 $comanda = Comanda::query()->with('righe.menuItem')->lockForUpdate()->findOrFail($esistente->id);
                 if ($comanda->isAnnullata()) {
                     throw new RuntimeException('Comanda annullata, non modificabile.');
+                }
+
+                // Impedisce correzioni cross-serata: lo stock e i totali restano sulla serata giusta.
+                if ((int) $comanda->serata_id !== (int) $serata->id) {
+                    throw new RuntimeException('Comanda non appartiene alla serata corrente, impossibile correggerla.');
                 }
 
                 if ($versionAttesa !== null && (int) $comanda->version !== (int) $versionAttesa) {
@@ -156,6 +165,15 @@ class ComandaService
                 return $comanda;
             }
 
+            // Vincolo su Serata::corrente() (non solo "serata della comanda ancora aperta"):
+            // dopo la chiusura corrente() è null → annullo bloccato anche senza nuova serata;
+            // con una nuova serata aperta, serata_id diverso → stesso blocco.
+            // Così non si alterano stock/incassi di turni già cassati.
+            $serataCorrente = Serata::corrente();
+            if (! $serataCorrente || (int) $comanda->serata_id !== (int) $serataCorrente->id) {
+                throw new RuntimeException('Comanda non appartiene alla serata corrente, impossibile annullarla.');
+            }
+
             foreach ($comanda->righe as $riga) {
                 if ($riga->qta_scalata > 0) {
                     $this->stock->restituisci(
@@ -192,6 +210,39 @@ class ComandaService
         }
 
         return $out;
+    }
+
+    /**
+     * Somma le quantità delle voci menù con flag is_coperto.
+     *
+     * @param  array<int, array{menu_item_id: int, quantita: int}>  $righeNormalizzate
+     */
+    private function calcolaCoperti(array $righeNormalizzate): int
+    {
+        $ids = array_values(array_unique(array_map(
+            fn (array $r) => $r['menu_item_id'],
+            $righeNormalizzate,
+        )));
+
+        if ($ids === []) {
+            return 0;
+        }
+
+        $copertoIds = MenuItem::query()
+            ->whereIn('id', $ids)
+            ->where('is_coperto', true)
+            ->pluck('id')
+            ->map(fn ($id) => (int) $id)
+            ->all();
+
+        $coperti = 0;
+        foreach ($righeNormalizzate as $riga) {
+            if (in_array($riga['menu_item_id'], $copertoIds, true)) {
+                $coperti += $riga['quantita'];
+            }
+        }
+
+        return $coperti;
     }
 
     /**
