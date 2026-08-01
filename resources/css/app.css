@@ -42,6 +42,11 @@
     }
 
     [x-cloak] { display: none !important; }
+
+    kbd {
+        @apply inline-block rounded border border-sagra-line border-b-2 bg-white px-1.5 py-0.5
+            font-mono text-[0.72em] font-semibold text-sagra-ink shadow-[inset_0_1px_0_#fff];
+    }
 }
 
 @layer components {

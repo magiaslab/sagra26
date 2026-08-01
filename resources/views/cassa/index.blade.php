@@ -85,34 +85,34 @@
         </div>
     </header>
 
-    <div class="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-sagra-line bg-white px-4 py-1.5 text-xs text-sagra-muted" aria-hidden="true">
-        <span><span class="font-mono text-sagra-ink">↓/Invio</span> riga dopo</span>
-        <span><span class="font-mono text-sagra-ink">↑</span> riga prima</span>
-        <span><span class="font-mono text-sagra-ink">+/-</span> quantità</span>
-        <span><span class="font-mono text-sagra-ink">Canc</span> azzera</span>
-        <span><span class="font-mono text-sagra-ink">F9</span> conferma</span>
-        <span><span class="font-mono text-sagra-ink">F2</span> richiama</span>
-        <span><span class="font-mono text-sagra-ink">Esc</span> annulla</span>
+    <div class="flex flex-wrap items-center gap-x-1 gap-y-1 border-b border-sagra-line bg-white px-4 py-2 text-[0.78rem] font-medium text-sagra-muted" aria-hidden="true">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
+        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>↑</kbd> riga prima</span>
+        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>+</kbd><kbd>-</kbd> quantità</span>
+        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Canc</kbd> azzera</span>
+        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F9</kbd> conferma</span>
+        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F2</kbd> richiama</span>
+        <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Esc</kbd> annulla</span>
     </div>
 
     <div class="flex-1 overflow-auto bg-sagra-bg px-4 py-4">
         <div class="mx-auto grid max-w-[1200px] grid-cols-1 content-start gap-x-8 gap-y-5 md:grid-cols-2" x-ref="menuList">
             <template x-for="group in grouped" :key="group.categoria">
                 <section class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
-                    <h2 class="border-b border-sagra-line px-3 py-2 text-xs font-semibold uppercase tracking-wide text-sagra-muted" x-text="group.categoria"></h2>
+                    <h2 class="border-b border-sagra-line px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-sagra-muted" x-text="group.categoria"></h2>
                     <div class="divide-y divide-sagra-line/70">
                         <template x-for="item in group.items" :key="item.id">
                             <div
-                                class="grid min-h-11 cursor-pointer grid-cols-[1fr_auto_3.25rem] items-center gap-3 px-3 py-2 transition"
+                                class="grid min-h-12 cursor-pointer grid-cols-[1fr_auto_3.5rem] items-center gap-3 px-4 py-2.5 transition"
                                 :class="{
-                                    'bg-sagra-softer': (qty[item.id] || 0) > 0 && activeId !== item.id,
-                                    'bg-sagra/10 ring-2 ring-inset ring-sagra': activeId === item.id
+                                    'bg-sagra-softer': qtyOf(item) > 0 && activeId !== item.id,
+                                    'bg-sagra-softer ring-2 ring-inset ring-sagra': activeId === item.id
                                 }"
                                 :data-id="item.id"
                                 @click="setActive(item.id)"
                             >
                                 <div class="min-w-0">
-                                    <div class="truncate text-sm font-semibold text-sagra-ink" x-text="item.nome"></div>
+                                    <div class="truncate text-[1.05rem] font-semibold text-sagra-ink" x-text="item.nome"></div>
                                     <div
                                         class="mt-0.5 text-xs font-medium"
                                         :class="stockStateClass(item)"
@@ -120,16 +120,11 @@
                                         x-text="stockLabel(item)"
                                     ></div>
                                 </div>
-                                <div class="whitespace-nowrap text-sm tabular-nums text-sagra-muted" x-text="formatEuro(item.prezzo)"></div>
+                                <div class="whitespace-nowrap text-[0.98rem] tabular-nums text-sagra-muted" x-text="formatEuro(item.prezzo)"></div>
                                 <div
-                                    class="flex h-9 items-center justify-center rounded-md bg-sagra-bg text-center text-base font-semibold tabular-nums text-sagra-ink ring-1 ring-inset ring-sagra-line"
-                                    :class="{
-                                        'bg-neutral-100 text-neutral-400 ring-neutral-200': isStockBlocked(item),
-                                        'bg-sagra text-white ring-sagra': (qty[item.id] || 0) > 0 && activeId !== item.id,
-                                        'bg-white text-sagra ring-sagra': activeId === item.id && (qty[item.id] || 0) > 0,
-                                        'bg-white ring-sagra': activeId === item.id && !(qty[item.id] || 0)
-                                    }"
-                                    x-text="qty[item.id] || ''"
+                                    class="flex h-10 items-center justify-center rounded-md text-center text-lg font-bold tabular-nums ring-1 ring-inset"
+                                    :class="qtyBoxClass(item)"
+                                    x-text="qtyOf(item) || ''"
                                 ></div>
                             </div>
                         </template>
@@ -150,10 +145,10 @@
         </div>
         <div class="flex flex-wrap items-center gap-2">
             <button type="button" class="inline-flex h-11 items-center rounded-md bg-sagra px-5 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" @click="apriPagamento()" :disabled="!serataAperta">
-                Conferma e stampa <span class="ml-2 font-mono text-xs text-white/80">F9</span>
+                Conferma e stampa <kbd class="ml-1.5 border-white/40 bg-black/15 text-inherit">F9</kbd>
             </button>
-            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <span class="ml-1 font-mono text-xs text-sagra-muted">F2</span></button>
-            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <span class="ml-1 font-mono text-xs text-sagra-muted">Esc</span></button>
+            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <kbd class="ml-1">F2</kbd></button>
+            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <kbd class="ml-1">Esc</kbd></button>
         </div>
     </footer>
 
@@ -492,6 +487,28 @@ function cassaApp(cfg) {
             if (!item?.stock_limitato) return false;
             const r = this.stockResiduo(item);
             return r === null || r <= 0;
+        },
+
+        qtyOf(item) {
+            if (!item) return 0;
+            const q = this.qty[item.id] ?? this.qty[String(item.id)];
+            return q ? Number(q) : 0;
+        },
+
+        qtyBoxClass(item) {
+            const q = this.qtyOf(item);
+            const active = this.activeId === item.id;
+            if (this.isStockBlocked(item) && q <= 0) {
+                return 'bg-neutral-100 text-neutral-400 ring-neutral-200';
+            }
+            if (q > 0) {
+                return active
+                    ? 'bg-sagra text-white ring-sagra'
+                    : 'bg-sagra-soft text-sagra-dark ring-sagra/40';
+            }
+            return active
+                ? 'bg-white text-sagra-ink ring-sagra'
+                : 'bg-sagra-bg text-sagra-ink ring-sagra-line';
         },
 
         stockStateClass(item) {
