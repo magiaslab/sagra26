@@ -14,8 +14,12 @@
     @foreach ([1, 2] as $half)
         <section class="facsimile-half">
             <header class="facsimile-head">
-                <div class="facsimile-title">{{ $impostazioni->intestazione_nome }}</div>
-                <div class="facsimile-anno">{{ $impostazioni->intestazione_anno }}</div>
+                <div class="facsimile-title">
+                    {{ $impostazioni->intestazione_nome }}
+                    @if ($impostazioni->intestazione_anno)
+                        <span class="facsimile-anno">{{ $impostazioni->intestazione_anno }}</span>
+                    @endif
+                </div>
                 @if ($impostazioni->intestazione_sottotitolo)
                     <div class="facsimile-sub">{{ $impostazioni->intestazione_sottotitolo }}</div>
                 @endif
