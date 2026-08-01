@@ -49,7 +49,7 @@ it('mostra asterisco e nota sul talloncino cliente leggendo congelato live', fun
     expect($html)->toContain('Cacciucchetto *')
         ->and($html)->toContain('Acqua Naturale 1L')
         ->and($html)->not->toContain('Acqua Naturale 1L *')
-        ->and($html)->toContain('* Pietanza che può contenere ingredienti congelati.');
+        ->and($html)->toContain('* Prodotto surgelato o congelato all\'origine.');
 
     // Solo sul talloncino Cliente: cucina/cameriere/griglia restano senza asterisco.
     expect(substr_count($html, 'Cacciucchetto *'))->toBe(1);
@@ -80,7 +80,7 @@ it('toglie l asterisco alla ristampa se il flag menù viene rimosso (non storici
 
     expect($html)->toContain('Cacciucchetto')
         ->and($html)->not->toContain('Cacciucchetto *')
-        ->and($html)->not->toContain('* Pietanza che può contenere ingredienti congelati.');
+        ->and($html)->not->toContain('* Prodotto surgelato o congelato all\'origine.');
 });
 
 it('mostra asterisco e nota sul facsimile solo se ci sono voci congelate', function () {
@@ -92,7 +92,7 @@ it('mostra asterisco e nota sul facsimile solo se ci sono voci congelate', funct
         ->assertOk()
         ->getContent();
     expect($senza)->not->toContain('Cacciucchetto *')
-        ->and($senza)->not->toContain('* Pietanza che può contenere ingredienti congelati.')
+        ->and($senza)->not->toContain('* Prodotto surgelato o congelato all\'origine.')
         ->and($senza)->toContain('facsimile-sheet');
 
     $cacciucchetto->update(['congelato' => true]);
@@ -102,7 +102,7 @@ it('mostra asterisco e nota sul facsimile solo se ci sono voci congelate', funct
         ->assertOk()
         ->getContent();
     expect($con)->toContain('Cacciucchetto *')
-        ->and($con)->toContain('* Pietanza che può contenere ingredienti congelati.')
+        ->and($con)->toContain('* Prodotto surgelato o congelato all\'origine.')
         // Due metà sullo stesso foglio A4 (una pagina).
         ->and(substr_count($con, 'facsimile-half'))->toBe(2)
         ->and(substr_count($con, 'facsimile-sheet'))->toBe(1);

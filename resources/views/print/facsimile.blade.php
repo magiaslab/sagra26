@@ -45,7 +45,7 @@
             </div>
 
             @if ($haCongelati)
-                <div class="facsimile-nota-congelato">* Pietanza che può contenere ingredienti congelati.</div>
+                <div class="facsimile-nota-congelato">* Prodotto surgelato o congelato all'origine.</div>
             @endif
         </section>
         @if ($half === 1)
