@@ -1178,6 +1178,188 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
+/* ===== GESTIONE SUBNAV / PAGE HEADER ===== */
+.gestione-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  padding: .55rem .15rem .85rem;
+  margin: -.25rem 0 1rem;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+}
+.gestione-subnav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.15rem;
+  padding: .35rem .75rem;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background: var(--bg-2);
+  color: var(--ink);
+  font-size: .9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.gestione-subnav a:hover {
+  border-color: var(--line);
+  background: #fff;
+  text-decoration: none;
+}
+.gestione-subnav a.is-active {
+  background: var(--accent);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+.gestione-subnav a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: .75rem 1rem;
+  margin-bottom: 1rem;
+}
+.page-header h1 {
+  margin: 0;
+  font-size: 1.55rem;
+  line-height: 1.2;
+}
+.page-header-sub {
+  margin: .25rem 0 0;
+  color: var(--muted);
+  font-size: .95rem;
+  font-weight: 600;
+}
+.page-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+  align-items: center;
+}
+
+/* ===== UTILITY LAYOUT (sostituiscono style inline) ===== */
+.panel-stack { margin-bottom: 1rem; }
+.panel-scroll { max-height: 80vh; overflow: auto; }
+.stack-gap { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.inline-fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: stretch;
+}
+.inline-fields .input { flex: 1 1 10rem; min-width: 0; }
+.inline-fields .btn { flex: 0 0 auto; }
+.field-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  align-items: center;
+}
+.field-row > .label-fixed {
+  min-width: 220px;
+  font-weight: 700;
+}
+.input-narrow { max-width: 140px; }
+.input-date { max-width: 220px; }
+.input-stock { max-width: 120px; }
+.check-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.1rem;
+  align-items: center;
+  margin: .35rem 0 .75rem;
+}
+.check-row label { font-weight: 600; }
+.actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: 1rem;
+}
+.mt-block { margin-top: 1rem; }
+.mb-block { margin-bottom: 1rem; }
+.mt-tight { margin-top: .5rem; }
+.list-plain {
+  margin: .5rem 0 0 1.1rem;
+  padding: 0;
+}
+.alert-lead { margin: .75rem 0 .5rem; }
+.is-disattivo { opacity: .5; }
+.cell-nowrap { white-space: nowrap; }
+.cat-title { margin: 0 0 .35rem; }
+.table-block { margin-bottom: 1rem; }
+.table-spaced { margin-top: 1rem; }
+.tagli-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: .5rem;
+}
+.tagli-grid .field { margin: 0; }
+.kpi-val-sm { font-size: 1.2rem; }
+.kpi-meta { margin-top: .25rem; }
+.stack-panels > .panel + .panel { margin-top: 1rem; }
+
+/* Home hero */
+.home-hero {
+  text-align: center;
+  padding: 2rem;
+}
+.home-hero-title {
+  font-size: 2rem;
+  margin: 0 0 .25rem;
+}
+.home-hero-year {
+  font-size: 1.4rem;
+  margin: .25rem 0;
+  font-weight: 700;
+}
+.home-hero-sub {
+  color: var(--muted);
+  margin: .35rem 0 0;
+}
+
+/* PIN gestione (schermata sblocco, no subnav) */
+.pin-panel {
+  max-width: 420px;
+  margin: 2rem auto;
+  text-align: center;
+}
+.pin-input {
+  text-align: center;
+  font-size: 1.4rem;
+  letter-spacing: .3em;
+}
+.pin-actions { margin-top: 1rem; }
+.pin-help {
+  margin-top: 1.25rem;
+  font-size: .85rem;
+}
+.btn-linkish {
+  border: none;
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+  color: var(--muted);
+  font: inherit;
+  font-weight: 600;
+  padding: .2rem .35rem;
+}
+.btn-linkish:hover { color: var(--accent); }
+.pin-form-left { text-align: left; }
+.pin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
 /* ===== PRINT COMANDA ===== */
 @page {
   size: A4 landscape;

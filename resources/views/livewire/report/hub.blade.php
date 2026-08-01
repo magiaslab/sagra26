@@ -1,6 +1,12 @@
 <div>
-    <h1>Report / Stampe</h1>
-    <div class="panel no-print" style="margin-bottom:1rem">
+    <x-gestione.subnav />
+    <x-gestione.page-header title="Report / Stampe" subtitle="Cucina, griglia, bevande, economico e consegna">
+        <x-slot:actions>
+            <button class="btn btn-primary no-print" type="button" onclick="window.print()">Stampa / PDF</button>
+        </x-slot:actions>
+    </x-gestione.page-header>
+
+    <div class="panel no-print panel-stack">
         <div class="grid-3">
             <div class="field">
                 <label class="label">Tipo</label>
@@ -25,7 +31,7 @@
                 <label class="label">Ambito</label>
                 <label><input type="checkbox" wire:model.live="completo"> Completo (tutta la sagra)</label>
                 @if ($tipo === 'consegna')
-                    <select class="input" wire:model.live="puntoCassaId" style="margin-top:.5rem">
+                    <select class="input mt-tight" wire:model.live="puntoCassaId">
                         @foreach ($punti as $p)
                             <option value="{{ $p->id }}">{{ $p->nome }}</option>
                         @endforeach
@@ -33,7 +39,6 @@
                 @endif
             </div>
         </div>
-        <button class="btn" onclick="window.print()">Stampa / PDF</button>
     </div>
 
     @if (!$serata)

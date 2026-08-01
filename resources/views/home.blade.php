@@ -3,11 +3,11 @@
 @section('title', 'Home')
 
 @section('content')
-<div class="panel" style="text-align:center;padding:2rem">
-    <h1 style="font-size:2rem;margin-bottom:.25rem">{{ $impostazioni->intestazione_nome }}</h1>
-    <p style="font-size:1.4rem;margin:.25rem 0">{{ $impostazioni->intestazione_anno }}</p>
+<div class="panel home-hero">
+    <h1 class="home-hero-title">{{ $impostazioni->intestazione_nome }}</h1>
+    <p class="home-hero-year">{{ $impostazioni->intestazione_anno }}</p>
     @if ($impostazioni->intestazione_sottotitolo)
-        <p style="color:#555">{{ $impostazioni->intestazione_sottotitolo }}</p>
+        <p class="home-hero-sub">{{ $impostazioni->intestazione_sottotitolo }}</p>
     @endif
 </div>
 

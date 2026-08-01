@@ -1,5 +1,5 @@
 <div>
-    <div class="panel" style="max-width:420px;margin:2rem auto;text-align:center">
+    <div class="panel pin-panel">
         @if (!$recupero)
             <h1>Area gestione</h1>
             <p>Inserisci il PIN per continuare.</p>
@@ -7,15 +7,14 @@
                 <div class="alert alert-danger">{{ $errore }}</div>
             @endif
             <form wire:submit="sblocca">
-                <input class="input" type="password" inputmode="numeric" autocomplete="one-time-code"
-                       wire:model="pin" autofocus maxlength="12"
-                       style="text-align:center;font-size:1.4rem;letter-spacing:.3em">
-                <div style="margin-top:1rem">
+                <input class="input pin-input" type="password" inputmode="numeric" autocomplete="one-time-code"
+                       wire:model="pin" autofocus maxlength="12">
+                <div class="pin-actions">
                     <button class="btn btn-primary" type="submit">Sblocca</button>
                 </div>
             </form>
-            <p style="margin-top:1.25rem;font-size:.85rem">
-                <button type="button" class="btn btn-sm" wire:click="apriRecupero" style="border:none;background:transparent;text-decoration:underline;cursor:pointer;color:#555">
+            <p class="pin-help">
+                <button type="button" class="btn-linkish" wire:click="apriRecupero">
                     PIN dimenticato?
                 </button>
             </p>
@@ -25,7 +24,7 @@
             @if ($errore)
                 <div class="alert alert-danger">{{ $errore }}</div>
             @endif
-            <form wire:submit="reimposta" style="text-align:left">
+            <form wire:submit="reimposta" class="pin-form-left">
                 <div class="field">
                     <label class="label">Codice di sblocco</label>
                     <input class="input" type="password" wire:model="codiceMaster" autofocus autocomplete="off">
@@ -38,7 +37,7 @@
                     <label class="label">Conferma nuovo PIN</label>
                     <input class="input" type="password" inputmode="numeric" maxlength="4" wire:model="confermaPin" autocomplete="new-password">
                 </div>
-                <div style="display:flex;gap:.5rem;justify-content:center;margin-top:1rem">
+                <div class="pin-form-actions">
                     <button class="btn btn-primary" type="submit">Reimposta e entra</button>
                     <button class="btn" type="button" wire:click="annullaRecupero">Annulla</button>
                 </div>

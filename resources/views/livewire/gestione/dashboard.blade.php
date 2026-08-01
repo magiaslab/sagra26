@@ -1,5 +1,10 @@
 <div>
-    <h1>Gestione</h1>
+    <x-gestione.subnav />
+    <x-gestione.page-header
+        title="Gestione"
+        subtitle="Apertura serata, menù, chiusure e report"
+    />
+
     @if ($serata)
         <div class="alert alert-ok">Serata aperta: <strong>{{ $serata->data->format('d/m/Y') }}</strong></div>
     @else

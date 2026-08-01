@@ -1,7 +1,14 @@
 <div>
-    <h1>Chiusura & riconciliazione</h1>
+    <x-gestione.subnav />
+    <x-gestione.page-header title="Chiusura & riconciliazione" subtitle="Conta pezzi e confronto a tre vie">
+        <x-slot:actions>
+            @if ($riconciliazione)
+                <a class="btn" href="{{ route('gestione.report', absolute: false) }}?tipo=consegna">Foglio consegna</a>
+            @endif
+        </x-slot:actions>
+    </x-gestione.page-header>
 
-    <div class="grid-2" style="margin-bottom:1rem">
+    <div class="grid-2 mb-block">
         <div class="field">
             <label class="label">Serata</label>
             <select class="input" wire:model.live="serataId">
@@ -27,15 +34,15 @@
                 <label class="label">Fondo iniziale</label>
                 <input class="input" type="number" step="0.01" wire:model.live="fondo_iniziale">
             </div>
-            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem">
+            <div class="tagli-grid">
                 @foreach ($tagli as $campo => $valore)
-                    <div class="field" style="margin:0">
+                    <div class="field">
                         <label class="label">{{ number_format($valore, $valore < 1 ? 2 : 0, ',', '.') }} €</label>
                         <input class="input" type="number" min="0" wire:model.live="pezzi.{{ $campo }}">
                     </div>
                 @endforeach
             </div>
-            <div class="field" style="margin-top:1rem">
+            <div class="field mt-block">
                 <label class="label">Fondo trattenuto</label>
                 <input class="input" type="number" step="0.01" wire:model.live="fondo_trattenuto">
             </div>
@@ -88,7 +95,6 @@
                 </table>
                 <p>Consegnato: <strong>{{ number_format($riconciliazione['contante_consegnato'], 2, ',', '.') }} €</strong>
                     · Incasso contante reale: <strong>{{ number_format($riconciliazione['incasso_contante_reale'], 2, ',', '.') }} €</strong></p>
-                <a class="btn" href="{{ route('gestione.report', absolute: false) }}?tipo=consegna">Foglio consegna</a>
             @endif
         </div>
     </div>
