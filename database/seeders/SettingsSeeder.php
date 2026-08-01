@@ -12,34 +12,42 @@ class SettingsSeeder extends Seeder
 {
     public function run(): void
     {
-        Impostazione::query()->create([
-            'intestazione_nome' => 'Sagra del Cacciucchetto',
-            'intestazione_anno' => '2026',
-            'intestazione_sottotitolo' => 'A.S.D. Basket San Vincenzo · UISP Pallavolo · ASD Calcio San Vincenzo',
-            'pin_gestione' => '1234',
-        ]);
+        Impostazione::query()->firstOrCreate(
+            [],
+            [
+                'intestazione_nome' => 'Sagra del Cacciucchetto',
+                'intestazione_anno' => '2026',
+                'intestazione_sottotitolo' => 'A.S.D. Basket San Vincenzo · UISP Pallavolo · ASD Calcio San Vincenzo',
+                'pin_gestione' => '1234',
+            ],
+        );
 
-        $punto = PuntoCassa::query()->create([
-            'nome' => 'Cassetto unico',
-            'attivo' => true,
-        ]);
+        $punto = PuntoCassa::query()->updateOrCreate(
+            ['nome' => 'Cassetto unico'],
+            ['attivo' => true],
+        );
 
-        $cassaA = Postazione::query()->create(['nome' => 'Cassa A']);
-        $cassaB = Postazione::query()->create(['nome' => 'Cassa B']);
+        $cassaA = Postazione::query()->updateOrCreate(['nome' => 'Cassa A'], []);
+        $cassaB = Postazione::query()->updateOrCreate(['nome' => 'Cassa B'], []);
 
         // Data passata: resta valida per tutte le serate future senza dipendere da "oggi"
         $validoDa = '2020-01-01';
 
-        PostazionePuntoCassa::query()->create([
-            'postazione_id' => $cassaA->id,
-            'punto_cassa_id' => $punto->id,
-            'valido_da' => $validoDa,
-        ]);
+        foreach ([$cassaA, $cassaB] as $postazione) {
+            $mappa = PostazionePuntoCassa::query()
+                ->where('postazione_id', $postazione->id)
+                ->whereDate('valido_da', $validoDa)
+                ->first();
 
-        PostazionePuntoCassa::query()->create([
-            'postazione_id' => $cassaB->id,
-            'punto_cassa_id' => $punto->id,
-            'valido_da' => $validoDa,
-        ]);
+            if ($mappa) {
+                $mappa->update(['punto_cassa_id' => $punto->id]);
+            } else {
+                PostazionePuntoCassa::query()->create([
+                    'postazione_id' => $postazione->id,
+                    'punto_cassa_id' => $punto->id,
+                    'valido_da' => $validoDa,
+                ]);
+            }
+        }
     }
 }

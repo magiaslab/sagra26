@@ -28,6 +28,8 @@ class ImpostazioniPage extends Component
 
     public string $mapValidoDa = '';
 
+    public string $errore = '';
+
     public function mount(): void
     {
         $i = Impostazione::corrente();
@@ -47,7 +49,9 @@ class ImpostazioniPage extends Component
             'intestazione_sottotitolo' => $this->intestazione_sottotitolo ?: null,
             'pin_gestione' => $this->pin_gestione,
         ]);
+        $this->errore = '';
         session()->flash('status', 'Impostazioni salvate.');
+        $this->dispatch('toast', message: 'Impostazioni salvate.', type: 'ok');
     }
 
     public function aggiungiPostazione(): void
@@ -55,6 +59,30 @@ class ImpostazioniPage extends Component
         $this->validate(['nuovaPostazione' => 'required|string|max:255']);
         Postazione::query()->create(['nome' => $this->nuovaPostazione]);
         $this->nuovaPostazione = '';
+        $this->errore = '';
+    }
+
+    public function eliminaPostazione(int $id): void
+    {
+        $postazione = Postazione::query()->findOrFail($id);
+
+        $nComande = $postazione->comande()->count();
+        if ($nComande > 0) {
+            $this->bloccaEliminazione("Non eliminabile: {$nComande} comande già registrate su questa postazione");
+
+            return;
+        }
+
+        $nMappature = $postazione->mappature()->count();
+        if ($nMappature > 0) {
+            $this->bloccaEliminazione("Non eliminabile: {$nMappature} mappature punto cassa collegate a questa postazione");
+
+            return;
+        }
+
+        $postazione->delete();
+        $this->errore = '';
+        $this->dispatch('toast', message: 'Postazione eliminata.', type: 'ok');
     }
 
     public function aggiungiPunto(): void
@@ -62,6 +90,37 @@ class ImpostazioniPage extends Component
         $this->validate(['nuovoPunto' => 'required|string|max:255']);
         PuntoCassa::query()->create(['nome' => $this->nuovoPunto, 'attivo' => true]);
         $this->nuovoPunto = '';
+        $this->errore = '';
+    }
+
+    public function eliminaPunto(int $id): void
+    {
+        $punto = PuntoCassa::query()->findOrFail($id);
+
+        $nComande = $punto->comande()->count();
+        if ($nComande > 0) {
+            $this->bloccaEliminazione("Non eliminabile: {$nComande} comande già registrate su questo punto cassa");
+
+            return;
+        }
+
+        $nChiusure = $punto->chiusure()->count();
+        if ($nChiusure > 0) {
+            $this->bloccaEliminazione("Non eliminabile: {$nChiusure} chiusure collegate a questo punto cassa");
+
+            return;
+        }
+
+        $nMappature = $punto->mappature()->count();
+        if ($nMappature > 0) {
+            $this->bloccaEliminazione("Non eliminabile: {$nMappature} mappature postazione collegate a questo punto cassa");
+
+            return;
+        }
+
+        $punto->delete();
+        $this->errore = '';
+        $this->dispatch('toast', message: 'Punto cassa eliminato.', type: 'ok');
     }
 
     public function mappa(): void
@@ -76,7 +135,15 @@ class ImpostazioniPage extends Component
             'punto_cassa_id' => $this->mapPunto,
             'valido_da' => $this->mapValidoDa,
         ]);
+        $this->errore = '';
         session()->flash('status', 'Mappatura salvata.');
+        $this->dispatch('toast', message: 'Mappatura salvata.', type: 'ok');
+    }
+
+    private function bloccaEliminazione(string $messaggio): void
+    {
+        $this->errore = $messaggio;
+        $this->dispatch('toast', message: $messaggio, type: 'danger');
     }
 
     public function render()

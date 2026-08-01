@@ -5,6 +5,10 @@
         subtitle="Intestazione, PIN, postazioni e punti cassa"
     />
 
+    @if ($errore !== '')
+        <x-ui.alert type="danger">{{ $errore }}</x-ui.alert>
+    @endif
+
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
             <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Intestazione / sistema</h2>
@@ -30,9 +34,16 @@
         <div class="flex flex-col gap-4">
             <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
                 <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Postazioni</h2>
-                <ul class="mb-3 mt-0 list-disc pl-5 text-sm text-sagra-ink">
+                <ul class="mb-3 mt-0 space-y-2 p-0 text-sm text-sagra-ink">
                     @foreach ($postazioni as $p)
-                        <li>{{ $p->nome }}</li>
+                        <li class="flex items-center justify-between gap-2">
+                            <span>{{ $p->nome }}</span>
+                            <button
+                                type="button"
+                                class="inline-flex shrink-0 items-center rounded-md bg-white px-2 py-1 text-xs font-semibold text-sagra-danger ring-1 ring-sagra-danger/40 hover:bg-sagra-danger-soft"
+                                wire:click="eliminaPostazione({{ $p->id }})"
+                            >Elimina</button>
+                        </li>
                     @endforeach
                 </ul>
                 <div class="flex flex-wrap items-stretch gap-2">
@@ -43,9 +54,16 @@
 
             <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
                 <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Punti cassa</h2>
-                <ul class="mb-3 mt-0 list-disc pl-5 text-sm text-sagra-ink">
+                <ul class="mb-3 mt-0 space-y-2 p-0 text-sm text-sagra-ink">
                     @foreach ($punti as $p)
-                        <li>{{ $p->nome }} @unless($p->attivo)(disattivo)@endunless</li>
+                        <li class="flex items-center justify-between gap-2">
+                            <span>{{ $p->nome }} @unless($p->attivo)(disattivo)@endunless</span>
+                            <button
+                                type="button"
+                                class="inline-flex shrink-0 items-center rounded-md bg-white px-2 py-1 text-xs font-semibold text-sagra-danger ring-1 ring-sagra-danger/40 hover:bg-sagra-danger-soft"
+                                wire:click="eliminaPunto({{ $p->id }})"
+                            >Elimina</button>
+                        </li>
                     @endforeach
                 </ul>
                 <div class="flex flex-wrap items-stretch gap-2">
