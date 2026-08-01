@@ -15,10 +15,9 @@
   --accent-softer: #eef6f1;
   --warn: #8a4b00;
   --warn-soft: #fff3cd;
-  /* Solo cursore riga in Cassa (non riusare --warn: non è un avviso). */
-  --amber: #b45309;
-  --amber-soft: #fef3c7;
-  --amber-ring: #f59e0b;
+  /* Cursore riga in Cassa: caldo soft, non stile alert (niente anello giallo). */
+  --amber: #a16207;
+  --amber-soft: #faf6ee;
   --danger: #8b1515;
   --danger-soft: #fceaea;
   --focus: #0b5fff;
@@ -339,10 +338,10 @@ textarea:focus-visible {
 
 .cassa-chrome {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1.2fr);
   align-items: center;
-  gap: 1rem;
-  padding: .65rem 1.1rem;
+  gap: .75rem 1.25rem;
+  padding: .7rem 1.15rem;
   background: var(--accent);
   color: #fff;
   min-height: 3.75rem;
@@ -351,11 +350,12 @@ textarea:focus-visible {
 .cassa-chrome-left {
   display: flex;
   align-items: center;
-  gap: .6rem;
+  gap: .55rem;
   font-weight: 800;
   letter-spacing: .02em;
   text-transform: uppercase;
   font-size: 1rem;
+  min-width: 0;
 }
 
 .cassa-postazione select {
@@ -377,7 +377,7 @@ textarea:focus-visible {
   outline-offset: 2px;
 }
 
-.cassa-chrome-sep { opacity: .7; }
+.cassa-chrome-sep { opacity: .55; }
 
 .cassa-comanda-label strong {
   font-size: 1.25rem;
@@ -388,7 +388,7 @@ textarea:focus-visible {
   display: inline-block;
   margin-left: .4rem;
   font-size: .7rem;
-  border: 1px solid rgba(255,255,255,.55);
+  border: 1px solid rgba(255,255,255,.45);
   padding: .1rem .4rem;
   border-radius: 3px;
   font-weight: 700;
@@ -396,60 +396,26 @@ textarea:focus-visible {
   letter-spacing: 0;
 }
 
-.cassa-chrome-center {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: .55rem;
-  flex-wrap: wrap;
-}
-
-.cassa-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: .45rem;
-  border: 1px solid rgba(255,255,255,.55);
-  border-radius: 999px;
-  padding: .45rem 1rem;
-  color: #fff;
-  text-decoration: none;
+/* Brand = solo titolo (non è un bottone di navigazione). */
+.cassa-chrome-brand {
+  justify-self: center;
+  text-align: center;
   font-weight: 700;
-  font-size: .95rem;
-  background: rgba(255,255,255,.1);
+  font-size: 1rem;
+  letter-spacing: .01em;
   white-space: nowrap;
-  min-height: 2.5rem;
-}
-.cassa-brand:hover {
-  background: rgba(255,255,255,.2);
-  text-decoration: none;
-  color: #fff;
-}
-.cassa-brand:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 3px;
-}
-.cassa-brand-gear { font-size: 1rem; opacity: .9; }
-
-/* Uscita rara: vicino al brand, non in competizione con F9/F2/Esc. */
-.cassa-home-link {
-  color: rgba(255,255,255,.88);
-  font-size: .82rem;
-  font-weight: 600;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  padding: .25rem .4rem;
-}
-.cassa-home-link:hover { color: #fff; text-decoration: underline; }
-.cassa-home-link:focus-visible {
-  outline: 3px solid #fff;
-  outline-offset: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  opacity: .95;
 }
 
 .cassa-chrome-right {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  gap: 1.6rem;
+  gap: 1.25rem;
+  min-width: 0;
 }
 
 .cassa-kpi {
@@ -458,30 +424,77 @@ textarea:focus-visible {
 }
 .cassa-kpi-lbl {
   display: block;
-  font-size: .7rem;
+  font-size: .68rem;
   text-transform: uppercase;
   letter-spacing: .06em;
-  opacity: .9;
+  opacity: .85;
   font-weight: 700;
 }
 .cassa-kpi-val {
-  font-size: 1.7rem;
+  font-size: 1.65rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-.cassa-kpi-totale .cassa-kpi-val { font-size: 1.95rem; }
+.cassa-kpi-totale .cassa-kpi-val { font-size: 1.85rem; }
 
+/* Uscite rare: stessa famiglia tipografica, destinazioni distinte. */
+.cassa-chrome-nav {
+  display: flex;
+  align-items: center;
+  gap: .15rem;
+  padding-left: .85rem;
+  border-left: 1px solid rgba(255,255,255,.28);
+  margin-left: .15rem;
+}
+.cassa-chrome-nav a {
+  color: rgba(255,255,255,.88);
+  font-size: .82rem;
+  font-weight: 650;
+  text-decoration: none;
+  padding: .4rem .55rem;
+  border-radius: 4px;
+}
+.cassa-chrome-nav a:hover {
+  color: #fff;
+  background: rgba(255,255,255,.12);
+  text-decoration: none;
+}
+.cassa-chrome-nav a:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Legenda scorciatoie: testo + kbd, non toolbar di bottoni. */
 .cassa-shortcuts,
 .help-keys {
   display: flex;
   flex-wrap: wrap;
-  gap: .45rem 1.2rem;
-  padding: .5rem 1.1rem;
-  background: #dfe6e2;
-  border-bottom: 1px solid #c2ccc7;
-  font-size: .82rem;
-  color: #3d4842;
-  font-weight: 600;
+  align-items: center;
+  gap: .15rem .35rem;
+  padding: .4rem 1.15rem;
+  background: #e8ece9;
+  border-bottom: 1px solid #d0d7d3;
+  font-size: .78rem;
+  color: #55605a;
+  font-weight: 500;
+}
+.cassa-shortcuts-item {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  padding: .15rem .55rem;
+  white-space: nowrap;
+}
+.cassa-shortcuts-item + .cassa-shortcuts-item {
+  border-left: 1px solid #c5cdc8;
+}
+.cassa-shortcuts kbd,
+.help-keys kbd {
+  font-size: .72em;
+  padding: .08rem .3rem;
+  border-bottom-width: 2px;
+  background: #fff;
+  color: #333;
 }
 
 .cassa-body-panel {
@@ -500,8 +513,20 @@ textarea:focus-visible {
 }
 
 @media (max-width: 900px) {
-  .cassa-chrome { grid-template-columns: 1fr; gap: .55rem; }
-  .cassa-chrome-right { justify-content: flex-start; }
+  .cassa-chrome {
+    grid-template-columns: 1fr;
+    gap: .45rem;
+  }
+  .cassa-chrome-brand { justify-self: start; text-align: left; }
+  .cassa-chrome-right {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .cassa-chrome-nav {
+    border-left: 0;
+    padding-left: 0;
+    margin-left: 0;
+  }
   .cassa-menu-grid { grid-template-columns: 1fr; }
 }
 
@@ -540,11 +565,16 @@ textarea:focus-visible {
   background: var(--accent-softer);
 }
 
-/* Riga a fuoco (cursore tastiera): amber, distinto dal teal "compilata". */
+/* Riga a fuoco: caldo soft + barra sinistra (niente bordo/anello da alert). */
 .cassa-row.active {
   background: var(--amber-soft);
   border-left-color: var(--amber);
-  box-shadow: inset 0 0 0 2px var(--amber-ring);
+  box-shadow: none;
+}
+.cassa-row.filled.active {
+  /* A fuoco prevale sul filled: si vede dove sei, non un doppio stato confuso. */
+  background: var(--amber-soft);
+  border-left-color: var(--amber);
 }
 
 .cassa-row-main { min-width: 0; }
@@ -583,7 +613,7 @@ textarea:focus-visible {
 
 .cassa-row-qty {
   min-height: var(--touch);
-  border: 2px solid var(--line);
+  border: 1.5px solid var(--line);
   border-radius: var(--radius);
   background: #fff;
   text-align: center;
@@ -600,11 +630,10 @@ textarea:focus-visible {
 }
 .cassa-row.filled .cassa-row-qty {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(30, 92, 67, .18);
 }
 .cassa-row.active .cassa-row-qty {
-  border-color: var(--amber);
-  box-shadow: 0 0 0 1px rgba(180, 83, 9, .25);
+  border-color: #c4a574; /* caldo soft, non arancio “errore” */
+  background: #fffdf8;
 }
 
 .cassa-footer {
@@ -1192,18 +1221,18 @@ textarea:focus-visible {
   display: inline-flex;
   align-items: center;
   min-height: 2.15rem;
-  padding: .35rem .75rem;
+  padding: .35rem .8rem;
   border-radius: 999px;
   border: 1px solid transparent;
-  background: var(--bg-2);
-  color: var(--ink);
+  background: transparent;
+  color: var(--muted);
   font-size: .9rem;
   font-weight: 700;
   text-decoration: none;
 }
 .gestione-subnav a:hover {
-  border-color: var(--line);
-  background: #fff;
+  color: var(--ink);
+  background: rgba(30, 92, 67, .08);
   text-decoration: none;
 }
 .gestione-subnav a.is-active {
@@ -1240,6 +1269,87 @@ textarea:focus-visible {
   flex-wrap: wrap;
   gap: .45rem;
   align-items: center;
+}
+
+/* Stato serata: chip quieto, non box alert a tutta larghezza. */
+.status-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.15rem;
+  padding: .35rem .75rem;
+  border-radius: 999px;
+  font-size: .88rem;
+  font-weight: 700;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.status-chip--ok {
+  border-color: rgba(30, 92, 67, .35);
+  background: var(--accent-softer);
+  color: var(--accent-dark);
+}
+.status-chip--warn {
+  border-color: rgba(138, 75, 0, .35);
+  background: #fffaf0;
+  color: var(--warn);
+}
+
+/* Dashboard gestione: griglia 3+2, card con barra accento. */
+.dash-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: .25rem;
+}
+.dash-card {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  min-height: 8.5rem;
+  padding: 1.25rem 1.3rem 1.35rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  border-left: 4px solid var(--accent);
+  text-decoration: none;
+  color: inherit;
+  box-shadow: var(--shadow-soft);
+  transition: border-color .15s ease, background .15s ease, transform .15s ease;
+}
+.dash-card:hover {
+  background: var(--accent-softer);
+  border-color: var(--accent);
+  text-decoration: none;
+  transform: translateY(-1px);
+}
+.dash-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.dash-card-kicker {
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.dash-card h2 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: var(--ink);
+}
+.dash-card p {
+  margin: 0;
+  color: var(--muted);
+  font-size: .95rem;
+  line-height: 1.4;
+}
+@media (max-width: 900px) {
+  .dash-grid { grid-template-columns: 1fr; }
+}
+@media (min-width: 901px) and (max-width: 1100px) {
+  .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* ===== UTILITY LAYOUT (sostituiscono style inline) ===== */

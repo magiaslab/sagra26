@@ -50,7 +50,7 @@
                     </template>
                 </select>
             </label>
-            <span class="cassa-chrome-sep">·</span>
+            <span class="cassa-chrome-sep" aria-hidden="true">·</span>
             <span class="cassa-comanda-label">
                 COMANDA
                 <strong x-text="numeroDisplay"></strong>
@@ -59,13 +59,7 @@
             </span>
         </div>
 
-        <div class="cassa-chrome-center">
-            <a class="cassa-brand" :href="urls.gestione" title="Gestione">
-                <span class="cassa-brand-gear" aria-hidden="true">⚙</span>
-                <span x-text="brand"></span>
-            </a>
-            <a class="cassa-home-link" :href="urls.home" title="Torna alla home">Home</a>
-        </div>
+        <div class="cassa-chrome-brand" x-text="brand"></div>
 
         <div class="cassa-chrome-right">
             <div class="cassa-kpi">
@@ -76,17 +70,21 @@
                 <span class="cassa-kpi-lbl">Totale</span>
                 <span class="cassa-kpi-val" x-text="formatEuro(totale)"></span>
             </div>
+            <nav class="cassa-chrome-nav" aria-label="Uscita cassa">
+                <a :href="urls.gestione">Gestione</a>
+                <a :href="urls.home">Home</a>
+            </nav>
         </div>
     </header>
 
     <div class="cassa-shortcuts" aria-hidden="true">
-        <span><kbd>↓</kbd> / <kbd>Invio</kbd> riga dopo</span>
-        <span><kbd>↑</kbd> riga prima</span>
-        <span><kbd>+</kbd> / <kbd>-</kbd> quantità</span>
-        <span><kbd>Canc</kbd> azzera riga</span>
-        <span><kbd>F9</kbd> conferma + stampa</span>
-        <span><kbd>F2</kbd> richiama comanda</span>
-        <span><kbd>Esc</kbd> annulla comanda</span>
+        <span class="cassa-shortcuts-item"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
+        <span class="cassa-shortcuts-item"><kbd>↑</kbd> riga prima</span>
+        <span class="cassa-shortcuts-item"><kbd>+</kbd><kbd>-</kbd> quantità</span>
+        <span class="cassa-shortcuts-item"><kbd>Canc</kbd> azzera</span>
+        <span class="cassa-shortcuts-item"><kbd>F9</kbd> conferma</span>
+        <span class="cassa-shortcuts-item"><kbd>F2</kbd> richiama</span>
+        <span class="cassa-shortcuts-item"><kbd>Esc</kbd> annulla</span>
     </div>
 
     <div class="cassa-body-panel">
