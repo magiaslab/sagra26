@@ -339,16 +339,24 @@
     height: 210mm;
   }
 }
+/* Anteprima A4 in modale cassa: scala via JS (fitAnteprima), niente scroll. */
 .a4-preview {
-  overflow: auto;
+  overflow: hidden;
   background: #d5ddd7;
-  padding: .85rem;
-  border-radius: var(--radius);
+  padding: .5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+.a4-scale {
+  transform-origin: center center;
+  flex-shrink: 0;
 }
 .a4-sheet {
   width: 270mm;
   height: 190mm;
-  margin: 0 auto;
+  margin: 0;
   background: #fff;
   border: 1px solid #999;
   display: grid;

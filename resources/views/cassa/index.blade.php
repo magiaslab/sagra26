@@ -180,89 +180,91 @@
         </div>
     </div>
 
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalAnteprima" x-cloak @keydown.escape.window="chiudiModal()">
-        <div class="max-h-[94vh] w-[min(980px,96vw)] overflow-auto rounded-lg border-2 border-sagra-ink bg-white p-5 shadow-xl" @click.stop>
-            <div class="mb-3 flex items-center justify-between gap-3">
-                <h2 class="m-0 text-base font-bold">Anteprima A4 — 27 cm utili (297 mm meno margini di stampa)</h2>
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-2 sm:p-3" x-show="modalAnteprima" x-cloak @keydown.escape.window="chiudiModal()">
+        <div class="flex h-[96vh] w-[min(1100px,98vw)] flex-col overflow-hidden rounded-lg border-2 border-sagra-ink bg-white shadow-xl" @click.stop>
+            <div class="flex shrink-0 items-center justify-between gap-3 border-b border-sagra-line px-4 py-2.5">
+                <h2 class="m-0 text-sm font-bold sm:text-base">Anteprima stampa — Invio per confermare</h2>
                 <span class="badge" :class="metodo === 'contante' ? 'badge-double' : ''"
                       x-text="metodo === 'contante' ? 'CONTANTE' : 'POS'"></span>
             </div>
-            <div class="a4-preview">
-                <div class="a4-sheet">
-                    <section class="a4-tag a4-cliente">
-                        <div class="a4-brand" x-text="brand"></div>
-                        <div class="a4-sub" x-text="sottotitolo" x-show="sottotitolo"></div>
-                        <div class="a4-head">
-                            <span class="a4-role">CLIENTE</span>
-                            <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
-                        </div>
-                        <template x-for="r in righeOrdine" :key="'c-'+r.id">
-                            <div class="a4-line">
-                                <strong x-text="r.q"></strong>
-                                <span x-text="r.nome"></span>
-                                <span x-text="formatEuro(r.importo).replace(/\s/g,'')"></span>
-                            </div>
-                        </template>
-                        <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
-                        <div class="a4-pay" :class="metodo === 'contante' ? 'a4-pay--contante' : 'a4-pay--pos'"
-                             x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
-                    </section>
-                    <div class="a4-right">
-                        <div class="a4-top">
-                            <section class="a4-tag a4-cucina">
-                                <div class="a4-brand" x-text="brand"></div>
-                                <div class="a4-head">
-                                    <span class="a4-role">CUCINA</span>
-                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
-                                </div>
-                                <template x-for="r in righeCucina" :key="'k-'+r.id">
-                                    <div class="a4-check">
-                                        <span class="a4-box"></span>
-                                        <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
-                                    </div>
-                                </template>
-                                <div class="a4-empty" x-show="righeCucina.length === 0">—</div>
-                                <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
-                            </section>
-                            <section class="a4-tag a4-cameriere">
-                                <div class="a4-brand" x-text="brand"></div>
-                                <div class="a4-head">
-                                    <span class="a4-role">CAMERIERE</span>
-                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
-                                </div>
-                                <div class="a4-mano a4-mano--top"><span>Tavolo</span><span class="a4-linea"></span></div>
-                                <template x-for="r in righeOrdine" :key="'w-'+r.id">
-                                    <div class="a4-check">
-                                        <span class="a4-box"></span>
-                                        <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
-                                    </div>
-                                </template>
-                            </section>
-                        </div>
-                        <section class="a4-tag a4-griglia">
-                            <div class="a4-griglia-head">
-                                <div>
-                                    <div class="a4-brand" x-text="brand"></div>
-                                    <div class="a4-role">GRIGLIA</div>
-                                </div>
-                                <div class="a4-mano a4-mano--inline"><span>Cameriere</span><span class="a4-linea"></span></div>
+            <div class="a4-preview min-h-0 flex-1" x-ref="a4Fit">
+                <div class="a4-scale" :style="a4ScaleStyle">
+                    <div class="a4-sheet" x-ref="a4Sheet">
+                        <section class="a4-tag a4-cliente">
+                            <div class="a4-brand" x-text="brand"></div>
+                            <div class="a4-sub" x-text="sottotitolo" x-show="sottotitolo"></div>
+                            <div class="a4-head">
+                                <span class="a4-role">CLIENTE</span>
                                 <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
                             </div>
-                            <template x-for="r in righeGriglia" :key="'g-'+r.id">
-                                <div class="a4-line-griglia">
+                            <template x-for="r in righeOrdine" :key="'c-'+r.id">
+                                <div class="a4-line">
                                     <strong x-text="r.q"></strong>
                                     <span x-text="r.nome"></span>
+                                    <span x-text="formatEuro(r.importo).replace(/\s/g,'')"></span>
                                 </div>
                             </template>
-                            <div class="a4-empty" x-show="righeGriglia.length === 0">—</div>
+                            <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
+                            <div class="a4-pay" :class="metodo === 'contante' ? 'a4-pay--contante' : 'a4-pay--pos'"
+                                 x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
                         </section>
+                        <div class="a4-right">
+                            <div class="a4-top">
+                                <section class="a4-tag a4-cucina">
+                                    <div class="a4-brand" x-text="brand"></div>
+                                    <div class="a4-head">
+                                        <span class="a4-role">CUCINA</span>
+                                        <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                    </div>
+                                    <template x-for="r in righeCucina" :key="'k-'+r.id">
+                                        <div class="a4-check">
+                                            <span class="a4-box"></span>
+                                            <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
+                                        </div>
+                                    </template>
+                                    <div class="a4-empty" x-show="righeCucina.length === 0">—</div>
+                                    <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
+                                </section>
+                                <section class="a4-tag a4-cameriere">
+                                    <div class="a4-brand" x-text="brand"></div>
+                                    <div class="a4-head">
+                                        <span class="a4-role">CAMERIERE</span>
+                                        <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                    </div>
+                                    <div class="a4-mano a4-mano--top"><span>Tavolo</span><span class="a4-linea"></span></div>
+                                    <template x-for="r in righeOrdine" :key="'w-'+r.id">
+                                        <div class="a4-check">
+                                            <span class="a4-box"></span>
+                                            <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
+                                        </div>
+                                    </template>
+                                </section>
+                            </div>
+                            <section class="a4-tag a4-griglia">
+                                <div class="a4-griglia-head">
+                                    <div>
+                                        <div class="a4-brand" x-text="brand"></div>
+                                        <div class="a4-role">GRIGLIA</div>
+                                    </div>
+                                    <div class="a4-mano a4-mano--inline"><span>Cameriere</span><span class="a4-linea"></span></div>
+                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                </div>
+                                <template x-for="r in righeGriglia" :key="'g-'+r.id">
+                                    <div class="a4-line-griglia">
+                                        <strong x-text="r.q"></strong>
+                                        <span x-text="r.nome"></span>
+                                    </div>
+                                </template>
+                                <div class="a4-empty" x-show="righeGriglia.length === 0">—</div>
+                            </section>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="mt-4 flex justify-end gap-2">
+            <div class="flex shrink-0 justify-end gap-2 border-t border-sagra-line bg-white px-4 py-3">
                 <button class="btn" type="button" @click="chiudiModal()">Annulla (Esc)</button>
                 <button class="btn btn-primary" type="button" @click="inviaConferma()" :disabled="busy">
-                    Stampa <kbd>Invio</kbd>
+                    Conferma e stampa <kbd class="ml-1 border-white/40 bg-black/15 text-inherit">Invio</kbd>
                 </button>
             </div>
         </div>
@@ -439,6 +441,34 @@ function cassaApp(cfg) {
             this.$nextTick(() => this.scrollActive());
             this.$watch('errore', (v) => { if (v) window.sagraToast?.(v, 'danger'); });
             this.$watch('messaggio', (v) => { if (v) window.sagraToast?.(v, 'ok'); });
+            this.$watch('modalAnteprima', (open) => {
+                if (open) this.$nextTick(() => this.fitAnteprima());
+            });
+            this._onResizeAnteprima = () => {
+                if (this.modalAnteprima) this.fitAnteprima();
+            };
+            window.addEventListener('resize', this._onResizeAnteprima);
+        },
+
+        get a4ScaleStyle() {
+            const s = this.a4Scale || 1;
+            return {
+                transform: `scale(${s})`,
+                width: '270mm',
+                height: '190mm',
+            };
+        },
+
+        fitAnteprima() {
+            const box = this.$refs.a4Fit;
+            if (!box) return;
+            // Foglio A4 landscape utile: 270×190 mm → CSS px a 96dpi
+            const sheetW = 270 * (96 / 25.4);
+            const sheetH = 190 * (96 / 25.4);
+            const pad = 16;
+            const sx = (box.clientWidth - pad) / sheetW;
+            const sy = (box.clientHeight - pad) / sheetH;
+            this.a4Scale = Math.max(0.35, Math.min(sx, sy, 1.15));
         },
 
         formatEuro(n) {
@@ -592,6 +622,11 @@ function cassaApp(cfg) {
             this.metodo = m;
             this.modalPagamento = false;
             this.modalAnteprima = true;
+            this.$nextTick(() => {
+                this.fitAnteprima();
+                // Secondo passaggio dopo layout definitivo del modal
+                requestAnimationFrame(() => this.fitAnteprima());
+            });
         },
 
         async inviaConferma() {
