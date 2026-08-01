@@ -3,6 +3,11 @@
 @section('title', 'Facsimile menù')
 
 @section('content')
+@php
+    $haCongelati = $categorie->contains(
+        fn ($cat) => $cat->menuItems->contains(fn ($item) => (bool) $item->congelato)
+    );
+@endphp
 @unless ($autoPrint)
 <div class="no-print" style="padding:1rem;text-align:center">
     <button class="btn btn-primary" onclick="window.print()">Stampa</button>
@@ -26,16 +31,22 @@
                 <div class="facsimile-hint">Compila le quantità e consegna in cassa</div>
             </header>
 
-            @foreach ($categorie as $cat)
-                <div class="facsimile-cat">{{ $cat->nome }}</div>
-                @foreach ($cat->menuItems as $item)
-                    <div class="facsimile-row">
-                        <span class="facsimile-qty"></span>
-                        <span class="facsimile-nome">{{ $item->nome }}</span>
-                        <span class="facsimile-prezzo">{{ number_format($item->prezzo, 2, ',', '.') }} €</span>
-                    </div>
+            <div class="facsimile-body">
+                @foreach ($categorie as $cat)
+                    <div class="facsimile-cat">{{ $cat->nome }}</div>
+                    @foreach ($cat->menuItems as $item)
+                        <div class="facsimile-row">
+                            <span class="facsimile-qty"></span>
+                            <span class="facsimile-nome">{{ $item->nome }}@if ($item->congelato) *@endif</span>
+                            <span class="facsimile-prezzo">{{ number_format($item->prezzo, 2, ',', '.') }} €</span>
+                        </div>
+                    @endforeach
                 @endforeach
-            @endforeach
+            </div>
+
+            @if ($haCongelati)
+                <div class="facsimile-nota-congelato">* Pietanza che può contenere ingredienti congelati.</div>
+            @endif
         </section>
         @if ($half === 1)
             <div class="facsimile-cut" aria-hidden="true"></div>

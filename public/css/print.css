@@ -287,6 +287,13 @@
 
 .meta-small { font-size: .85em; color: #000; margin-bottom: 1.5mm; }
 
+.tag-nota-congelato {
+  margin-top: 2mm;
+  font-size: .78em;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+
 /* ===== FACSIMILE MENU =====
    Due metà su un solo A4 landscape. Dimensioni utili = foglio meno margini @page (8mm). */
 .facsimile-sheet {
@@ -315,6 +322,24 @@
   font-size: 9.5px;
   box-sizing: border-box;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.facsimile-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.facsimile-nota-congelato {
+  flex-shrink: 0;
+  margin-top: 1.2mm;
+  padding-top: .8mm;
+  border-top: 1px solid #000;
+  font-size: .68em;
+  line-height: 1.15;
 }
 
 .facsimile-head {
