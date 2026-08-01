@@ -188,11 +188,18 @@
                                 <span class="a4-role">CLIENTE</span>
                                 <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
                             </div>
+                            <div class="a4-line a4-line-head">
+                                <span>Q.tà</span>
+                                <span>Piatto</span>
+                                <span class="a4-importo">Prezzo</span>
+                                <span class="a4-importo">Totale</span>
+                            </div>
                             <template x-for="r in righeOrdine" :key="'c-'+r.id">
                                 <div class="a4-line">
                                     <strong x-text="r.q"></strong>
                                     <span x-text="r.nome"></span>
-                                    <span x-text="formatEuro(r.importo).replace(/\s/g,'')"></span>
+                                    <span class="a4-importo" x-text="formatEuro(r.prezzo).replace(/\s/g,'')"></span>
+                                    <span class="a4-importo" x-text="formatEuro(r.importo).replace(/\s/g,'')"></span>
                                 </div>
                             </template>
                             <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
@@ -226,8 +233,9 @@
                                     <div class="a4-mano a4-mano--top"><span>Tavolo</span><span class="a4-linea"></span></div>
                                     <template x-for="r in righeOrdine" :key="'w-'+r.id">
                                         <div class="a4-check">
+                                            <span class="a4-qty" x-text="r.q"></span>
+                                            <span class="a4-dotted" x-text="r.nome"></span>
                                             <span class="a4-box"></span>
-                                            <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
                                         </div>
                                     </template>
                                 </section>
@@ -243,7 +251,7 @@
                                 </div>
                                 <template x-for="r in righeGriglia" :key="'g-'+r.id">
                                     <div class="a4-line-griglia">
-                                        <strong x-text="r.q"></strong>
+                                        <span class="a4-qty" x-text="r.q"></span>
                                         <span x-text="r.nome"></span>
                                     </div>
                                 </template>
@@ -414,6 +422,7 @@ function cassaApp(cfg) {
                     id: i.id,
                     nome: i.nome,
                     q: this.qty[i.id],
+                    prezzo: i.prezzo,
                     importo: Math.round(this.qty[i.id] * i.prezzo * 100) / 100,
                     area_stampa: i.area_stampa,
                 }));

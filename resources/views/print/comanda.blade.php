@@ -36,10 +36,17 @@
         <div class="meta-small">{{ $comanda->serata->data->format('d/m/Y') }} · {{ $comanda->created_at->format('H:i') }}</div>
 
         <div class="tag-body">
+            <div class="tag-line tag-line-head">
+                <span>Q.tà</span>
+                <span>Piatto</span>
+                <span class="tag-importo">Prezzo</span>
+                <span class="tag-importo">Totale</span>
+            </div>
             @foreach ($tutte as $r)
                 <div class="tag-line">
                     <strong>{{ $r['quantita'] }}</strong>
                     <span>{{ $r['nome'] }}</span>
+                    <span class="tag-importo">{{ number_format($r['prezzo_unitario'], 2, ',', '.') }}</span>
                     <span class="tag-importo">{{ number_format($r['importo'], 2, ',', '.') }}</span>
                 </div>
             @endforeach

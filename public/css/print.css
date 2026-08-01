@@ -147,15 +147,26 @@
 
 .tag-line {
   display: grid;
-  grid-template-columns: 1.6em 1fr auto;
-  gap: 2mm;
+  grid-template-columns: 2em 1fr 4.2em 4.4em;
+  gap: 1.5mm;
   align-items: baseline;
   margin: 0.8mm 0;
+}
+
+.tag-line-head {
+  margin: 1.5mm 0 1mm;
+  padding-bottom: 0.6mm;
+  border-bottom: 1px solid #000;
+  font-size: 0.78em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .02em;
 }
 
 .tag-importo {
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  text-align: right;
 }
 
 .tag-line-check {
@@ -424,10 +435,25 @@
 .a4-num { font-weight: 900; font-size: 1.2em; }
 .a4-line {
   display: grid;
-  grid-template-columns: 1.4em 1fr auto;
+  grid-template-columns: 2em 1fr 4.2em 4.4em;
   gap: 1.5mm;
+  align-items: baseline;
   padding: .6mm 0;
   border-bottom: 1px dotted #ccc;
+}
+.a4-line-head {
+  border-bottom: 1px solid #000;
+  font-size: 0.78em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .02em;
+  padding-bottom: 0.8mm;
+  margin-bottom: 0.5mm;
+}
+.a4-importo {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  text-align: right;
 }
 .a4-line-griglia {
   display: grid;
