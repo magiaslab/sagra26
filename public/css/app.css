@@ -571,10 +571,13 @@ textarea:focus-visible {
   border-color: #bbb;
   color: #888;
 }
-.cassa-row.filled .cassa-row-qty,
-.cassa-row.active .cassa-row-qty {
+.cassa-row.filled .cassa-row-qty {
   border-color: var(--accent);
   box-shadow: 0 0 0 1px rgba(30, 92, 67, .18);
+}
+.cassa-row.active .cassa-row-qty {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 1px rgba(180, 83, 9, .25);
 }
 
 .cassa-footer {
