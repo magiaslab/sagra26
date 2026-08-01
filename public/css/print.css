@@ -160,20 +160,30 @@
 
 .tag-line-check {
   display: grid;
-  grid-template-columns: 12px 1fr;
+  grid-template-columns: auto 1fr 13px;
   gap: 2.2mm;
   align-items: center;
   margin: 1.4mm 0;
 }
 
+.tag-qty {
+  font-size: 1.55em;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  min-width: 1.1em;
+  text-align: right;
+}
+
 .check-box {
   display: inline-block;
-  width: 11px;
-  height: 11px;
+  width: 12px;
+  height: 12px;
   border: 1.5px solid #000;
   background: transparent;
   flex-shrink: 0;
   box-sizing: border-box;
+  justify-self: end;
 }
 
 .dotted {
@@ -184,10 +194,10 @@
 
 .tag-line-griglia {
   display: grid;
-  grid-template-columns: 1.6em 1fr;
-  gap: 2mm;
+  grid-template-columns: auto 1fr;
+  gap: 2.5mm;
   align-items: baseline;
-  margin: 1mm 0;
+  margin: 1.2mm 0;
 }
 
 .tag-griglia-head {
@@ -421,9 +431,18 @@
 }
 .a4-line-griglia {
   display: grid;
-  grid-template-columns: 1.4em 1fr;
-  gap: 1.5mm;
+  grid-template-columns: auto 1fr;
+  gap: 2mm;
+  align-items: baseline;
   padding: .6mm 0;
+}
+.a4-qty {
+  font-size: 1.55em;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  min-width: 1.1em;
+  text-align: right;
 }
 .a4-totale {
   margin-top: auto;
@@ -444,17 +463,18 @@
 .a4-pay--pos { border: 2px solid #000; }
 .a4-check {
   display: grid;
-  grid-template-columns: 10px 1fr;
+  grid-template-columns: auto 1fr 11px;
   gap: 2mm;
   align-items: center;
   padding: 1mm 0;
 }
 .a4-box {
-  width: 9px;
-  height: 9px;
+  width: 10px;
+  height: 10px;
   border: 1.5px solid #000;
   background: transparent;
   flex-shrink: 0;
+  justify-self: end;
 }
 .a4-dotted {
   border-bottom: 1px dotted #000;

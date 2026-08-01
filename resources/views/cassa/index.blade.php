@@ -209,8 +209,9 @@
                                     </div>
                                     <template x-for="r in righeCucina" :key="'k-'+r.id">
                                         <div class="a4-check">
+                                            <span class="a4-qty" x-text="r.q"></span>
+                                            <span class="a4-dotted" x-text="r.nome"></span>
                                             <span class="a4-box"></span>
-                                            <span class="a4-dotted"><strong x-text="r.q"></strong> <span x-text="r.nome"></span></span>
                                         </div>
                                     </template>
                                     <div class="a4-empty" x-show="righeCucina.length === 0">—</div>
