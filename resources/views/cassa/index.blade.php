@@ -11,7 +11,7 @@
 @endphp
 
 <div
-    class="flex h-dvh flex-col overflow-hidden font-sans text-[1.05rem]"
+    class="flex min-h-screen flex-col font-sans text-[1.05rem]"
     x-data="cassaApp({
         menu: {{ $menuJson }},
         stock: {{ $stockJson }},
