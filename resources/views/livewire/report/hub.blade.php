@@ -2,12 +2,12 @@
     <x-gestione.subnav />
     <x-gestione.page-header title="Report / Stampe" subtitle="Cucina, griglia, bevande, economico e consegna">
         <x-slot:actions>
-            <button class="btn btn-primary no-print" type="button" onclick="window.print()">Stampa / PDF</button>
+            <button class="btn btn-primary print:hidden" type="button" onclick="window.print()">Stampa / PDF</button>
         </x-slot:actions>
     </x-gestione.page-header>
 
-    <div class="panel no-print panel-stack">
-        <div class="grid-3">
+    <div class="panel mb-4 print:hidden">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
             <div class="field">
                 <label class="label">Tipo</label>
                 <select class="input" wire:model.live="tipo">
@@ -29,9 +29,9 @@
             </div>
             <div class="field">
                 <label class="label">Ambito</label>
-                <label><input type="checkbox" wire:model.live="completo"> Completo (tutta la sagra)</label>
+                <label class="font-semibold"><input type="checkbox" wire:model.live="completo"> Completo (tutta la sagra)</label>
                 @if ($tipo === 'consegna')
-                    <select class="input mt-tight" wire:model.live="puntoCassaId">
+                    <select class="input mt-2" wire:model.live="puntoCassaId">
                         @foreach ($punti as $p)
                             <option value="{{ $p->id }}">{{ $p->nome }}</option>
                         @endforeach
@@ -42,7 +42,7 @@
     </div>
 
     @if (!$serata)
-        <div class="alert alert-warn">Nessuna serata selezionata.</div>
+        <x-ui.alert type="warn">Nessuna serata selezionata.</x-ui.alert>
     @elseif ($tipo === 'cucina' || $tipo === 'griglia')
         @include('livewire.report.partials.reparto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
     @elseif ($tipo === 'bevande')
