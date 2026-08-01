@@ -119,7 +119,7 @@
         <div class="mx-auto grid max-w-[1200px] grid-cols-1 content-start gap-x-8 gap-y-5 md:grid-cols-2" x-ref="menuList">
             <template x-for="group in grouped" :key="group.categoria">
                 <section class="rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
-                    <h2 class="border-b border-sagra-line px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-sagra-muted" x-text="group.categoria"></h2>
+                    <h2 class="border-b border-sagra-line bg-sagra-softer/70 px-4 py-2.5 text-[0.95rem] font-bold tracking-wide text-sagra" x-text="group.categoria"></h2>
                     <div class="divide-y divide-sagra-line/70">
                         <template x-for="item in group.items" :key="item.id">
                             <div
