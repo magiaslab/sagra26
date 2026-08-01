@@ -7,6 +7,7 @@
     $tutte = $righe;
     $cucina = $righe->filter(fn ($r) => $r['area_stampa'] === 'cucina');
     $griglia = $righe->filter(fn ($r) => $r['area_stampa'] === 'griglia');
+    $haCongelati = $righe->contains(fn ($r) => ! empty($r['congelato']));
     $metodo = $comanda->metodo_pagamento;
     $nome = $impostazioni->intestazione_nome;
     $anno = $impostazioni->intestazione_anno;
@@ -45,7 +46,7 @@
             @foreach ($tutte as $r)
                 <div class="tag-line">
                     <strong>{{ $r['quantita'] }}</strong>
-                    <span>{{ $r['nome'] }}</span>
+                    <span>{{ $r['nome'] }}@if (! empty($r['congelato'])) *@endif</span>
                     <span class="tag-importo">{{ number_format($r['prezzo_unitario'], 2, ',', '.') }}</span>
                     <span class="tag-importo">{{ number_format($r['importo'], 2, ',', '.') }}</span>
                 </div>
@@ -64,6 +65,9 @@
                 MISTO
             @endif
         </div>
+        @if ($haCongelati)
+            <div class="tag-nota-congelato">* Prodotto surgelato o congelato all'origine.</div>
+        @endif
     </section>
 
     <div class="tag-right">

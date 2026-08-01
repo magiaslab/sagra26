@@ -24,6 +24,8 @@ class MenuCrud extends Component
 
     public bool $bar = false;
 
+    public bool $congelato = false;
+
     public bool $is_coperto = false;
 
     public string $stock_default = '';
@@ -44,6 +46,7 @@ class MenuCrud extends Component
         $this->attivo = $item->attivo;
         $this->piatto_del_giorno = $item->piatto_del_giorno;
         $this->bar = (bool) $item->bar;
+        $this->congelato = (bool) $item->congelato;
         $this->is_coperto = (bool) $item->is_coperto;
         $this->stock_default = $item->stock_default !== null ? (string) $item->stock_default : '';
         $this->area_stampa = $item->area_stampa ?? '';
@@ -58,6 +61,7 @@ class MenuCrud extends Component
         $this->attivo = true;
         $this->piatto_del_giorno = false;
         $this->bar = false;
+        $this->congelato = false;
         $this->is_coperto = false;
         $this->stock_default = '';
         $this->area_stampa = '';
@@ -82,6 +86,7 @@ class MenuCrud extends Component
             'attivo' => $this->attivo,
             'piatto_del_giorno' => $this->piatto_del_giorno,
             'bar' => $this->bar,
+            'congelato' => $this->congelato,
             'is_coperto' => $this->is_coperto,
             'stock_default' => $this->stock_default === '' ? null : (int) $this->stock_default,
             'area_stampa' => $this->area_stampa === '' ? null : $this->area_stampa,

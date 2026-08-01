@@ -218,6 +218,8 @@ class CassaController extends Controller
             return [
                 'quantita' => $r->quantita,
                 'nome' => $r->menuItem->nome,
+                // Live dal menù: non storicizzato su comanda_righe (a differenza di bar/prezzo).
+                'congelato' => (bool) $r->menuItem->congelato,
                 'prezzo_unitario' => $prezzo,
                 'importo' => round($r->quantita * $prezzo, 2),
                 'area_stampa' => $r->menuItem->areaStampaEffettiva(),

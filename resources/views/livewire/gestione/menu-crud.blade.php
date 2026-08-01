@@ -43,6 +43,7 @@
                     <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model="attivo"> Attivo</label>
                     <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model="piatto_del_giorno"> Piatto del giorno</label>
                     <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model="bar"> Voce Bar</label>
+                    <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model="congelato"> Possibile congelato (*)</label>
                     <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model="is_coperto"> Voce Coperto</label>
                 </div>
                 @error('is_coperto')
@@ -88,6 +89,7 @@
                                     <strong>{{ $item->nome }}</strong>
                                     @if ($item->area_stampa)<span class="rounded bg-sagra-softer px-1.5 py-0.5 text-xs font-medium text-sagra">{{ $item->area_stampa }}</span>@endif
                                     @if ($item->bar)<span class="rounded bg-sagra-softer px-1.5 py-0.5 text-xs font-medium text-sagra">BAR</span>@endif
+                                    @if ($item->congelato)<span class="rounded bg-sagra-softer px-1.5 py-0.5 text-xs font-medium text-sagra">*</span>@endif
                                     @if ($item->is_coperto)<span class="rounded bg-sagra-softer px-1.5 py-0.5 text-xs font-medium text-sagra">COPERTI</span>@endif
                                     @if ($item->stock_default !== null)<span class="text-sm text-sagra-muted"> stock {{ $item->stock_default }}</span>@endif
                                 </td>
