@@ -44,7 +44,8 @@
     <header class="cassa-chrome">
         <div class="cassa-chrome-left">
             <label class="cassa-postazione">
-                <select x-model.number="postazioneId" @change="salvaPostazione()">
+                <span class="cassa-postazione-lbl">Postazione</span>
+                <select x-model.number="postazioneId" @change="salvaPostazione()" aria-label="Seleziona postazione cassa">
                     <template x-for="p in postazioni" :key="p.id">
                         <option :value="p.id" x-text="p.nome"></option>
                     </template>
@@ -59,7 +60,14 @@
             </span>
         </div>
 
-        <div class="cassa-chrome-brand" x-text="brand"></div>
+        <div class="cassa-chrome-center">
+            <div class="cassa-chrome-brand" x-text="brand"></div>
+            <nav class="cassa-chrome-nav" aria-label="Uscita cassa">
+                <a :href="urls.gestione">Gestione</a>
+                <span class="cassa-chrome-nav-sep" aria-hidden="true">·</span>
+                <a :href="urls.home">Home</a>
+            </nav>
+        </div>
 
         <div class="cassa-chrome-right">
             <div class="cassa-kpi">
@@ -70,10 +78,6 @@
                 <span class="cassa-kpi-lbl">Totale</span>
                 <span class="cassa-kpi-val" x-text="formatEuro(totale)"></span>
             </div>
-            <nav class="cassa-chrome-nav" aria-label="Uscita cassa">
-                <a :href="urls.gestione">Gestione</a>
-                <a :href="urls.home">Home</a>
-            </nav>
         </div>
     </header>
 
