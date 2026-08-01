@@ -11,7 +11,7 @@
     @livewireStyles
     @stack('head')
 </head>
-<body class="h-dvh overflow-hidden bg-sagra-bg">
+<body class="min-h-screen bg-sagra-bg">
 @yield('content')
 <x-ui.toast-host />
 <x-ui.flash-toasts />

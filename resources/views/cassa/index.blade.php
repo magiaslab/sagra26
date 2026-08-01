@@ -35,7 +35,7 @@
     })"
     @keydown.window="onKey($event)"
 >
-    <div class="sticky top-0 z-40 shrink-0">
+    <div class="sticky top-0 z-40" x-ref="stickyBar">
         @if (!$serata)
             <div class="bg-sagra-warn-soft px-4 py-2.5 text-sm font-medium text-sagra-warn ring-1 ring-inset ring-sagra-warn/25">
                 Nessuna serata aperta.
@@ -112,15 +112,15 @@
         </div>
     </div>
 
-    <div class="min-h-0 flex-1 overflow-auto bg-sagra-bg px-4 py-4">
+    <div class="flex-1 bg-sagra-bg px-4 py-4">
         <div class="mx-auto grid max-w-[1200px] grid-cols-1 content-start gap-x-8 gap-y-5 md:grid-cols-2" x-ref="menuList">
             <template x-for="group in grouped" :key="group.categoria">
-                <section class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
+                <section class="rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
                     <h2 class="border-b border-sagra-line px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-sagra-muted" x-text="group.categoria"></h2>
                     <div class="divide-y divide-sagra-line/70">
                         <template x-for="item in group.items" :key="item.id">
                             <div
-                                class="grid min-h-12 cursor-pointer grid-cols-[1fr_auto_3.5rem] items-center gap-3 px-4 py-2.5 transition"
+                                class="grid min-h-12 scroll-mt-28 cursor-pointer grid-cols-[1fr_auto_3.5rem] items-center gap-3 px-4 py-2.5 transition"
                                 :class="{
                                     'bg-sagra-softer': qtyOf(item) > 0 && activeId !== item.id,
                                     'bg-sagra-softer ring-2 ring-inset ring-sagra': activeId === item.id
@@ -547,7 +547,16 @@ function cassaApp(cfg) {
 
         scrollActive() {
             const el = this.$refs.menuList?.querySelector(`[data-id="${this.activeId}"]`);
-            if (el) el.scrollIntoView({ block: 'nearest' });
+            if (!el) return;
+            // Rispetta header+toolbar sticky: non usare scrollIntoView sul contenitore sbagliato
+            const topPad = (this.$refs.stickyBar?.offsetHeight || 0) + 8;
+            const rect = el.getBoundingClientRect();
+            const viewBottom = window.innerHeight - 8;
+            if (rect.top < topPad) {
+                window.scrollBy({ top: rect.top - topPad, left: 0, behavior: 'auto' });
+            } else if (rect.bottom > viewBottom) {
+                window.scrollBy({ top: rect.bottom - viewBottom, left: 0, behavior: 'auto' });
+            }
         },
 
         move(delta) {
