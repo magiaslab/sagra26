@@ -287,10 +287,11 @@
 
 .meta-small { font-size: .85em; color: #000; margin-bottom: 1.5mm; }
 
-/* ===== FACSIMILE MENU ===== */
+/* ===== FACSIMILE MENU =====
+   Due metà su un solo A4 landscape. Dimensioni utili = foglio meno margini @page (8mm). */
 .facsimile-sheet {
-  width: 297mm;
-  height: 210mm;
+  width: 281mm;   /* 297 - 16 */
+  height: 194mm;  /* 210 - 16 */
   margin: 1rem auto;
   background: #fff;
   border: 1px solid #000;
@@ -298,6 +299,8 @@
   grid-template-columns: 1fr 0 1fr;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,.12);
+  page-break-inside: avoid;
+  break-inside: avoid;
 }
 
 .facsimile-cut {
@@ -307,44 +310,66 @@
 }
 
 .facsimile-half {
-  padding: 6mm 7mm;
+  padding: 4mm 5mm;
   overflow: hidden;
-  font-size: 10.5px;
+  font-size: 9.5px;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 .facsimile-head {
   text-align: center;
-  border-bottom: 2px solid #000;
-  padding-bottom: 2mm;
-  margin-bottom: 3mm;
+  border-bottom: 1.5px solid #000;
+  padding-bottom: 1.2mm;
+  margin-bottom: 1.8mm;
 }
-.facsimile-title { font-size: 1.35em; font-weight: 800; }
-.facsimile-anno { font-size: 1.1em; font-weight: 700; }
-.facsimile-sub { font-size: .8em; margin-top: 1mm; }
-.facsimile-hint { font-size: .75em; margin-top: 1.5mm; text-transform: uppercase; letter-spacing: .04em; }
+.facsimile-title {
+  font-size: 1.2em;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.facsimile-anno {
+  font-size: 1em;
+  font-weight: 700;
+  margin-left: .35em;
+}
+.facsimile-sub {
+  font-size: .72em;
+  margin-top: .6mm;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.facsimile-hint {
+  font-size: .7em;
+  margin-top: .8mm;
+  text-transform: uppercase;
+  letter-spacing: .03em;
+}
 
 .facsimile-cat {
   font-weight: 800;
   text-transform: uppercase;
-  border-bottom: 1.5px solid #000;
-  margin: 2.5mm 0 1mm;
-  padding-bottom: .5mm;
-  font-size: .85em;
+  border-bottom: 1px solid #000;
+  margin: 1.6mm 0 .6mm;
+  padding-bottom: .3mm;
+  font-size: .82em;
 }
 
 .facsimile-row {
   display: grid;
-  grid-template-columns: 14mm 1fr auto;
-  gap: 2mm;
+  grid-template-columns: 11mm 1fr auto;
+  gap: 1.5mm;
   align-items: end;
-  margin: 1.2mm 0;
-  line-height: 1.15;
+  margin: .7mm 0;
+  line-height: 1.1;
 }
 
 .facsimile-qty {
   display: block;
-  height: 4mm;
+  height: 3.2mm;
   border-bottom: 1px solid #000;
 }
 
@@ -356,8 +381,10 @@
     box-shadow: none !important;
     margin: 0 !important;
     border: none !important;
-    width: 297mm;
-    height: 210mm;
+    width: 281mm;
+    height: 194mm;
+    page-break-after: avoid;
+    break-after: avoid;
   }
 }
 /* Anteprima A4 in modale cassa: scala via JS (fitAnteprima), niente scroll. */
