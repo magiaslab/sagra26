@@ -36,9 +36,9 @@
     @keydown.window="onKey($event)"
 >
     @if (!$serata)
-        <div class="border-b-2 border-sagra-warn bg-sagra-warn-soft px-4 py-2.5 text-sm font-semibold text-sagra-warn">
+        <div class="bg-sagra-warn-soft px-4 py-2.5 text-sm font-medium text-sagra-warn ring-1 ring-inset ring-sagra-warn/25">
             Nessuna serata aperta.
-            <a class="underline" :href="urls.gestione">Apri da Gestione → Serate</a>
+            <a class="font-semibold underline underline-offset-2" :href="urls.gestione">Apri da Gestione → Serate</a>
         </div>
     @endif
 
@@ -49,43 +49,43 @@
                     x-model.number="postazioneId"
                     @change="salvaPostazione()"
                     aria-label="Seleziona postazione cassa"
-                    class="h-9 max-w-[10rem] cursor-pointer rounded-md border-0 bg-white/10 px-2.5 text-sm font-semibold uppercase text-white ring-1 ring-inset ring-white/30 focus:outline-none focus:ring-2 focus:ring-white/60"
+                    class="h-9 max-w-[10rem] cursor-pointer rounded-md border-0 bg-white/10 px-2.5 text-sm font-medium text-white ring-1 ring-inset ring-white/25 focus:outline-none focus:ring-2 focus:ring-white/50"
                 >
                     <template x-for="p in postazioni" :key="p.id">
                         <option :value="p.id" x-text="p.nome" class="text-black"></option>
                     </template>
                 </select>
-                <div class="flex items-baseline gap-2 whitespace-nowrap text-sm font-semibold">
-                    <span class="text-white/70">Comanda</span>
-                    <span class="text-xl font-bold tabular-nums" x-text="numeroDisplay"></span>
-                    <span class="text-xs font-medium text-white/70"
+                <div class="flex items-baseline gap-2 whitespace-nowrap text-sm">
+                    <span class="font-medium text-white/70">Comanda</span>
+                    <span class="text-xl font-semibold tabular-nums" x-text="numeroDisplay"></span>
+                    <span class="text-xs font-medium text-white/65"
                           x-show="comandaId" x-cloak
                           x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"></span>
                 </div>
             </div>
 
-            <div class="mx-auto hidden min-w-0 items-center gap-4 sm:flex">
-                <span class="truncate text-sm font-semibold tracking-wide" x-text="brand"></span>
-                <nav class="flex items-center gap-3 text-sm" aria-label="Uscita cassa">
-                    <a class="font-medium text-white/75 no-underline hover:text-white" :href="urls.gestione">Gestione</a>
-                    <a class="font-medium text-white/75 no-underline hover:text-white" :href="urls.home">Home</a>
+            <div class="mx-auto hidden h-full min-w-0 items-stretch gap-6 sm:flex">
+                <span class="flex items-center truncate text-sm font-semibold tracking-wide" x-text="brand"></span>
+                <nav class="flex items-stretch gap-1" aria-label="Uscita cassa">
+                    <a class="inline-flex items-center border-b-2 border-transparent px-2 text-sm font-medium text-white/75 no-underline hover:border-white/40 hover:text-white" :href="urls.gestione">Gestione</a>
+                    <a class="inline-flex items-center border-b-2 border-transparent px-2 text-sm font-medium text-white/75 no-underline hover:border-white/40 hover:text-white" :href="urls.home">Home</a>
                 </nav>
             </div>
 
             <div class="ml-auto flex items-center gap-6">
                 <div class="text-right">
-                    <div class="text-[0.7rem] font-medium uppercase tracking-wide text-white/70">Coperti</div>
-                    <div class="text-xl font-bold tabular-nums leading-none" x-text="coperti"></div>
+                    <div class="text-[0.68rem] font-medium uppercase tracking-wide text-white/65">Coperti</div>
+                    <div class="text-xl font-semibold tabular-nums leading-none" x-text="coperti"></div>
                 </div>
                 <div class="text-right">
-                    <div class="text-[0.7rem] font-medium uppercase tracking-wide text-white/70">Totale</div>
-                    <div class="text-2xl font-bold tabular-nums leading-none" x-text="formatEuro(totale)"></div>
+                    <div class="text-[0.68rem] font-medium uppercase tracking-wide text-white/65">Totale</div>
+                    <div class="text-2xl font-semibold tabular-nums leading-none" x-text="formatEuro(totale)"></div>
                 </div>
             </div>
         </div>
     </header>
 
-    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-sagra-line bg-white px-4 py-1.5 text-xs text-sagra-muted" aria-hidden="true">
+    <div class="flex flex-wrap items-center gap-x-5 gap-y-1 border-b border-sagra-line bg-white px-4 py-1.5 text-xs text-sagra-muted" aria-hidden="true">
         <span><span class="font-mono text-sagra-ink">↓/Invio</span> riga dopo</span>
         <span><span class="font-mono text-sagra-ink">↑</span> riga prima</span>
         <span><span class="font-mono text-sagra-ink">+/-</span> quantità</span>
@@ -95,64 +95,65 @@
         <span><span class="font-mono text-sagra-ink">Esc</span> annulla</span>
     </div>
 
-    <div class="flex-1 overflow-auto p-4">
-        <div class="mx-auto grid max-w-[1200px] grid-cols-1 content-start gap-x-8 gap-y-4 md:grid-cols-2" x-ref="menuList">
+    <div class="flex-1 overflow-auto bg-sagra-bg px-4 py-4">
+        <div class="mx-auto grid max-w-[1200px] grid-cols-1 content-start gap-x-8 gap-y-5 md:grid-cols-2" x-ref="menuList">
             <template x-for="group in grouped" :key="group.categoria">
-                <section>
-                    <h2 class="mb-2 border-b-2 border-sagra pb-1 text-sm font-extrabold uppercase tracking-widest text-sagra" x-text="group.categoria"></h2>
-                    <template x-for="item in group.items" :key="item.id">
-                        <div
-                            class="mb-1 grid min-h-10 cursor-pointer grid-cols-[1fr_auto_3.4rem] items-center gap-2 rounded-md border-l-4 border-transparent px-2 py-2 hover:bg-sagra/5"
-                            :class="{
-                                'bg-sagra-softer border-l-sagra': (qty[item.id] || 0) > 0 && activeId !== item.id,
-                                'bg-sagra-amber-soft border-l-sagra-amber': activeId === item.id
-                            }"
-                            :data-id="item.id"
-                            @click="setActive(item.id)"
-                        >
-                            <div class="min-w-0">
-                                <div class="text-[1.05rem] font-bold text-sagra-ink" x-text="item.nome"></div>
+                <section class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
+                    <h2 class="border-b border-sagra-line px-3 py-2 text-xs font-semibold uppercase tracking-wide text-sagra-muted" x-text="group.categoria"></h2>
+                    <div class="divide-y divide-sagra-line/70">
+                        <template x-for="item in group.items" :key="item.id">
+                            <div
+                                class="grid min-h-11 cursor-pointer grid-cols-[1fr_auto_3.25rem] items-center gap-3 px-3 py-2 transition"
+                                :class="{
+                                    'bg-sagra-softer': (qty[item.id] || 0) > 0 && activeId !== item.id,
+                                    'bg-sagra/10 ring-2 ring-inset ring-sagra': activeId === item.id
+                                }"
+                                :data-id="item.id"
+                                @click="setActive(item.id)"
+                            >
+                                <div class="min-w-0">
+                                    <div class="truncate text-sm font-semibold text-sagra-ink" x-text="item.nome"></div>
+                                    <div
+                                        class="mt-0.5 text-xs font-medium"
+                                        :class="stockStateClass(item)"
+                                        x-show="item.stock_limitato || !serataAperta"
+                                        x-text="stockLabel(item)"
+                                    ></div>
+                                </div>
+                                <div class="whitespace-nowrap text-sm tabular-nums text-sagra-muted" x-text="formatEuro(item.prezzo)"></div>
                                 <div
-                                    class="mt-0.5 text-xs font-semibold"
-                                    :class="stockStateClass(item)"
-                                    x-show="item.stock_limitato || !serataAperta"
-                                    x-text="stockLabel(item)"
+                                    class="flex h-9 items-center justify-center rounded-md bg-sagra-bg text-center text-base font-semibold tabular-nums text-sagra-ink ring-1 ring-inset ring-sagra-line"
+                                    :class="{
+                                        'bg-neutral-100 text-neutral-400 ring-neutral-200': isStockBlocked(item),
+                                        'bg-sagra text-white ring-sagra': (qty[item.id] || 0) > 0 && activeId !== item.id,
+                                        'bg-white text-sagra ring-sagra': activeId === item.id && (qty[item.id] || 0) > 0,
+                                        'bg-white ring-sagra': activeId === item.id && !(qty[item.id] || 0)
+                                    }"
+                                    x-text="qty[item.id] || ''"
                                 ></div>
                             </div>
-                            <div class="whitespace-nowrap text-[0.98rem] font-semibold tabular-nums text-sagra-muted" x-text="formatEuro(item.prezzo)"></div>
-                            <div
-                                class="min-h-10 rounded-md border-[1.5px] border-sagra-line bg-white text-center text-lg font-extrabold leading-10 tabular-nums text-sagra-dark"
-                                :class="{
-                                    'bg-neutral-100 border-neutral-400 text-neutral-400': isStockBlocked(item),
-                                    'border-sagra': (qty[item.id] || 0) > 0 && activeId !== item.id,
-                                    'border-[#c4a574] bg-[#fffdf8]': activeId === item.id
-                                }"
-                                x-text="qty[item.id] || ''"
-                            ></div>
-                        </div>
-                    </template>
+                        </template>
+                    </div>
                 </section>
             </template>
         </div>
     </div>
 
     <footer class="flex flex-col items-stretch justify-between gap-3 border-t border-sagra-line bg-white px-4 py-3 lg:flex-row lg:items-center">
-        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 text-sm font-semibold text-sagra-muted">
-            <span class="whitespace-nowrap" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-3 text-sm text-sagra-muted">
+            <span class="whitespace-nowrap font-medium" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
             <div class="w-full max-w-xs min-h-10" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
                 <input class="block h-10 w-full rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
                        placeholder="Motivo correzione (facoltativo)" autocomplete="off"
                        :tabindex="comandaId ? 0 : -1" :aria-hidden="!comandaId">
             </div>
         </div>
-        <div class="flex flex-wrap items-center gap-3">
-            <button type="button" class="inline-flex h-11 items-center rounded-md bg-sagra px-5 text-base font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" @click="apriPagamento()" :disabled="!serataAperta">
-                Conferma e stampa <span class="ml-2 font-mono text-sm text-white/80">F9</span>
+        <div class="flex flex-wrap items-center gap-2">
+            <button type="button" class="inline-flex h-11 items-center rounded-md bg-sagra px-5 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" @click="apriPagamento()" :disabled="!serataAperta">
+                Conferma e stampa <span class="ml-2 font-mono text-xs text-white/80">F9</span>
             </button>
-            <div class="flex items-center gap-2">
-                <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <span class="ml-1 font-mono text-xs text-sagra-muted">F2</span></button>
-                <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <span class="ml-1 font-mono text-xs text-sagra-muted">Esc</span></button>
-            </div>
+            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <span class="ml-1 font-mono text-xs text-sagra-muted">F2</span></button>
+            <button type="button" class="inline-flex h-11 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <span class="ml-1 font-mono text-xs text-sagra-muted">Esc</span></button>
         </div>
     </footer>
 
@@ -280,14 +281,15 @@
                        @keydown.enter.prevent="eseguiRichiamo()" placeholder="Es. 42">
                 <button class="inline-flex shrink-0 items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
             </div>
-            <h3 class="mb-2 mt-3 text-sm font-extrabold uppercase tracking-wide text-sagra-muted">Ultime comande</h3>
+            <h3 class="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-sagra-muted">Ultime comande</h3>
             <div class="max-h-[42vh] overflow-auto" x-show="storico.length === 0">
-                <p class="rounded-md border border-sagra-line bg-sagra-bg p-4 text-center text-sagra-muted">Nessuna comanda stampata ancora in questa serata.</p>
+                <p class="rounded-md bg-sagra-bg p-4 text-center text-sm text-sagra-muted ring-1 ring-inset ring-sagra-line/80">Nessuna comanda stampata ancora in questa serata.</p>
             </div>
-            <div class="flex max-h-[42vh] flex-col gap-2 overflow-auto" x-show="storico.length > 0">
+            <div class="max-h-[42vh] overflow-auto rounded-lg ring-1 ring-sagra-line/80" x-show="storico.length > 0">
+                <div class="divide-y divide-sagra-line">
                 <template x-for="c in storico" :key="c.comanda_id">
-                    <div class="overflow-hidden rounded-md bg-white ring-1 ring-sagra-line"
-                         :class="{ 'opacity-60 bg-neutral-50': c.stato === 'annullata', 'ring-sagra-danger': annulloId === c.comanda_id }">
+                    <div class="bg-white"
+                         :class="{ 'opacity-60': c.stato === 'annullata', 'bg-sagra-danger-soft/40': annulloId === c.comanda_id }">
                         <template x-if="c.stato === 'annullata'">
                             <div class="px-3 py-2">
                                 <div class="flex items-center justify-between gap-2">
@@ -334,6 +336,7 @@
                         </template>
                     </div>
                 </template>
+                </div>
             </div>
             <div class="mt-4 flex justify-end gap-2">
                 <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
