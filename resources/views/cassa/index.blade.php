@@ -369,6 +369,7 @@ function cassaApp(cfg) {
         modalPagamento: false,
         modalAnteprima: false,
         modalRichiamo: false,
+        a4Scale: 1,
         metodo: null,
         comandaId: null,
         numeroRichiamato: null,
