@@ -118,15 +118,26 @@
     <div class="flex-1 bg-sagra-bg px-4 py-4">
         <div class="mx-auto grid max-w-[1200px] grid-cols-1 content-start gap-x-8 gap-y-5 md:grid-cols-2" x-ref="menuList">
             <template x-for="group in grouped" :key="group.categoria">
-                <section class="rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
-                    <h2 class="border-b border-sagra-line bg-sagra-softer/70 px-4 py-2.5 text-[0.95rem] font-bold tracking-wide text-sagra" x-text="group.categoria"></h2>
+                <section
+                    class="rounded-lg bg-white shadow-sm ring-1 transition"
+                    :class="group.items.some(i => i.id === activeId)
+                        ? 'ring-sagra/50 shadow-md'
+                        : 'ring-sagra-line/80'"
+                >
+                    <h2
+                        class="border-b px-4 py-2.5 text-[0.95rem] font-bold tracking-wide transition"
+                        :class="group.items.some(i => i.id === activeId)
+                            ? 'border-sagra/25 bg-sagra-soft text-sagra-dark'
+                            : 'border-sagra-line bg-sagra-softer text-sagra'"
+                        x-text="group.categoria"
+                    ></h2>
                     <div class="divide-y divide-sagra-line/70">
                         <template x-for="item in group.items" :key="item.id">
                             <div
                                 class="grid min-h-12 scroll-mt-28 cursor-pointer grid-cols-[1fr_auto_3.5rem] items-center gap-3 px-4 py-2.5 transition"
                                 :class="{
-                                    'bg-sagra-softer': qtyOf(item) > 0 && activeId !== item.id,
-                                    'bg-sagra-softer ring-2 ring-inset ring-sagra': activeId === item.id
+                                    'bg-sagra-softer/80': qtyOf(item) > 0 && activeId !== item.id,
+                                    'bg-sagra-soft ring-2 ring-inset ring-sagra': activeId === item.id
                                 }"
                                 :data-id="item.id"
                                 @click="setActive(item.id)"
