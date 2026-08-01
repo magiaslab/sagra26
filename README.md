@@ -30,6 +30,7 @@ touch database/database.sqlite
 #   # DB_DATABASE lasciato vuoto → usa database/database.sqlite
 
 php artisan migrate --seed
+npm install && npm run build
 php artisan serve
 ```
 
@@ -53,6 +54,7 @@ di backup sono in `deploy/`.
 
 ## Note offline
 
-Nessuna dipendenza da CDN/API esterne a runtime: CSS in `public/css/app.css`,
+Nessuna dipendenza da CDN/API esterne a runtime: UI con Tailwind via Vite
+(`npm run build` → `public/build`), stampa mm in `public/css/print.css`.
 Alpine.js arriva con Livewire. La stampa comanda è pensata per Chrome kiosk-printing
 e layout B/N (bordi/testo, mai solo `background-color`).

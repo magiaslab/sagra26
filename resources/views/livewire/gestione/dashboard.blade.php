@@ -1,31 +1,63 @@
 <div>
-    <h1>Gestione</h1>
-    @if ($serata)
-        <div class="alert alert-ok">Serata aperta: <strong>{{ $serata->data->format('d/m/Y') }}</strong></div>
-    @else
-        <div class="alert alert-warn">Nessuna serata aperta.</div>
-    @endif
+    <x-gestione.subnav />
+    <x-gestione.page-header
+        title="Gestione"
+        subtitle="Apertura serata, menù, chiusure e report"
+    >
+        <x-slot:actions>
+            @if ($serata)
+                <span class="inline-flex min-h-9 items-center rounded-md bg-sagra-softer px-3 py-1.5 text-sm font-medium text-sagra-dark">
+                    Serata aperta · {{ $serata->data->format('d/m/Y') }}
+                </span>
+            @else
+                <span class="inline-flex min-h-9 items-center rounded-md bg-sagra-amber-soft px-3 py-1.5 text-sm font-medium text-sagra-warn">
+                    Nessuna serata aperta
+                </span>
+                <a class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" href="{{ route('gestione.serate', absolute: false) }}">Apri serata</a>
+            @endif
+        </x-slot:actions>
+    </x-gestione.page-header>
 
-    <div class="home-cards">
-        <a class="home-card" href="{{ route('gestione.serate', absolute: false) }}">
-            <h2>Serate</h2>
-            <p>Apertura, stock e chiusura serata</p>
+    <div class="divide-y divide-sagra-line overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.serate', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Operativo</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Serate</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Apertura, stock limitati e chiusura della serata</p>
+            </div>
         </a>
-        <a class="home-card" href="{{ route('gestione.menu', absolute: false) }}">
-            <h2>Menù</h2>
-            <p>Voci, prezzi, stock default, aree stampa</p>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.menu', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Catalogo</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Menù</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Voci, prezzi, stock default e aree stampa</p>
+            </div>
         </a>
-        <a class="home-card" href="{{ route('gestione.chiusura', absolute: false) }}">
-            <h2>Chiusura cassa</h2>
-            <p>Conta pezzi e riconciliazione a tre vie</p>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.chiusura', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Fine turno</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Chiusura cassa</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Conta pezzi e riconciliazione a tre vie</p>
+            </div>
         </a>
-        <a class="home-card" href="{{ route('gestione.report', absolute: false) }}">
-            <h2>Report / Stampe</h2>
-            <p>Cucina, statistiche, economico, consegna</p>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.report', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Stampe</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Report</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Cucina, griglia, bevande, economico, consegna</p>
+            </div>
         </a>
-        <a class="home-card" href="{{ route('gestione.impostazioni', absolute: false) }}">
-            <h2>Impostazioni</h2>
-            <p>Postazioni, punti cassa, PIN</p>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.impostazioni', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Sistema</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Impostazioni</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Postazioni, punti cassa e PIN gestione</p>
+            </div>
         </a>
     </div>
 </div>

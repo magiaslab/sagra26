@@ -36,10 +36,17 @@
         <div class="meta-small">{{ $comanda->serata->data->format('d/m/Y') }} · {{ $comanda->created_at->format('H:i') }}</div>
 
         <div class="tag-body">
+            <div class="tag-line tag-line-head">
+                <span>Q.tà</span>
+                <span>Piatto</span>
+                <span class="tag-importo">Prezzo</span>
+                <span class="tag-importo">Totale</span>
+            </div>
             @foreach ($tutte as $r)
                 <div class="tag-line">
                     <strong>{{ $r['quantita'] }}</strong>
                     <span>{{ $r['nome'] }}</span>
+                    <span class="tag-importo">{{ number_format($r['prezzo_unitario'], 2, ',', '.') }}</span>
                     <span class="tag-importo">{{ number_format($r['importo'], 2, ',', '.') }}</span>
                 </div>
             @endforeach
@@ -71,8 +78,9 @@
                 <div class="tag-body">
                     @forelse ($cucina as $r)
                         <div class="tag-line-check">
+                            <span class="tag-qty">{{ $r['quantita'] }}</span>
+                            <span class="dotted">{{ $r['nome'] }}</span>
                             <span class="check-box" aria-hidden="true"></span>
-                            <span class="dotted"><strong>{{ $r['quantita'] }}</strong> {{ $r['nome'] }}</span>
                         </div>
                     @empty
                         <div class="meta-small">— nessuna voce —</div>
@@ -98,8 +106,9 @@
                 <div class="tag-body">
                     @foreach ($tutte as $r)
                         <div class="tag-line-check">
+                            <span class="tag-qty">{{ $r['quantita'] }}</span>
+                            <span class="dotted">{{ $r['nome'] }}</span>
                             <span class="check-box" aria-hidden="true"></span>
-                            <span class="dotted"><strong>{{ $r['quantita'] }}</strong> {{ $r['nome'] }}</span>
                         </div>
                     @endforeach
                 </div>
@@ -122,7 +131,7 @@
             <div class="tag-body tag-body--griglia">
                 @forelse ($griglia as $r)
                     <div class="tag-line-griglia">
-                        <strong>{{ $r['quantita'] }}</strong>
+                        <span class="tag-qty">{{ $r['quantita'] }}</span>
                         <span>{{ $r['nome'] }}</span>
                     </div>
                 @empty

@@ -1,10 +1,16 @@
 <div>
-    <h1>Report / Stampe</h1>
-    <div class="panel no-print" style="margin-bottom:1rem">
-        <div class="grid-3">
-            <div class="field">
-                <label class="label">Tipo</label>
-                <select class="input" wire:model.live="tipo">
+    <x-gestione.subnav />
+    <x-gestione.page-header title="Report / Stampe" subtitle="Cucina, griglia, bevande, economico e consegna">
+        <x-slot:actions>
+            <button class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark print:hidden" type="button" onclick="window.print()">Stampa / PDF</button>
+        </x-slot:actions>
+    </x-gestione.page-header>
+
+    <div class="mb-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80 print:hidden">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-sagra-ink">Tipo</label>
+                <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="tipo">
                     <option value="cucina">Cucina</option>
                     <option value="griglia">Griglia</option>
                     <option value="bevande">Bevande</option>
@@ -13,19 +19,19 @@
                     <option value="consegna">Consegna incassi</option>
                 </select>
             </div>
-            <div class="field">
-                <label class="label">Serata (fino a / di riferimento)</label>
-                <select class="input" wire:model.live="serataId">
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-sagra-ink">Serata (fino a / di riferimento)</label>
+                <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="serataId">
                     @foreach ($serate as $s)
                         <option value="{{ $s->id }}">{{ $s->data->format('d/m/Y') }}</option>
                     @endforeach
                 </select>
             </div>
-            <div class="field">
-                <label class="label">Ambito</label>
-                <label><input type="checkbox" wire:model.live="completo"> Completo (tutta la sagra)</label>
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-sagra-ink">Ambito</label>
+                <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model.live="completo"> Completo (tutta la sagra)</label>
                 @if ($tipo === 'consegna')
-                    <select class="input" wire:model.live="puntoCassaId" style="margin-top:.5rem">
+                    <select class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="puntoCassaId">
                         @foreach ($punti as $p)
                             <option value="{{ $p->id }}">{{ $p->nome }}</option>
                         @endforeach
@@ -33,11 +39,10 @@
                 @endif
             </div>
         </div>
-        <button class="btn" onclick="window.print()">Stampa / PDF</button>
     </div>
 
     @if (!$serata)
-        <div class="alert alert-warn">Nessuna serata selezionata.</div>
+        <x-ui.alert type="warn">Nessuna serata selezionata.</x-ui.alert>
     @elseif ($tipo === 'cucina' || $tipo === 'griglia')
         @include('livewire.report.partials.reparto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
     @elseif ($tipo === 'bevande')

@@ -213,10 +213,13 @@ class CassaController extends Controller
         $impostazioni = Impostazione::corrente();
 
         $righe = $comanda->righe->map(function ($r) {
+            $prezzo = (float) $r->prezzo_unitario;
+
             return [
                 'quantita' => $r->quantita,
                 'nome' => $r->menuItem->nome,
-                'importo' => round($r->quantita * (float) $r->prezzo_unitario, 2),
+                'prezzo_unitario' => $prezzo,
+                'importo' => round($r->quantita * $prezzo, 2),
                 'area_stampa' => $r->menuItem->areaStampaEffettiva(),
             ];
         });
