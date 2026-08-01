@@ -17,7 +17,6 @@ class SettingsSeeder extends Seeder
             'intestazione_anno' => '2026',
             'intestazione_sottotitolo' => 'A.S.D. Basket San Vincenzo · UISP Pallavolo · ASD Calcio San Vincenzo',
             'pin_gestione' => '1234',
-            'chromium_path' => env('CHROMIUM_PATH', '/usr/bin/chromium-browser'),
         ]);
 
         $punto = PuntoCassa::query()->create([

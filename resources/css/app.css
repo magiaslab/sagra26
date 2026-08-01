@@ -6,6 +6,52 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: "Segoe UI", "Liberation Sans", "Helvetica Neue", ui-sans-serif, system-ui, sans-serif;
+    --font-mono: "Cascadia Mono", "Liberation Mono", Consolas, ui-monospace, monospace;
+
+    --color-sagra-ink: #1a1f1c;
+    --color-sagra-muted: #5a635e;
+    --color-sagra-line: #c5cdc8;
+    --color-sagra-bg: #f4f6f4;
+    --color-sagra-bg2: #e8eee9;
+    --color-sagra: #1e5c43;
+    --color-sagra-dark: #143d2d;
+    --color-sagra-soft: #d9ebe2;
+    --color-sagra-softer: #eef6f1;
+    --color-sagra-amber: #a16207;
+    --color-sagra-amber-soft: #faf6ee;
+    --color-sagra-warn: #8a4b00;
+    --color-sagra-warn-soft: #fff3cd;
+    --color-sagra-danger: #8b1515;
+    --color-sagra-danger-soft: #fceaea;
+    --color-sagra-focus: #0b5fff;
+}
+
+@layer base {
+    html {
+        @apply antialiased text-sagra-ink bg-sagra-bg;
+    }
+
+    body {
+        @apply min-h-full font-sans bg-sagra-bg;
+    }
+
+    :focus { outline: none; }
+    :focus-visible {
+        @apply outline-2 outline-offset-2 outline-sagra-focus;
+    }
+
+    [x-cloak] { display: none !important; }
+
+    kbd {
+        @apply inline-block rounded border border-sagra-line border-b-2 bg-white px-1.5 py-0.5
+            font-mono text-[0.72em] font-semibold text-sagra-ink shadow-[inset_0_1px_0_#fff];
+    }
+}
+
+@layer components {
+    @media print {
+        .no-print { display: none !important; }
+        body { background: #fff !important; }
+    }
 }

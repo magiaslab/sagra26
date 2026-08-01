@@ -19,6 +19,7 @@ Sul mini-PC Ubuntu, copia l'intera cartella del progetto in:
 ```bash
 cd ~/cassa
 composer install --no-dev --optimize-autoloader
+npm ci && npm run build
 cp .env.example .env   # se non esiste già
 php artisan key:generate
 
@@ -28,7 +29,6 @@ php artisan key:generate
 #   APP_URL=http://<host-o-nome-lan>:8000
 #   DB_CONNECTION=sqlite
 #   DB_DATABASE=/home/<utente>/cassa/database/database.sqlite
-#   CHROMIUM_PATH=/usr/bin/chromium-browser
 #   PIN_MASTER_RESET=<codice-segreto-non-default>
 
 touch database/database.sqlite

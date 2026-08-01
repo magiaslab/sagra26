@@ -18,8 +18,6 @@ class ImpostazioniPage extends Component
 
     public string $pin_gestione = '';
 
-    public string $chromium_path = '';
-
     public string $nuovaPostazione = '';
 
     public string $nuovoPunto = '';
@@ -37,7 +35,6 @@ class ImpostazioniPage extends Component
         $this->intestazione_anno = $i->intestazione_anno;
         $this->intestazione_sottotitolo = (string) ($i->intestazione_sottotitolo ?? '');
         $this->pin_gestione = $i->pin_gestione;
-        $this->chromium_path = (string) ($i->chromium_path ?? '');
         $this->mapValidoDa = now()->toDateString();
     }
 
@@ -49,7 +46,6 @@ class ImpostazioniPage extends Component
             'intestazione_anno' => $this->intestazione_anno,
             'intestazione_sottotitolo' => $this->intestazione_sottotitolo ?: null,
             'pin_gestione' => $this->pin_gestione,
-            'chromium_path' => $this->chromium_path ?: null,
         ]);
         session()->flash('status', 'Impostazioni salvate.');
     }

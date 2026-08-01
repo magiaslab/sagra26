@@ -17,6 +17,7 @@ class MenuItem extends Model
         'attivo',
         'piatto_del_giorno',
         'bar',
+        'is_coperto',
         'stock_default',
         'area_stampa',
         'ordinamento',
@@ -29,6 +30,7 @@ class MenuItem extends Model
             'attivo' => 'boolean',
             'piatto_del_giorno' => 'boolean',
             'bar' => 'boolean',
+            'is_coperto' => 'boolean',
             'stock_default' => 'integer',
         ];
     }
