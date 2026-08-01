@@ -35,7 +35,8 @@
     })"
     @keydown.window="onKey($event)"
 >
-    <div class="sticky top-0 z-40" x-ref="stickyBar">
+    {{-- self-start: senza questo, in un flex-col lo sticky non funziona (il flex item si allunga a tutta pagina) --}}
+    <div class="sticky top-0 z-40 w-full self-start" x-ref="stickyBar">
         @if (!$serata)
             <div class="bg-sagra-warn-soft px-4 py-2.5 text-sm font-medium text-sagra-warn ring-1 ring-inset ring-sagra-warn/25">
                 Nessuna serata aperta.
