@@ -35,8 +35,8 @@
     })"
     @keydown.window="onKey($event)"
 >
-    {{-- self-start: senza questo, in un flex-col lo sticky non funziona (il flex item si allunga a tutta pagina) --}}
-    <div class="sticky top-0 z-40 w-full self-start" x-ref="stickyBar">
+    {{-- fixed (non sticky): affidabile con scroll pagina + navigazione tastiera --}}
+    <div class="fixed inset-x-0 top-0 z-40 bg-white shadow-sm" x-ref="stickyBar">
         @if (!$serata)
             <div class="bg-sagra-warn-soft px-4 py-2.5 text-sm font-medium text-sagra-warn ring-1 ring-inset ring-sagra-warn/25">
                 Nessuna serata aperta.
@@ -87,7 +87,7 @@
             </div>
         </header>
 
-        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-sagra-line bg-white px-4 py-2 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-sagra-line bg-white px-4 py-2">
             <div class="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1 text-[0.78rem] font-medium text-sagra-muted" aria-hidden="true">
                 <span class="inline-flex items-center gap-1 px-2 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
                 <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>↑</kbd> riga prima</span>
@@ -112,6 +112,7 @@
             </div>
         </div>
     </div>
+    <div aria-hidden="true" :style="`height: ${topPad}px`"></div>
 
     <div class="flex-1 bg-sagra-bg px-4 py-4">
         <div class="mx-auto grid max-w-[1200px] grid-cols-1 content-start gap-x-8 gap-y-5 md:grid-cols-2" x-ref="menuList">
@@ -375,6 +376,7 @@ function cassaApp(cfg) {
         modalAnteprima: false,
         modalRichiamo: false,
         a4Scale: 1,
+        topPad: 120,
         metodo: null,
         comandaId: null,
         numeroRichiamato: null,
@@ -445,16 +447,25 @@ function cassaApp(cfg) {
 
         init() {
             this.pollTimer = setInterval(() => this.pollStock(), 5000);
-            this.$nextTick(() => this.scrollActive());
+            this.$nextTick(() => {
+                this.syncTopPad();
+                this.scrollActive();
+            });
             this.$watch('errore', (v) => { if (v) window.sagraToast?.(v, 'danger'); });
             this.$watch('messaggio', (v) => { if (v) window.sagraToast?.(v, 'ok'); });
             this.$watch('modalAnteprima', (open) => {
                 if (open) this.$nextTick(() => this.fitAnteprima());
             });
-            this._onResizeAnteprima = () => {
+            this._onResizeCassa = () => {
+                this.syncTopPad();
                 if (this.modalAnteprima) this.fitAnteprima();
             };
-            window.addEventListener('resize', this._onResizeAnteprima);
+            window.addEventListener('resize', this._onResizeCassa);
+        },
+
+        syncTopPad() {
+            const h = this.$refs.stickyBar?.offsetHeight || 0;
+            this.topPad = h > 0 ? h : 120;
         },
 
         get a4ScaleStyle() {
@@ -549,8 +560,8 @@ function cassaApp(cfg) {
         scrollActive() {
             const el = this.$refs.menuList?.querySelector(`[data-id="${this.activeId}"]`);
             if (!el) return;
-            // Rispetta header+toolbar sticky: non usare scrollIntoView sul contenitore sbagliato
-            const topPad = (this.$refs.stickyBar?.offsetHeight || 0) + 8;
+            this.syncTopPad();
+            const topPad = (this.topPad || 0) + 8;
             const rect = el.getBoundingClientRect();
             const viewBottom = window.innerHeight - 8;
             if (rect.top < topPad) {
