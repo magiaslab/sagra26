@@ -91,6 +91,7 @@
             <div class="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1 text-[0.78rem] font-medium text-sagra-muted" aria-hidden="true">
                 <span class="inline-flex items-center gap-1 px-2 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
                 <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>↑</kbd> riga prima</span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>←</kbd><kbd>→</kbd> categoria</span>
                 <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>+</kbd><kbd>-</kbd> quantità</span>
                 <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Canc</kbd> azzera</span>
                 <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F9</kbd> conferma</span>
