@@ -19,6 +19,7 @@ Sul mini-PC Ubuntu, copia l'intera cartella del progetto in:
 ```bash
 cd ~/cassa
 composer install --no-dev --optimize-autoloader
+npm ci && npm run build
 cp .env.example .env   # se non esiste già
 php artisan key:generate
 

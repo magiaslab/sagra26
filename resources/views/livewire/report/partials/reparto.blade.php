@@ -1,17 +1,17 @@
 <div class="panel">
-    <div style="display:flex;justify-content:space-between;align-items:baseline">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-            <h2 style="margin:0">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
+            <h2 class="m-0 text-xl font-extrabold">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
             <div class="meta-small">Report {{ strtoupper($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
         </div>
-        <div>
+        <div class="flex flex-wrap gap-1.5">
             <span class="badge">Coperti stasera {{ $dati['copertiStasera'] }}</span>
             <span class="badge">Cumulato {{ $dati['copertiCum'] }}</span>
         </div>
     </div>
 
     @forelse ($dati['categorie'] as $cat)
-        <h3 style="margin-top:1rem;border-bottom:2px solid #000">{{ $cat->nome }}</h3>
+        <h3 class="mt-4 mb-2 border-b-2 border-sagra-ink pb-1 text-base font-extrabold">{{ $cat->nome }}</h3>
         <table class="table">
             <thead><tr><th>Piatto</th><th>Stasera</th><th>Cumulato</th><th></th></tr></thead>
             <tbody>

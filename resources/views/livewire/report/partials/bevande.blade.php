@@ -1,15 +1,15 @@
 <div class="panel">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.5rem">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
         <div>
-            <h2 style="margin:0">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
+            <h2 class="m-0 text-xl font-extrabold">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
             <div class="meta-small">Report BEVANDE — {{ $serata->data->format('d/m/Y') }}</div>
         </div>
     </div>
 
-    <div class="grid-2" style="margin:1rem 0">
+    <div class="grid-2 my-4">
         <div class="kpi">
             <div class="lbl">Stasera — Bar / Non Bar</div>
-            <div class="val" style="font-size:1.2rem">
+            <div class="val text-[1.2rem]">
                 {{ number_format($dati['riepilogo']['bar_stasera'], 2, ',', '.') }} €
                 /
                 {{ number_format($dati['riepilogo']['non_bar_stasera'], 2, ',', '.') }} €
@@ -17,7 +17,7 @@
         </div>
         <div class="kpi">
             <div class="lbl">Cumulato — Bar / Non Bar</div>
-            <div class="val" style="font-size:1.2rem">
+            <div class="val text-[1.2rem]">
                 {{ number_format($dati['riepilogo']['bar_cumulato'], 2, ',', '.') }} €
                 /
                 {{ number_format($dati['riepilogo']['non_bar_cumulato'], 2, ',', '.') }} €

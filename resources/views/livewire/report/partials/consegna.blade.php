@@ -1,20 +1,20 @@
 <div class="panel">
     @if (!empty($dati['errore']))
-        <div class="alert alert-warn">{{ $dati['errore'] }}</div>
+        <x-ui.alert type="warn">{{ $dati['errore'] }}</x-ui.alert>
     @else
         @php $c = $dati['chiusura']; $ric = $dati['ric']; @endphp
-        <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-                <h2 style="margin:0">Consegna incassi</h2>
+                <h2 class="m-0 text-xl font-extrabold">Consegna incassi</h2>
                 <div>{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</div>
                 <div>{{ $dati['punto']->nome }}</div>
             </div>
-            <div class="badge badge-double" style="font-size:1.2rem;padding:.5rem .8rem">
+            <div class="badge badge-double px-3 py-2 text-xl">
                 {{ $serata->data->format('d/m/Y') }}
             </div>
         </div>
 
-        <h3>Riepilogo economico</h3>
+        <h3 class="mt-4 mb-2 text-base font-extrabold">Riepilogo economico</h3>
         <table class="table">
             <tr><td>Incasso totale atteso</td><td>{{ number_format($ric['atteso_totale'], 2, ',', '.') }} €</td></tr>
             <tr><td>Atteso contante</td><td>{{ number_format($ric['atteso_contante'], 2, ',', '.') }} €</td></tr>
@@ -30,7 +30,7 @@
             <tr><td>Δ fiscale</td><td>{{ number_format($ric['delta_fiscale'], 2, ',', '.') }} €</td></tr>
         </table>
 
-        <h3>Dettaglio pezzi</h3>
+        <h3 class="mt-4 mb-2 text-base font-extrabold">Dettaglio pezzi</h3>
         <table class="table">
             <thead><tr><th>Taglio</th><th>N°</th><th>Importo</th></tr></thead>
             <tbody>
@@ -46,14 +46,14 @@
             </tbody>
         </table>
 
-        <div class="grid-2" style="margin-top:2rem">
+        <div class="grid-2 mt-8">
             <div>
                 <div>Firma cassiere</div>
-                <div class="linea" style="border-bottom:1px solid #000;min-height:40px;margin-top:1.5rem"></div>
+                <div class="mt-6 min-h-10 border-b border-black"></div>
             </div>
             <div>
                 <div>Firma responsabile</div>
-                <div class="linea" style="border-bottom:1px solid #000;min-height:40px;margin-top:1.5rem"></div>
+                <div class="mt-6 min-h-10 border-b border-black"></div>
             </div>
         </div>
     @endif

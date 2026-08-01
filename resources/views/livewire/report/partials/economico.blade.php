@@ -1,5 +1,5 @@
 <div class="panel">
-    <h2>{{ $impostazioni->intestazione_nome }} — Economico</h2>
+    <h2 class="mt-0 text-xl font-extrabold">{{ $impostazioni->intestazione_nome }} — Economico</h2>
     <table class="table">
         <thead><tr><th>Serata</th><th>Contante</th><th>POS</th><th>Totale</th></tr></thead>
         <tbody>
