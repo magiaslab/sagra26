@@ -13,6 +13,7 @@
     $anno = $impostazioni->intestazione_anno;
     $sottotitolo = $impostazioni->intestazione_sottotitolo;
     $num = $comanda->numero_progressivo;
+    $numSerata = $numeroDiSerata ?? $comanda->numeroDiSerata();
 @endphp
 
 @unless ($autoPrint)
@@ -32,9 +33,9 @@
         @endif
         <div class="tag-head">
             <span class="tag-role">CLIENTE</span>
-            <span class="tag-num">n.{{ $num }}</span>
+            <span class="tag-num">Comanda {{ $numSerata }} di stasera</span>
         </div>
-        <div class="meta-small">{{ $comanda->serata->data->format('d/m/Y') }} · {{ $comanda->created_at->format('H:i') }}</div>
+        <div class="meta-small">rif. #{{ $num }} · {{ $comanda->serata->data->format('d/m/Y') }} · {{ $comanda->created_at->format('H:i') }}</div>
 
         <div class="tag-body">
             <div class="tag-line tag-line-head">

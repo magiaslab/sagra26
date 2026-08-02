@@ -19,6 +19,7 @@
         postazioneId: {{ (int) $postazioneId }},
         serataAperta: {{ $serata ? 'true' : 'false' }},
         prossimoNumero: {{ (int) $prossimoNumero }},
+        prossimoNumeroDiSerata: {{ (int) $prossimoNumeroDiSerata }},
         brand: @js(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? '')),
         sottotitolo: @js($impostazioni->intestazione_sottotitolo ?? ''),
         csrf: '{{ csrf_token() }}',
@@ -57,12 +58,16 @@
                             <option :value="p.id" x-text="p.nome" class="text-black"></option>
                         </template>
                     </select>
-                    <div class="flex items-baseline gap-2 whitespace-nowrap text-sm">
-                        <span class="font-medium text-white/70">Comanda</span>
-                        <span class="text-xl font-semibold tabular-nums" x-text="numeroDisplay"></span>
-                        <span class="text-xs font-medium text-white/65"
-                              x-show="comandaId" x-cloak
-                              x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"></span>
+                    <div class="flex min-w-0 flex-col leading-tight">
+                        <div class="flex items-baseline gap-1.5 whitespace-nowrap text-sm">
+                            <span class="font-medium text-white/70">Comanda</span>
+                            <span class="text-xl font-semibold tabular-nums" x-text="numeroDiSerataDisplay"></span>
+                            <span class="text-sm font-medium text-white/70">di stasera</span>
+                            <span class="text-xs font-medium text-white/65"
+                                  x-show="comandaId" x-cloak
+                                  x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"></span>
+                        </div>
+                        <div class="text-[0.7rem] font-medium text-white/60 tabular-nums" x-text="'rif. #' + numeroDisplay"></div>
                     </div>
                 </div>
 
@@ -165,11 +170,22 @@
         </div>
     </div>
 
+    <div class="fixed inset-0 z-[110] flex items-center justify-center bg-black/45" x-show="modalClaim" x-cloak>
+        <div class="w-[min(440px,92vw)] rounded-lg bg-white p-6 shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <h2 class="m-0 text-lg font-semibold text-sagra-ink">Postazione già in uso</h2>
+            <p class="mt-2 text-sm text-sagra-ink" x-text="claimMessaggio"></p>
+            <div class="mt-5 flex flex-wrap justify-end gap-2">
+                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="annullaClaim()">Annulla</button>
+                <button type="button" class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" @click="forzaClaim()">Prendi comunque il controllo</button>
+            </div>
+        </div>
+    </div>
+
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalPagamento" x-cloak @keydown.escape.window="chiudiModal()">
         <div class="w-[min(420px,92vw)] rounded-lg bg-white p-6 text-center shadow-xl ring-1 ring-sagra-line" @click.stop>
             <h2 class="text-lg font-semibold text-sagra-ink">
-                Comanda n.<span x-text="numeroDisplay"></span>
-                <span class="text-sagra-muted"> · <span x-text="formatEuro(totale)"></span></span>
+                Comanda <span x-text="numeroDiSerataDisplay"></span> di stasera
+                <span class="block text-sm font-medium text-sagra-muted">rif. #<span x-text="numeroDisplay"></span> · <span x-text="formatEuro(totale)"></span></span>
             </h2>
             <p class="mt-2 text-sm text-sagra-muted">Come paga il cliente?</p>
             <div class="mt-5 grid grid-cols-2 gap-3">
@@ -202,8 +218,9 @@
                             <div class="a4-sub" x-text="sottotitolo" x-show="sottotitolo"></div>
                             <div class="a4-head">
                                 <span class="a4-role">CLIENTE</span>
-                                <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                <span class="a4-num" x-text="'Comanda ' + numeroDiSerataDisplay + ' di stasera'"></span>
                             </div>
+                            <div class="a4-meta" x-text="'rif. #' + numeroDisplay"></div>
                             <div class="a4-line a4-line-head">
                                 <span>Q.tà</span>
                                 <span>Piatto</span>
@@ -378,8 +395,10 @@ function cassaApp(cfg) {
         qty: {},
         activeId: cfg.menu[0]?.id ?? null,
         postazioneId: cfg.postazioneId,
+        postazioneIdPrev: cfg.postazioneId,
         serataAperta: cfg.serataAperta,
         prossimoNumero: cfg.prossimoNumero || 1,
+        prossimoNumeroDiSerata: cfg.prossimoNumeroDiSerata || 1,
         brand: cfg.brand,
         sottotitolo: cfg.sottotitolo || '',
         csrf: cfg.csrf,
@@ -387,11 +406,14 @@ function cassaApp(cfg) {
         modalPagamento: false,
         modalAnteprima: false,
         modalRichiamo: false,
+        modalClaim: false,
+        claimMessaggio: '',
         a4Scale: 1,
         topPad: 120,
         metodo: null,
         comandaId: null,
         numeroRichiamato: null,
+        numeroDiSerataRichiamato: null,
         comandaVersion: null,
         correzioniCount: 0,
         motivo: '',
@@ -415,6 +437,10 @@ function cassaApp(cfg) {
 
         get numeroDisplay() {
             return this.numeroRichiamato ?? this.prossimoNumero;
+        },
+
+        get numeroDiSerataDisplay() {
+            return this.numeroDiSerataRichiamato ?? this.prossimoNumeroDiSerata;
         },
 
         get totale() {
@@ -462,6 +488,7 @@ function cassaApp(cfg) {
             this.$nextTick(() => {
                 this.syncTopPad();
                 this.scrollActive();
+                this.salvaPostazione(false);
             });
             this.$watch('errore', (v) => { if (v) window.sagraToast?.(v, 'danger'); });
             this.$watch('messaggio', (v) => { if (v) window.sagraToast?.(v, 'ok'); });
@@ -643,6 +670,7 @@ function cassaApp(cfg) {
             this.qty = {};
             this.comandaId = null;
             this.numeroRichiamato = null;
+            this.numeroDiSerataRichiamato = null;
             this.comandaVersion = null;
             this.correzioniCount = 0;
             this.motivo = '';
@@ -744,6 +772,7 @@ function cassaApp(cfg) {
                 if (!res.ok) throw new Error(data.error || 'Errore salvataggio');
                 if (data.stock) this.stock = data.stock;
                 if (data.numero) this.prossimoNumero = data.numero + 1;
+                if (!this.comandaId) this.prossimoNumeroDiSerata += 1;
                 this.chiudiModal();
                 // Stessa finestra: non usare window.open/_blank, altrimenti
                 // Chrome --app/--kiosk-printing perde la modalità kiosk.
@@ -846,27 +875,65 @@ function cassaApp(cfg) {
                 this.qty = q;
                 this.comandaId = data.comanda_id;
                 this.numeroRichiamato = data.numero;
+                this.numeroDiSerataRichiamato = data.numero_di_serata ?? null;
                 this.comandaVersion = data.version ?? 1;
                 this.correzioniCount = data.correzioni_count || 0;
                 this.motivo = '';
                 this.chiudiModal();
-                this.messaggio = 'Caricata comanda #' + data.numero
+                this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')
+                    + 'rif. #' + data.numero
                     + (this.correzioniCount ? ' (già corretta ' + this.correzioniCount + '×)' : '');
             } catch (e) {
                 this.errore = e.message;
             }
         },
 
-        async salvaPostazione() {
-            await fetch(this.urls.postazione, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.csrf,
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({ postazione_id: this.postazioneId }),
-            });
+        async salvaPostazione(force = false) {
+            try {
+                const res = await fetch(this.urls.postazione, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': this.csrf,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        postazione_id: this.postazioneId,
+                        force: !!force,
+                    }),
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.status === 409 || data.claim_conflitto) {
+                    this.claimMessaggio = data.error
+                        || 'Postazione già in uso. Confermi di prenderne il controllo?';
+                    this.modalClaim = true;
+                    return;
+                }
+                if (!res.ok) {
+                    this.errore = data.error || 'Impossibile selezionare la postazione';
+                    this.postazioneId = this.postazioneIdPrev;
+                    return;
+                }
+                this.postazioneIdPrev = this.postazioneId;
+                this.modalClaim = false;
+                this.claimMessaggio = '';
+                if (data.warning) {
+                    this.errore = data.warning;
+                }
+            } catch (e) {
+                this.errore = e.message || 'Impossibile selezionare la postazione';
+                this.postazioneId = this.postazioneIdPrev;
+            }
+        },
+
+        forzaClaim() {
+            this.salvaPostazione(true);
+        },
+
+        annullaClaim() {
+            this.postazioneId = this.postazioneIdPrev;
+            this.modalClaim = false;
+            this.claimMessaggio = '';
         },
 
         async pollStock() {
@@ -881,6 +948,10 @@ function cassaApp(cfg) {
             const tag = (e.target.tagName || '').toLowerCase();
             const typing = tag === 'input' || tag === 'textarea' || tag === 'select';
 
+            if (this.modalClaim) {
+                if (e.key === 'Escape') { e.preventDefault(); this.annullaClaim(); }
+                return;
+            }
             if (this.modalPagamento) {
                 if (e.key === 'c' || e.key === 'C') { e.preventDefault(); this.scegliMetodo('contante'); }
                 if (e.key === 'p' || e.key === 'P') { e.preventDefault(); this.scegliMetodo('pos'); }

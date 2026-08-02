@@ -53,7 +53,9 @@ class ComandaService
 
         $puntoCassa = $postazione->puntoCassaAttivo($serata->data->toDateString());
         if (! $puntoCassa) {
-            throw new RuntimeException('Postazione non mappata a un punto cassa.');
+            throw new RuntimeException(
+                'Questa postazione non è ancora collegata al cassetto — chiedi a chi gestisce le Impostazioni di completare il collegamento.'
+            );
         }
 
         $righeNormalizzate = $this->normalizzaRighe($righe);

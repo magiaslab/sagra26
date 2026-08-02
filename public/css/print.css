@@ -133,10 +133,11 @@
 }
 
 .tag-num {
-  font-size: 1.35em;
+  font-size: 1.15em;
   font-weight: 900;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+  text-align: right;
 }
 
 .tag-body {
@@ -484,7 +485,8 @@
   margin: 1mm 0 2mm;
   padding-bottom: 1mm;
 }
-.a4-num { font-weight: 900; font-size: 1.2em; }
+.a4-num { font-weight: 900; font-size: 1.05em; text-align: right; }
+.a4-meta { font-size: 0.85em; color: #444; margin: -1mm 0 2mm; }
 .a4-line {
   display: grid;
   grid-template-columns: 2em 1fr 4.2em 4.4em;
