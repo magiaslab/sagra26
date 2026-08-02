@@ -6,6 +6,7 @@
         ['label' => 'Chiusura', 'route' => 'gestione.chiusura', 'match' => 'gestione.chiusura'],
         ['label' => 'Report', 'route' => 'gestione.report', 'match' => 'gestione.report'],
         ['label' => 'Impostazioni', 'route' => 'gestione.impostazioni', 'match' => 'gestione.impostazioni'],
+        ['label' => 'Stato', 'route' => 'gestione.stato', 'match' => 'gestione.stato'],
     ];
 @endphp
 <nav class="no-print mb-6 flex gap-6 border-b border-sagra-line" aria-label="Sezioni gestione">
