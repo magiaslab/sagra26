@@ -64,6 +64,27 @@ class Comanda extends Model
         return $this->stato === 'annullata';
     }
 
+    /**
+     * Posizione leggibile nella serata (1-based), calcolata al volo.
+     * Non è una colonna: non sostituisce numero_progressivo.
+     */
+    public function numeroDiSerata(): int
+    {
+        return (int) static::query()
+            ->where('serata_id', $this->serata_id)
+            ->where('id', '<=', $this->id)
+            ->count();
+    }
+
+    public static function prossimoNumeroDiSerata(?int $serataId): int
+    {
+        if (! $serataId) {
+            return 1;
+        }
+
+        return (int) static::query()->where('serata_id', $serataId)->count() + 1;
+    }
+
     public function importoContanteEffettivo(): float
     {
         return match ($this->metodo_pagamento) {

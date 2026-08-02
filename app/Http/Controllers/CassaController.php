@@ -51,6 +51,7 @@ class CassaController extends Controller
 
         $impostazioni = Impostazione::corrente();
         $prossimoNumero = (int) (Comanda::query()->max('numero_progressivo') ?? 0) + 1;
+        $prossimoNumeroDiSerata = Comanda::prossimoNumeroDiSerata($serata?->id);
 
         return view('cassa.index', [
             'serata' => $serata,
@@ -60,6 +61,7 @@ class CassaController extends Controller
             'stock' => $stock,
             'impostazioni' => $impostazioni,
             'prossimoNumero' => $prossimoNumero,
+            'prossimoNumeroDiSerata' => $prossimoNumeroDiSerata,
         ]);
     }
 
@@ -67,14 +69,50 @@ class CassaController extends Controller
     {
         $data = $request->validate([
             'postazione_id' => 'required|exists:postazioni,id',
+            'force' => 'sometimes|boolean',
         ]);
-        $request->session()->put('postazione_id', (int) $data['postazione_id']);
 
-        return response()->json(['ok' => true]);
+        $postazione = Postazione::query()->findOrFail((int) $data['postazione_id']);
+        $claimToken = $this->postazioneClaimToken($request);
+        $force = (bool) ($data['force'] ?? false);
+
+        if (! $force && $postazione->claimConflictFor($claimToken)) {
+            $tempo = $postazione->claimAgeLabel();
+
+            return response()->json([
+                'ok' => false,
+                'claim_conflitto' => true,
+                'error' => "Postazione già in uso (ultima attività: {$tempo} fa). Confermi di prenderne il controllo?",
+                'postazione_id' => $postazione->id,
+                'postazione_nome' => $postazione->nome,
+            ], 409);
+        }
+
+        $postazione->claim($claimToken);
+        $request->session()->put('postazione_id', $postazione->id);
+
+        $mappata = $postazione->puntoCassaAttivo() !== null;
+
+        return response()->json([
+            'ok' => true,
+            'mappata' => $mappata,
+            'warning' => $mappata
+                ? null
+                : 'Questa postazione non è ancora collegata al cassetto — chiedi a chi gestisce le Impostazioni di completare il collegamento.',
+        ]);
     }
 
-    public function stock(StockService $stock): JsonResponse
+    public function stock(Request $request, StockService $stock): JsonResponse
     {
+        $postazioneId = (int) $request->session()->get('postazione_id');
+        if ($postazioneId > 0) {
+            $postazione = Postazione::query()->find($postazioneId);
+            $claimToken = $request->session()->get('postazione_claim_token');
+            if ($postazione && is_string($claimToken) && $postazione->isClaimedBy($claimToken)) {
+                $postazione->touchClaim();
+            }
+        }
+
         $serata = Serata::corrente();
         if (! $serata) {
             return response()->json(['stock' => []]);
@@ -193,6 +231,7 @@ class CassaController extends Controller
         return response()->json([
             'comanda_id' => $comanda->id,
             'numero' => $comanda->numero_progressivo,
+            'numero_di_serata' => $comanda->numeroDiSerata(),
             'version' => $comanda->version,
             'coperti' => $comanda->coperti,
             'metodo_pagamento' => $comanda->metodo_pagamento,
@@ -230,6 +269,7 @@ class CassaController extends Controller
             'comanda' => $comanda,
             'righe' => $righe,
             'impostazioni' => $impostazioni,
+            'numeroDiSerata' => $comanda->numeroDiSerata(),
             'autoPrint' => request()->boolean('print'),
         ]);
     }
@@ -247,5 +287,21 @@ class CassaController extends Controller
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
+    }
+
+    /**
+     * Token stabile in sessione (sopravvive a eventuale regenerate dell'id sessione).
+     */
+    private function postazioneClaimToken(Request $request): string
+    {
+        $existing = $request->session()->get('postazione_claim_token');
+        if (is_string($existing) && $existing !== '') {
+            return $existing;
+        }
+
+        $token = bin2hex(random_bytes(16));
+        $request->session()->put('postazione_claim_token', $token);
+
+        return $token;
     }
 }
