@@ -530,10 +530,12 @@
 .a4-scale {
   transform-origin: center center;
   flex-shrink: 0;
-}
-.a4-sheet {
   width: 297mm;
   height: 210mm;
+}
+.a4-sheet {
+  width: 100%;
+  height: 100%;
   margin: 0;
   background: #fff;
   border: 1px solid #999;
