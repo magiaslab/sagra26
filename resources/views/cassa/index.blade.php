@@ -268,47 +268,45 @@
                             <div class="a4-pay" :class="metodo === 'contante' ? 'a4-pay--contante' : 'a4-pay--pos'"
                                  x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
                         </section>
-                        <div class="a4-right">
-                            <div class="a4-produzione">
-                                <template x-for="zona in zoneProduzione" :key="zona.key">
-                                    <section class="a4-box-zona">
-                                        <div class="a4-box-head">
-                                            <span class="a4-role" x-text="zona.label"></span>
-                                            <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
-                                        </div>
-                                        <template x-for="r in zona.righe" :key="zona.key + '-' + r.id">
-                                            <div class="a4-check">
-                                                <span class="a4-qty" x-text="r.q"></span>
-                                                <span class="a4-dotted" x-text="r.nome"></span>
-                                                <span class="a4-box"></span>
-                                            </div>
-                                        </template>
-                                        <div class="a4-empty" x-show="zona.righe.length === 0">— nessuna voce —</div>
-                                        <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
-                                    </section>
-                                </template>
-                            </div>
-                            <section class="a4-tag a4-cameriere">
-                                <div class="a4-head a4-head--compact">
-                                    <span class="a4-role">CAMERIERE</span>
-                                    <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
-                                </div>
-                                <template x-for="zona in zoneCameriere" :key="'cam-'+zona.key">
-                                    <div class="a4-cameriere-zona">
-                                        <div class="a4-cameriere-zona-lbl" x-text="zona.label"></div>
-                                        <template x-for="r in zona.righe" :key="'w-'+zona.key+'-'+r.id">
-                                            <div class="a4-check">
-                                                <span class="a4-qty" x-text="r.q"></span>
-                                                <span class="a4-dotted" x-text="r.nome"></span>
-                                                <span class="a4-box"></span>
-                                            </div>
-                                        </template>
-                                        <div class="a4-empty" x-show="zona.righe.length === 0">—</div>
+                        <div class="a4-produzione">
+                            <template x-for="zona in zoneProduzione" :key="zona.key">
+                                <section class="a4-box-zona">
+                                    <div class="a4-box-head">
+                                        <span class="a4-role" x-text="zona.label"></span>
+                                        <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
                                     </div>
-                                </template>
-                                <div class="a4-mano"><span>Tavolo</span><span class="a4-linea"></span></div>
-                            </section>
+                                    <template x-for="r in zona.righe" :key="zona.key + '-' + r.id">
+                                        <div class="a4-check">
+                                            <span class="a4-qty" x-text="r.q"></span>
+                                            <span class="a4-dotted" x-text="r.nome"></span>
+                                            <span class="a4-box"></span>
+                                        </div>
+                                    </template>
+                                    <div class="a4-empty" x-show="zona.righe.length === 0">— nessuna voce —</div>
+                                    <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
+                                </section>
+                            </template>
                         </div>
+                        <section class="a4-tag a4-cameriere">
+                            <div class="a4-head a4-head--compact">
+                                <span class="a4-role">CAMERIERE</span>
+                                <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
+                            </div>
+                            <template x-for="zona in zoneCameriere" :key="'cam-'+zona.key">
+                                <div class="a4-cameriere-zona">
+                                    <div class="a4-cameriere-zona-lbl" x-text="zona.label"></div>
+                                    <template x-for="r in zona.righe" :key="'w-'+zona.key+'-'+r.id">
+                                        <div class="a4-check">
+                                            <span class="a4-qty" x-text="r.q"></span>
+                                            <span class="a4-dotted" x-text="r.nome"></span>
+                                            <span class="a4-box"></span>
+                                        </div>
+                                    </template>
+                                    <div class="a4-empty" x-show="zona.righe.length === 0">—</div>
+                                </div>
+                            </template>
+                            <div class="a4-mano"><span>Tavolo</span><span class="a4-linea"></span></div>
+                        </section>
                     </div>
                 </div>
             </div>

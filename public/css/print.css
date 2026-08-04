@@ -1,7 +1,6 @@
 /* ===== PRINT COMANDA / FACSIMILE =====
-   A4 landscape. @page senza margini: il foglio riempie 297×210 e i
-   “margini stretti” (come anteprima) sono padding interno. Evita la
-   2ª pagina bianca da arrotondamenti mm→px e toglie il riquadro nero. */
+   A4 landscape. Comanda su foglio preforato 27cm = 3×9cm (Cliente|Produzione|Cameriere),
+   senza margini. Facsimile resta a pagina piena. */
 @page {
   size: A4 landscape;
   margin: 0;
@@ -54,15 +53,8 @@
   .facsimile-sheet {
     box-shadow: none !important;
     margin: 0 !important;
-    border: none !important; /* niente riquadro nero in stampa */
+    border: none !important;
     outline: none !important;
-    width: 297mm !important;
-    height: 210mm !important;
-    max-width: 297mm !important;
-    max-height: 210mm !important;
-    /* inset ≈ anteprima “quasi a filo” */
-    padding: 4mm !important;
-    box-sizing: border-box !important;
     overflow: hidden !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
@@ -70,23 +62,41 @@
     page-break-after: avoid !important;
     break-after: avoid !important;
     break-before: avoid !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Preforato 27cm × 21cm, allineato a sinistra (tagli a 9 / 18 / 27 cm) */
+  .print-sheet {
+    width: 270mm !important;
+    height: 210mm !important;
+    max-width: 270mm !important;
+    max-height: 210mm !important;
+    padding: 0 !important;
+  }
+
+  .facsimile-sheet {
+    width: 297mm !important;
+    height: 210mm !important;
+    max-width: 297mm !important;
+    max-height: 210mm !important;
+    padding: 4mm !important;
   }
 }
 
+/* Comanda: esattamente 3 parti da 90mm (27cm totali), font invariati */
 .print-sheet {
-  width: 297mm;
+  width: 270mm;
   height: 210mm;
-  max-width: 297mm;
+  max-width: 270mm;
   max-height: 210mm;
-  padding: 4mm;
-  /* Solo a schermo, bordo soft — in stampa viene tolto */
+  padding: 0;
   border: 1px solid #ccc;
   margin: 1rem auto;
   background: #fff;
   color: #000;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 29% 71%; /* cliente +2cm circa vs 22%; resto produzione+cameriere */
+  grid-template-columns: 90mm 90mm 90mm;
   font-size: 13.5px;
   line-height: 1.28;
   box-shadow: 0 2px 12px rgba(0,0,0,.15);
@@ -100,14 +110,9 @@
   flex-direction: column;
   overflow: hidden;
   min-height: 0;
+  min-width: 0;
   font-size: 11px;
-}
-
-.tag-right {
-  display: grid;
-  grid-template-columns: 1fr 1fr; /* produzione e cameriere stessa larghezza */
-  overflow: hidden;
-  min-height: 0;
+  box-sizing: border-box;
 }
 
 .tag-produzione {
@@ -116,6 +121,8 @@
   border-right: 2px dashed #000;
   overflow: hidden;
   min-height: 0;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .tag-box-zona {
@@ -147,7 +154,9 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   font-size: 11.5px;
+  box-sizing: border-box;
 }
 
 .tag-head--compact {
@@ -528,38 +537,36 @@
 }
 .a4-sheet {
   width: 270mm;
-  height: 190mm;
+  height: 210mm;
   margin: 0;
   background: #fff;
   border: 1px solid #999;
   display: grid;
-  grid-template-columns: 29% 71%;
+  grid-template-columns: 90mm 90mm 90mm;
   font-size: 12.5px;
   color: #111;
   overflow: hidden;
   box-sizing: border-box;
 }
-.a4-tag { padding: 2.5mm; overflow: hidden; }
+.a4-tag { padding: 2.5mm; overflow: hidden; box-sizing: border-box; }
 .a4-cliente {
   border-right: 2px dashed #888;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   font-size: 11px;
   padding: 2.5mm;
-}
-.a4-right {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 0;
-  overflow: hidden;
+  box-sizing: border-box;
 }
 .a4-produzione {
   display: flex;
   flex-direction: column;
   border-right: 2px dashed #888;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
+  box-sizing: border-box;
 }
 .a4-box-zona {
   flex: 1 1 0;
@@ -586,9 +593,11 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   font-size: 11px;
   padding: 2mm 2.2mm;
+  box-sizing: border-box;
 }
 .a4-head--compact {
   margin: 0 0 1mm;

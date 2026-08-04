@@ -49,7 +49,7 @@
 @endunless
 
 <div class="print-sheet">
-    {{-- 1. CLIENTE: colonna sinistra (più stretta per far spazio a produzione) --}}
+    {{-- Foglio preforato: 27cm = 3×9cm (Cliente | Produzione | Cameriere), senza margini --}}
     <section class="tag-cliente">
         <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
         @if ($sottotitolo)
@@ -99,62 +99,58 @@
         @endif
     </section>
 
-    <div class="tag-right">
-        {{-- 2. PRODUZIONE: 3 box verticali tagliabili --}}
-        <div class="tag-produzione">
-            @foreach ($zoneProduzione as $zona)
-                <section class="tag-box-zona" data-zona="{{ $zona['key'] }}">
-                    <div class="tag-box-head">
-                        <span class="tag-role">{{ $zona['label'] }}</span>
-                        <span class="tag-num">comanda num. #{{ $num }}</span>
-                    </div>
-                    <div class="tag-body">
-                        @forelse ($zona['righe'] as $r)
-                            <div class="tag-line-check">
-                                <span class="tag-qty">{{ $r['quantita'] }}</span>
-                                <span class="dotted">{{ $r['nome'] }}</span>
-                                <span class="check-box" aria-hidden="true"></span>
-                            </div>
-                        @empty
-                            <div class="meta-small">— nessuna voce —</div>
-                        @endforelse
-                    </div>
-                    <div class="campo-mano campo-mano--full">
-                        <span class="campo-mano-lbl">Cameriere</span>
-                        <span class="campo-mano-linea"></span>
-                    </div>
-                </section>
+    <div class="tag-produzione">
+        @foreach ($zoneProduzione as $zona)
+            <section class="tag-box-zona" data-zona="{{ $zona['key'] }}">
+                <div class="tag-box-head">
+                    <span class="tag-role">{{ $zona['label'] }}</span>
+                    <span class="tag-num">comanda num. #{{ $num }}</span>
+                </div>
+                <div class="tag-body">
+                    @forelse ($zona['righe'] as $r)
+                        <div class="tag-line-check">
+                            <span class="tag-qty">{{ $r['quantita'] }}</span>
+                            <span class="dotted">{{ $r['nome'] }}</span>
+                            <span class="check-box" aria-hidden="true"></span>
+                        </div>
+                    @empty
+                        <div class="meta-small">— nessuna voce —</div>
+                    @endforelse
+                </div>
+                <div class="campo-mano campo-mano--full">
+                    <span class="campo-mano-lbl">Cameriere</span>
+                    <span class="campo-mano-linea"></span>
+                </div>
+            </section>
+        @endforeach
+    </div>
+
+    <section class="tag-cameriere">
+        <div class="tag-head tag-head--compact">
+            <span class="tag-role">CAMERIERE</span>
+            <span class="tag-num">comanda num. #{{ $num }}</span>
+        </div>
+        <div class="tag-body">
+            @foreach ($zoneCameriere as $zona)
+                <div class="tag-cameriere-zona" data-zona-cameriere="{{ $zona['key'] }}">
+                    <div class="tag-cameriere-zona-lbl">{{ $zona['label'] }}</div>
+                    @forelse ($zona['righe'] as $r)
+                        <div class="tag-line-check">
+                            <span class="tag-qty">{{ $r['quantita'] }}</span>
+                            <span class="dotted">{{ $r['nome'] }}</span>
+                            <span class="check-box" aria-hidden="true"></span>
+                        </div>
+                    @empty
+                        <div class="meta-small">—</div>
+                    @endforelse
+                </div>
             @endforeach
         </div>
-
-        {{-- 3. CAMERIERE: riepilogo per zone, tavolo in basso --}}
-        <section class="tag-cameriere">
-            <div class="tag-head tag-head--compact">
-                <span class="tag-role">CAMERIERE</span>
-                <span class="tag-num">comanda num. #{{ $num }}</span>
-            </div>
-            <div class="tag-body">
-                @foreach ($zoneCameriere as $zona)
-                    <div class="tag-cameriere-zona" data-zona-cameriere="{{ $zona['key'] }}">
-                        <div class="tag-cameriere-zona-lbl">{{ $zona['label'] }}</div>
-                        @forelse ($zona['righe'] as $r)
-                            <div class="tag-line-check">
-                                <span class="tag-qty">{{ $r['quantita'] }}</span>
-                                <span class="dotted">{{ $r['nome'] }}</span>
-                                <span class="check-box" aria-hidden="true"></span>
-                            </div>
-                        @empty
-                            <div class="meta-small">—</div>
-                        @endforelse
-                    </div>
-                @endforeach
-            </div>
-            <div class="campo-mano campo-mano--full">
-                <span class="campo-mano-lbl">Tavolo</span>
-                <span class="campo-mano-linea"></span>
-            </div>
-        </section>
-    </div>
+        <div class="campo-mano campo-mano--full">
+            <span class="campo-mano-lbl">Tavolo</span>
+            <span class="campo-mano-linea"></span>
+        </div>
+    </section>
 </div>
 
 @push('scripts')
