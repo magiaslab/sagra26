@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>@yield('title', 'Stampa')</title>
-    <link rel="stylesheet" href="/css/print.css">
+    <link rel="stylesheet" href="/css/print.css?v={{ @filemtime(public_path('css/print.css')) ?: time() }}">
     @stack('head')
 </head>
 <body>

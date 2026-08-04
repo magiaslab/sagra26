@@ -1,9 +1,11 @@
-/* ===== PRINT COMANDA ===== */
+/* ===== PRINT COMANDA / FACSIMILE =====
+   A4 landscape. @page senza margini: il foglio riempie 297×210 e i
+   “margini stretti” (come anteprima) sono padding interno. Evita la
+   2ª pagina bianca da arrotondamenti mm→px e toglie il riquadro nero. */
 @page {
   size: A4 landscape;
-  margin: 8mm;
+  margin: 0;
 }
-
 
 /* Toolbar schermo sulle pagine stampa (comanda/facsimile). Non influisce sul layout mm. */
 @media screen {
@@ -33,27 +35,56 @@
   }
 }
 
-
 .print-only { display: none; }
 
 @media print {
-  body { background: #fff !important; }
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    max-height: 210mm !important;
+    overflow: hidden !important;
+  }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
-  .print-sheet { box-shadow: none !important; margin: 0 !important; }
+
+  .print-sheet,
+  .facsimile-sheet {
+    box-shadow: none !important;
+    margin: 0 !important;
+    border: none !important; /* niente riquadro nero in stampa */
+    outline: none !important;
+    width: 297mm !important;
+    height: 210mm !important;
+    max-width: 297mm !important;
+    max-height: 210mm !important;
+    /* inset ≈ anteprima “quasi a filo” */
+    padding: 4mm !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    page-break-before: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    break-before: avoid !important;
+  }
 }
 
 .print-sheet {
-  width: 270mm;
-  height: 190mm;
-  max-width: 270mm;
-  max-height: 190mm;
-  border: 1px solid #000;
+  width: 297mm;
+  height: 210mm;
+  max-width: 297mm;
+  max-height: 210mm;
+  padding: 4mm;
+  /* Solo a schermo, bordo soft — in stampa viene tolto */
+  border: 1px solid #ccc;
   margin: 1rem auto;
   background: #fff;
   color: #000;
   overflow: hidden;
-  /* Cliente più stretto → più spazio a produzione (3 box) + cameriere */
   display: grid;
   grid-template-columns: 22% 78%;
   font-size: 12px;
@@ -368,19 +399,23 @@
 }
 
 /* ===== FACSIMILE MENU =====
-   Due metà su un solo A4 landscape. Dimensioni utili = foglio meno margini @page (8mm). */
+   Due metà su un solo A4 landscape. Sempre 1 pagina (overflow clipped). */
 .facsimile-sheet {
-  width: 281mm;   /* 297 - 16 */
-  height: 194mm;  /* 210 - 16 */
+  width: 297mm;
+  height: 210mm;
+  max-width: 297mm;
+  max-height: 210mm;
+  padding: 4mm;
   margin: 1rem auto;
   background: #fff;
-  border: 1px solid #000;
+  border: 1px solid #ccc;
   display: grid;
   grid-template-columns: 1fr 0 1fr;
   overflow: hidden;
   box-shadow: 0 2px 12px rgba(0,0,0,.12);
   page-break-inside: avoid;
   break-inside: avoid;
+  box-sizing: border-box;
 }
 
 .facsimile-cut {
@@ -390,14 +425,15 @@
 }
 
 .facsimile-half {
-  padding: 4mm 5mm;
+  padding: 3mm 4mm;
   overflow: hidden;
-  font-size: 9.5px;
+  font-size: 9px;
   box-sizing: border-box;
   min-width: 0;
   display: flex;
   flex-direction: column;
   height: 100%;
+  max-height: 100%;
 }
 
 .facsimile-body {
@@ -408,21 +444,22 @@
 
 .facsimile-nota-congelato {
   flex-shrink: 0;
-  margin-top: 1.2mm;
-  padding-top: .8mm;
+  margin-top: 1mm;
+  padding-top: .6mm;
   border-top: 1px solid #000;
-  font-size: .68em;
-  line-height: 1.15;
+  font-size: .65em;
+  line-height: 1.1;
 }
 
 .facsimile-head {
   text-align: center;
   border-bottom: 1.5px solid #000;
-  padding-bottom: 1.2mm;
-  margin-bottom: 1.8mm;
+  padding-bottom: 1mm;
+  margin-bottom: 1.2mm;
+  flex-shrink: 0;
 }
 .facsimile-title {
-  font-size: 1.2em;
+  font-size: 1.15em;
   font-weight: 800;
   white-space: nowrap;
   overflow: hidden;
@@ -434,15 +471,15 @@
   margin-left: .35em;
 }
 .facsimile-sub {
-  font-size: .72em;
-  margin-top: .6mm;
+  font-size: .7em;
+  margin-top: .4mm;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 .facsimile-hint {
-  font-size: .7em;
-  margin-top: .8mm;
+  font-size: .65em;
+  margin-top: .5mm;
   text-transform: uppercase;
   letter-spacing: .03em;
 }
@@ -451,40 +488,28 @@
   font-weight: 800;
   text-transform: uppercase;
   border-bottom: 1px solid #000;
-  margin: 1.6mm 0 .6mm;
-  padding-bottom: .3mm;
-  font-size: .82em;
+  margin: 1.1mm 0 .4mm;
+  padding-bottom: .2mm;
+  font-size: .8em;
 }
 
 .facsimile-row {
   display: grid;
-  grid-template-columns: 11mm 1fr auto;
-  gap: 1.5mm;
+  grid-template-columns: 10mm 1fr auto;
+  gap: 1.2mm;
   align-items: end;
-  margin: .7mm 0;
-  line-height: 1.1;
+  margin: .45mm 0;
+  line-height: 1.05;
 }
 
 .facsimile-qty {
   display: block;
-  height: 3.2mm;
+  height: 2.8mm;
   border-bottom: 1px solid #000;
 }
 
 .facsimile-nome { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .facsimile-prezzo { font-variant-numeric: tabular-nums; white-space: nowrap; }
-
-@media print {
-  .facsimile-sheet {
-    box-shadow: none !important;
-    margin: 0 !important;
-    border: none !important;
-    width: 281mm;
-    height: 194mm;
-    page-break-after: avoid;
-    break-after: avoid;
-  }
-}
 /* Anteprima A4 in modale cassa: scala via JS (fitAnteprima), niente scroll. */
 .a4-preview {
   overflow: hidden;
