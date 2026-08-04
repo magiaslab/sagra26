@@ -52,6 +52,71 @@
 @layer components {
     @media print {
         .no-print { display: none !important; }
-        body { background: #fff !important; }
+        body { background: #fff !important; color: #000 !important; }
+        main {
+            max-width: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        .report-sheet {
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            background: #fff !important;
+        }
+
+        .report-sheet h2 {
+            font-size: 14pt !important;
+            margin: 0 0 4mm !important;
+        }
+
+        .report-sheet h3 {
+            font-size: 11pt !important;
+            margin: 3mm 0 1.5mm !important;
+            padding-bottom: 0.5mm !important;
+        }
+
+        .report-sheet table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 9pt !important;
+        }
+
+        .report-sheet th,
+        .report-sheet td {
+            padding: 1.2mm 2mm !important;
+            border-bottom: 0.3pt solid #bbb !important;
+            vertical-align: top !important;
+        }
+
+        .report-sheet thead th {
+            background: #eee !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        .report-sheet .report-kpi,
+        .report-sheet .report-card {
+            background: #f3f3f3 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            break-inside: avoid;
+        }
+
+        .report-sheet .report-meta {
+            font-size: 9pt !important;
+        }
+
+        .report-sheet .report-firma {
+            break-inside: avoid;
+            margin-top: 8mm !important;
+        }
+
+        /* Evita tagli brutti su tabelle lunghe */
+        .report-sheet tr {
+            break-inside: avoid;
+        }
     }
 }

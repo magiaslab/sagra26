@@ -5,18 +5,18 @@
         return str_repeat('█', $filled) . str_repeat('░', $width - $filled);
     };
 @endphp
-<div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
+<div class="report-sheet rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
     <h2 class="mt-0 text-xl font-semibold text-sagra-ink">{{ $impostazioni->intestazione_nome }} — Statistiche {{ $completo ? '(completo)' : 'fino al '.$serata->data->format('d/m/Y') }}</h2>
     <div class="my-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div class="rounded-lg bg-sagra-softer px-4 py-3">
+        <div class="report-kpi rounded-lg bg-sagra-softer px-4 py-3">
             <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Coperti</div>
             <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ $dati['coperti'] }}</div>
         </div>
-        <div class="rounded-lg bg-sagra-softer px-4 py-3">
+        <div class="report-kpi rounded-lg bg-sagra-softer px-4 py-3">
             <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Incasso</div>
             <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ number_format($dati['incasso'], 2, ',', '.') }} €</div>
         </div>
-        <div class="rounded-lg bg-sagra-softer px-4 py-3">
+        <div class="report-kpi rounded-lg bg-sagra-softer px-4 py-3">
             <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Media coperti/sera</div>
             <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ $dati['mediaCoperti'] }}</div>
         </div>
@@ -42,6 +42,6 @@
     </ol>
 
     @if ($dati['record'])
-        <p class="text-sm text-sagra-ink">Serata record: <strong>{{ $dati['record']['data'] }}</strong> — {{ number_format($dati['record']['incasso'], 2, ',', '.') }} €</p>
+        <p class="mt-3 text-sm text-sagra-ink">Serata record: <strong>{{ $dati['record']['data'] }}</strong> — {{ number_format($dati['record']['incasso'], 2, ',', '.') }} €</p>
     @endif
 </div>

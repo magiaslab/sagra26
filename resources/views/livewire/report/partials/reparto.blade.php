@@ -1,10 +1,10 @@
-<div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
+<div class="report-sheet rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
     <div class="flex flex-wrap items-baseline justify-between gap-2">
         <div>
             <h2 class="m-0 text-xl font-semibold text-sagra-ink">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
-            <div class="text-xs text-sagra-muted">Report {{ \App\Models\MenuItem::etichettaArea($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
+            <div class="report-meta text-xs text-sagra-muted">Report {{ \App\Models\MenuItem::etichettaArea($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
         </div>
-        <div class="flex flex-wrap gap-2">
+        <div class="flex flex-wrap gap-2 report-meta">
             <span class="text-xs font-medium text-sagra-muted">Coperti stasera {{ $dati['copertiStasera'] }}</span>
             <span class="text-xs font-medium text-sagra-muted">Cumulato {{ $dati['copertiCum'] }}</span>
         </div>
@@ -17,9 +17,9 @@
                 <thead>
                     <tr class="bg-sagra-softer">
                         <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Piatto</th>
-                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Stasera</th>
-                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Cumulato</th>
-                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink"></th>
+                        <th class="w-24 px-3 py-2 text-right font-semibold text-sagra-ink">Stasera</th>
+                        <th class="w-24 px-3 py-2 text-right font-semibold text-sagra-ink">Cumulato</th>
+                        <th class="w-28 px-3 py-2 text-left font-semibold text-sagra-ink"></th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-sagra-line">
@@ -32,8 +32,8 @@
                     @endphp
                     <tr>
                         <td class="px-3 py-2">{{ $item->nome }}</td>
-                        <td class="px-3 py-2">{{ $qS }}</td>
-                        <td class="px-3 py-2">{{ $qC }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums">{{ $qS }}</td>
+                        <td class="px-3 py-2 text-right tabular-nums">{{ $qC }}</td>
                         <td class="px-3 py-2">@if($esaurito)<span class="rounded bg-sagra-danger-soft px-1.5 py-0.5 text-xs font-medium text-sagra-danger">ESAURITO</span>@endif</td>
                     </tr>
                 @endforeach
