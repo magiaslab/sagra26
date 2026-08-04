@@ -41,7 +41,8 @@ it('lo storico elenca comande stampate e annullate della serata', function () {
         ->assertJsonPath('comande.0.stato', 'annullata')
         ->assertJsonPath('comande.0.motivo_annullo', 'errore cassiere')
         ->assertJsonPath('comande.1.numero', $a->numero_progressivo)
-        ->assertJsonPath('comande.1.stato', 'stampata');
+        ->assertJsonPath('comande.1.stato', 'stampata')
+        ->assertJsonPath('comande.1.print_url', route('cassa.stampa', $a, absolute: false));
 });
 
 it('annulla richiede motivo di almeno 2 caratteri e rende la comanda non richiamabile', function () {

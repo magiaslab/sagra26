@@ -170,6 +170,11 @@
                     Conferma e stampa <kbd class="ml-1.5 border-white/40 bg-black/15 text-inherit">F9</kbd>
                 </button>
                 <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <kbd class="ml-1">F2</kbd></button>
+                <button type="button"
+                        class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                        x-show="comandaId && printUrlRichiamata"
+                        x-cloak
+                        @click="apriRistampaCaricata()">Ristampa</button>
                 <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <kbd class="ml-1">Esc</kbd></button>
             </div>
         </div>
@@ -424,7 +429,7 @@
         <div class="max-h-[90vh] w-[min(27rem,94vw)] overflow-auto rounded-lg bg-white p-5 shadow-xl ring-1 ring-sagra-line" @click.stop>
             <h2 class="text-lg font-semibold text-sagra-ink">Richiama una comanda</h2>
             <p class="mb-3 text-xs leading-relaxed text-sagra-muted">
-                Tocca la riga per correggerla. «Annulla» è un'altra cosa: da usare solo se l'ordine non va più fatto — richiede un motivo e non si torna indietro.
+                Tocca la riga per correggerla. «Ristampa» ristampa tutto o solo una sezione (cliente / produzione / cameriere). «Annulla» è irreversibile e richiede un motivo.
             </p>
             <label class="mb-1 block text-sm font-medium text-sagra-ink">Numero progressivo</label>
             <div class="mb-2 flex gap-2">
@@ -440,7 +445,11 @@
                 <div class="divide-y divide-sagra-line">
                 <template x-for="c in storico" :key="c.comanda_id">
                     <div class="bg-white"
-                         :class="{ 'opacity-60': c.stato === 'annullata', 'bg-sagra-danger-soft/40': annulloId === c.comanda_id }">
+                         :class="{
+                             'opacity-60': c.stato === 'annullata',
+                             'bg-sagra-danger-soft/40': annulloId === c.comanda_id,
+                             'bg-sagra-softer': ristampaId === c.comanda_id,
+                         }">
                         <template x-if="c.stato === 'annullata'">
                             <div class="px-3 py-2">
                                 <div class="flex items-center justify-between gap-2">
@@ -462,9 +471,30 @@
                                         <span class="font-mono text-sm font-semibold tabular-nums" x-text="formatEuro(c.totale)"></span>
                                         <span class="ml-auto whitespace-nowrap text-xs font-medium text-sagra">Correggi →</span>
                                     </button>
+                                    <button type="button" class="min-w-[4.5rem] border-l border-sagra-line bg-white px-2 text-xs font-semibold text-sagra-ink hover:bg-sagra-softer"
+                                            @click.stop="apriRistampaStorico(c)" title="Ristampa comanda">Ristampa</button>
                                     <button type="button" class="min-w-[4.5rem] border-l border-sagra-line bg-white px-3 text-xs font-semibold text-sagra-danger hover:bg-sagra-danger-soft"
                                             @click.stop="apriConfermaAnnullo(c)" title="Annulla comanda (irreversibile)">Annulla</button>
                                 </div>
+                                <template x-if="ristampaId === c.comanda_id">
+                                    <div class="border-t border-sagra-line bg-sagra-softer p-3">
+                                        <p class="mb-2 text-xs font-medium text-sagra-ink">
+                                            Ristampa n.<strong x-text="c.numero"></strong> — cosa stampare?
+                                        </p>
+                                        <div class="flex flex-wrap gap-2">
+                                            <button type="button" class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark"
+                                                    @click="eseguiRistampa(c.print_url, 'tutte')">Tutto</button>
+                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                    @click="eseguiRistampa(c.print_url, 'cliente')">Cliente</button>
+                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                    @click="eseguiRistampa(c.print_url, 'produzione')">Produzione</button>
+                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                    @click="eseguiRistampa(c.print_url, 'cameriere')">Cameriere</button>
+                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-muted shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                    @click="chiudiRistampa()">Annulla</button>
+                                        </div>
+                                    </div>
+                                </template>
                                 <template x-if="annulloId === c.comanda_id">
                                     <div class="border-t border-sagra-danger/30 bg-sagra-danger-soft p-3">
                                         <p class="mb-2 text-xs font-medium leading-snug text-sagra-danger">
@@ -491,6 +521,30 @@
             </div>
             <div class="mt-4 flex justify-end gap-2">
                 <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalRistampa" x-cloak @keydown.escape.window="chiudiRistampa()">
+        <div class="w-[min(26rem,94vw)] rounded-lg bg-white p-5 shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <h2 class="m-0 text-lg font-semibold text-sagra-ink">Ristampa comanda</h2>
+            <p class="mt-1 text-sm text-sagra-muted">
+                n.<span class="font-mono font-semibold text-sagra-ink" x-text="numeroRichiamato || '—'"></span>
+                · scegli cosa stampare
+            </p>
+            <div class="mt-4 grid grid-cols-2 gap-2">
+                <button type="button" class="rounded-md bg-sagra px-3 py-3 text-sm font-semibold text-white hover:bg-sagra-dark"
+                        @click="eseguiRistampa(printUrlRichiamata, 'tutte')">Tutto</button>
+                <button type="button" class="rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                        @click="eseguiRistampa(printUrlRichiamata, 'cliente')">Cliente</button>
+                <button type="button" class="rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                        @click="eseguiRistampa(printUrlRichiamata, 'produzione')">Produzione</button>
+                <button type="button" class="rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                        @click="eseguiRistampa(printUrlRichiamata, 'cameriere')">Cameriere</button>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                        @click="chiudiRistampa()">Chiudi (Esc)</button>
             </div>
         </div>
     </div>
@@ -526,6 +580,7 @@ function cassaApp(cfg) {
         modalPagamento: false,
         modalAnteprima: false,
         modalRichiamo: false,
+        modalRistampa: false,
         modalClaim: false,
         claimMessaggio: '',
         a4Scale: 1,
@@ -546,10 +601,12 @@ function cassaApp(cfg) {
         motivo: '',
         tavolo: '',
         noteComanda: '',
+        printUrlRichiamata: null,
         richiamoNumero: '',
         storico: [],
         annulloId: null,
         annulloMotivo: '',
+        ristampaId: null,
         errore: null,
         messaggio: null,
         busy: false,
@@ -1004,6 +1061,7 @@ function cassaApp(cfg) {
             this.motivo = '';
             this.tavolo = '';
             this.noteComanda = '';
+            this.printUrlRichiamata = null;
             this.metodo = null;
             this.metodoOriginale = null;
             this.mostraMisto = false;
@@ -1019,8 +1077,10 @@ function cassaApp(cfg) {
             this.modalPagamento = false;
             this.modalAnteprima = false;
             this.modalRichiamo = false;
+            this.modalRistampa = false;
             this.annulloId = null;
             this.annulloMotivo = '';
+            this.ristampaId = null;
             this.errore = null;
         },
 
@@ -1168,6 +1228,8 @@ function cassaApp(cfg) {
             this.errore = null;
             this.annulloId = null;
             this.annulloMotivo = '';
+            this.ristampaId = null;
+            this.modalRistampa = false;
             this.modalRichiamo = true;
             this.caricaStorico();
             this.$nextTick(() => this.$refs.richiamoInput?.focus());
@@ -1191,9 +1253,42 @@ function cassaApp(cfg) {
             this.eseguiRichiamo();
         },
 
+        apriRistampaStorico(c) {
+            if (!c || c.stato === 'annullata' || !c.print_url) return;
+            this.errore = null;
+            this.annulloId = null;
+            this.annulloMotivo = '';
+            this.ristampaId = this.ristampaId === c.comanda_id ? null : c.comanda_id;
+        },
+
+        apriRistampaCaricata() {
+            if (!this.comandaId || !this.printUrlRichiamata) return;
+            this.errore = null;
+            this.modalRichiamo = false;
+            this.ristampaId = null;
+            this.modalRistampa = true;
+        },
+
+        chiudiRistampa() {
+            this.ristampaId = null;
+            this.modalRistampa = false;
+        },
+
+        eseguiRistampa(printUrl, parte) {
+            if (!printUrl) {
+                this.errore = 'URL stampa non disponibile.';
+                return;
+            }
+            const partiOk = ['tutte', 'cliente', 'produzione', 'cameriere'];
+            const p = partiOk.includes(parte) ? parte : 'tutte';
+            const sep = printUrl.includes('?') ? '&' : '?';
+            window.location.href = printUrl + sep + 'parte=' + encodeURIComponent(p) + '&print=1';
+        },
+
         apriConfermaAnnullo(c) {
             if (!c || c.stato === 'annullata') return;
             this.errore = null;
+            this.ristampaId = null;
             this.annulloId = c.comanda_id;
             this.annulloMotivo = '';
             this.$nextTick(() => this.$refs.annulloMotivoInput?.focus());
@@ -1271,6 +1366,7 @@ function cassaApp(cfg) {
                 this.prezziStorici = prezzi;
                 this.tavolo = data.tavolo || '';
                 this.noteComanda = data.note || '';
+                this.printUrlRichiamata = data.print_url || null;
                 this.motivo = '';
                 this.chiudiModal();
                 this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')
@@ -1358,10 +1454,15 @@ function cassaApp(cfg) {
                 if (e.key === 'Escape') { e.preventDefault(); this.chiudiModal(); }
                 return;
             }
+            if (this.modalRistampa) {
+                if (e.key === 'Escape') { e.preventDefault(); this.chiudiRistampa(); }
+                return;
+            }
             if (this.modalRichiamo) {
                 if (e.key === 'Escape') {
                     e.preventDefault();
                     if (this.annulloId) this.chiudiConfermaAnnullo();
+                    else if (this.ristampaId) this.chiudiRistampa();
                     else this.chiudiModal();
                 }
                 return;

@@ -211,6 +211,7 @@ class CassaController extends Controller
                 'stato' => $c->stato,
                 'motivo_annullo' => $c->motivo_annullo,
                 'n_righe' => $c->righe_count,
+                'print_url' => route('cassa.stampa', $c, absolute: false),
             ]);
 
         return response()->json(['comande' => $comande]);
@@ -249,6 +250,7 @@ class CassaController extends Controller
             'tavolo' => $comanda->tavolo,
             'note' => $comanda->note,
             'correzioni_count' => $comanda->correzioni()->count(),
+            'print_url' => route('cassa.stampa', $comanda, absolute: false),
             'righe' => $comanda->righe->map(fn ($r) => [
                 'menu_item_id' => $r->menu_item_id,
                 'quantita' => $r->quantita,
