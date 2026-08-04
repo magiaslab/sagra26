@@ -274,7 +274,7 @@
                                     <section class="a4-box-zona">
                                         <div class="a4-box-head">
                                             <span class="a4-role" x-text="zona.label"></span>
-                                            <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                            <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
                                         </div>
                                         <template x-for="r in zona.righe" :key="zona.key + '-' + r.id">
                                             <div class="a4-check">
@@ -291,7 +291,7 @@
                             <section class="a4-tag a4-cameriere">
                                 <div class="a4-head a4-head--compact">
                                     <span class="a4-role">CAMERIERE</span>
-                                    <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
+                                    <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
                                 </div>
                                 <template x-for="zona in zoneCameriere" :key="'cam-'+zona.key">
                                     <div class="a4-cameriere-zona">
