@@ -14,6 +14,7 @@ class Impostazione extends Model
         'intestazione_sottotitolo',
         'pin_gestione',
         'comunicazione_comanda',
+        'stock_soglia_alert',
         'chromium_path',
     ];
 
@@ -29,7 +30,15 @@ class Impostazione extends Model
             'intestazione_anno' => '2026',
             'intestazione_sottotitolo' => 'A.S.D. Basket San Vincenzo · UISP Pallavolo · ASD Calcio San Vincenzo',
             'pin_gestione' => '1234',
+            'stock_soglia_alert' => 10,
             'chromium_path' => null,
         ]);
+    }
+
+    public function sogliaStockAlert(): int
+    {
+        $n = (int) ($this->stock_soglia_alert ?? 10);
+
+        return max(0, $n);
     }
 }

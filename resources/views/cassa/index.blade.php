@@ -24,6 +24,7 @@
         brand: @js(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? '')),
         sottotitolo: @js($impostazioni->intestazione_sottotitolo ?? ''),
         comunicazioneComanda: @js($impostazioni->comunicazione_comanda ?? ''),
+        stockSogliaAlert: {{ (int) $impostazioni->sogliaStockAlert() }},
         csrf: '{{ csrf_token() }}',
         urls: {
             conferma: '{{ route('cassa.conferma', absolute: false) }}',
@@ -151,6 +152,15 @@
                         : (deltaCorrezione < 0 ? 'bg-sky-50 text-sky-800 ring-1 ring-sky-200' : 'bg-sagra-softer text-sagra-muted')"
                     x-text="deltaCorrezioneMessaggio"
                 ></span>
+                <div class="w-28 min-h-9 xl:w-32" :class="comandaId ? 'invisible pointer-events-none' : 'visible'">
+                    <input class="block h-9 w-full rounded-md bg-white px-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="40" x-model="tavolo"
+                           placeholder="Tavolo" autocomplete="off"
+                           :tabindex="comandaId ? -1 : 0">
+                </div>
+                <div class="w-36 min-h-9 xl:w-44">
+                    <input class="block h-9 w-full rounded-md bg-white px-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="noteComanda"
+                           placeholder="Note" autocomplete="off">
+                </div>
                 <div class="w-40 min-h-9 xl:w-44" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
                     <input class="block h-9 w-full rounded-md bg-white px-2.5 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
                            placeholder="Motivo correzione" autocomplete="off"
@@ -261,6 +271,22 @@
                         : 'POS'"></span>
                 </button>
             </div>
+            <div class="mt-3" x-show="!comandaId" x-cloak>
+                <button type="button" class="w-full rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriMisto()">
+                    <span class="font-mono text-xs text-sagra-muted">M</span> Misto (contante + POS)
+                </button>
+                <div class="mt-3 grid grid-cols-2 gap-2 text-left" x-show="mostraMisto" x-cloak>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-sagra-muted">Contante €</label>
+                        <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" x-model.number="importoContanteMisto" @input="syncMistoPos()">
+                    </div>
+                    <div>
+                        <label class="mb-1 block text-xs font-medium text-sagra-muted">POS €</label>
+                        <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" x-model.number="importoPosMisto" @focus="syncMistoPos()">
+                    </div>
+                    <button type="button" class="col-span-2 rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark" @click="confermaMisto()">Conferma misto</button>
+                </div>
+            </div>
             <p class="mt-4 text-xs text-sagra-muted">Esc per annullare</p>
         </div>
     </div>
@@ -295,6 +321,8 @@
                                 <span class="a4-num" x-text="'Comanda ' + numeroDiSerataDisplay + ' di stasera'"></span>
                             </div>
                             <div class="a4-meta" x-text="'rif. #' + numeroDisplay"></div>
+                            <div class="a4-meta" x-show="tavolo || noteComanda" x-cloak
+                                 x-text="(tavolo ? ('Tavolo ' + tavolo) : '') + (tavolo && noteComanda ? ' · ' : '') + (noteComanda || '')"></div>
                             <div class="a4-corr-banner" x-show="comandaId" x-cloak>CORREZIONE — già in corso · non è una comanda nuova</div>
                             <div class="a4-line a4-line-head">
                                 <span>Q.tà</span>
@@ -492,6 +520,7 @@ function cassaApp(cfg) {
         brand: cfg.brand,
         sottotitolo: cfg.sottotitolo || '',
         comunicazioneComanda: cfg.comunicazioneComanda || '',
+        stockSogliaAlert: cfg.stockSogliaAlert ?? 10,
         csrf: cfg.csrf,
         urls: cfg.urls,
         modalPagamento: false,
@@ -503,6 +532,9 @@ function cassaApp(cfg) {
         topPad: 120,
         metodo: null,
         metodoOriginale: null,
+        mostraMisto: false,
+        importoContanteMisto: 0,
+        importoPosMisto: 0,
         comandaId: null,
         numeroRichiamato: null,
         numeroDiSerataRichiamato: null,
@@ -512,6 +544,8 @@ function cassaApp(cfg) {
         qtyOriginali: {},
         prezziStorici: {},
         motivo: '',
+        tavolo: '',
+        noteComanda: '',
         richiamoNumero: '',
         storico: [],
         annulloId: null,
@@ -586,7 +620,11 @@ function cassaApp(cfg) {
             if (this.comandaId && this.deltaCorrezione > 0) {
                 return this.metodo === 'pos' ? '+ POS' : '+ CONTANTE';
             }
-            return this.metodo === 'contante' ? 'CONTANTE' : (this.metodo === 'pos' ? 'POS' : 'MISTO');
+            if (this.metodo === 'misto') {
+                return 'MISTO · € ' + this.formatEuro(this.importoContanteMisto)
+                    + ' + ▭ ' + this.formatEuro(this.importoPosMisto);
+            }
+            return this.metodo === 'contante' ? 'CONTANTE' : 'POS';
         },
 
         get movimentiCorrezione() {
@@ -843,6 +881,7 @@ function cassaApp(cfg) {
             const r = this.stockResiduo(item);
             if (r === null) return 'text-sagra-warn';
             if (r <= 0) return 'text-sagra-danger';
+            if (r <= this.stockSogliaAlert) return 'text-sagra-amber';
             return 'text-sagra-muted';
         },
 
@@ -854,6 +893,7 @@ function cassaApp(cfg) {
             const r = this.stockResiduo(item);
             if (r === null) return 'stock non impostato';
             if (r <= 0) return 'ESAURITO';
+            if (r <= this.stockSogliaAlert) return 'QUASI ESAURITO · rimasti ' + r;
             return 'rimasti ' + r;
         },
 
@@ -962,8 +1002,13 @@ function cassaApp(cfg) {
             this.qtyOriginali = {};
             this.prezziStorici = {};
             this.motivo = '';
+            this.tavolo = '';
+            this.noteComanda = '';
             this.metodo = null;
             this.metodoOriginale = null;
+            this.mostraMisto = false;
+            this.importoContanteMisto = 0;
+            this.importoPosMisto = 0;
             this.errore = null;
             this.messaggio = null;
             this.activeId = this.menu[0]?.id ?? null;
@@ -1014,18 +1059,44 @@ function cassaApp(cfg) {
                 return;
             }
             this.metodo = null;
+            this.mostraMisto = false;
+            this.importoContanteMisto = 0;
+            this.importoPosMisto = 0;
             this.modalPagamento = true;
         },
 
         scegliMetodo(m) {
             this.metodo = m;
+            this.mostraMisto = false;
             this.modalPagamento = false;
             this.modalAnteprima = true;
             this.$nextTick(() => {
                 this.fitAnteprima();
-                // Secondo passaggio dopo layout definitivo del modal
                 requestAnimationFrame(() => this.fitAnteprima());
             });
+        },
+
+        apriMisto() {
+            this.mostraMisto = true;
+            this.importoContanteMisto = this.totale;
+            this.importoPosMisto = 0;
+        },
+
+        syncMistoPos() {
+            const c = Math.round((Number(this.importoContanteMisto) || 0) * 100) / 100;
+            this.importoPosMisto = Math.max(0, Math.round((this.totale - c) * 100) / 100);
+        },
+
+        confermaMisto() {
+            const c = Math.round((Number(this.importoContanteMisto) || 0) * 100) / 100;
+            const p = Math.round((Number(this.importoPosMisto) || 0) * 100) / 100;
+            if (c < 0 || p < 0 || Math.abs((c + p) - this.totale) > 0.01) {
+                this.errore = 'Misto: contante + POS devono eguagliare il totale.';
+                return;
+            }
+            this.importoContanteMisto = c;
+            this.importoPosMisto = p;
+            this.scegliMetodo('misto');
         },
 
         async inviaConferma() {
@@ -1039,11 +1110,17 @@ function cassaApp(cfg) {
                     metodo_pagamento: this.metodo,
                     comanda_id: this.comandaId,
                     motivo: this.comandaId ? (this.motivo || null) : null,
+                    tavolo: this.tavolo || null,
+                    note: this.noteComanda || null,
                     righe: this.righeOrdine.map(r => ({
                         menu_item_id: r.id,
                         quantita: r.q,
                     })),
                 };
+                if (this.metodo === 'misto' && !this.comandaId) {
+                    payload.importo_contante = this.importoContanteMisto;
+                    payload.importo_pos = this.importoPosMisto;
+                }
                 if (this.comandaId && this.comandaVersion != null) {
                     payload.version = this.comandaVersion;
                 }
@@ -1192,6 +1269,8 @@ function cassaApp(cfg) {
                 }
                 this.qtyOriginali = orig;
                 this.prezziStorici = prezzi;
+                this.tavolo = data.tavolo || '';
+                this.noteComanda = data.note || '';
                 this.motivo = '';
                 this.chiudiModal();
                 this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')

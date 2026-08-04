@@ -22,6 +22,8 @@ class ReportHub extends Component
 
     public ?int $serataId = null;
 
+    public ?int $serataConfrontoId = null;
+
     public ?int $puntoCassaId = null;
 
     public bool $completo = true;
@@ -30,6 +32,74 @@ class ReportHub extends Component
     {
         $this->serataId = Serata::query()->orderByDesc('data')->value('id');
         $this->puntoCassaId = PuntoCassa::query()->where('attivo', true)->value('id');
+        $this->serataConfrontoId = $this->serataPrecedenteId($this->serataId);
+    }
+
+    public function updatedSerataId(?int $value): void
+    {
+        if ($this->tipo === 'confronto') {
+            $this->serataConfrontoId = $this->serataPrecedenteId($value);
+        }
+    }
+
+    public function exportCsv()
+    {
+        $serata = $this->serataId ? Serata::query()->find($this->serataId) : null;
+        if (! $serata) {
+            return;
+        }
+
+        $filename = 'serata-'.$serata->data->format('Y-m-d').'.csv';
+
+        return response()->streamDownload(function () use ($serata) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF"); // BOM Excel
+            fputcsv($out, [
+                'numero', 'numero_di_serata', 'stato', 'coperti', 'metodo',
+                'importo_contante', 'importo_pos', 'totale', 'tavolo', 'note',
+                'postazione', 'punto_cassa', 'created_at',
+                'voce', 'quantita', 'prezzo_unitario', 'importo_riga',
+            ], ';');
+
+            $comande = Comanda::query()
+                ->with(['righe.menuItem', 'postazione', 'puntoCassa'])
+                ->where('serata_id', $serata->id)
+                ->orderBy('id')
+                ->get();
+
+            foreach ($comande as $c) {
+                $base = [
+                    $c->numero_progressivo,
+                    $c->numeroDiSerata(),
+                    $c->stato,
+                    $c->coperti,
+                    $c->metodo_pagamento,
+                    $c->importoContanteEffettivo(),
+                    $c->importoPosEffettivo(),
+                    (float) $c->totale,
+                    $c->tavolo,
+                    $c->note,
+                    $c->postazione?->nome,
+                    $c->puntoCassa?->nome,
+                    optional($c->created_at)?->format('Y-m-d H:i:s'),
+                ];
+                if ($c->righe->isEmpty()) {
+                    fputcsv($out, array_merge($base, ['', '', '', '']), ';');
+                    continue;
+                }
+                foreach ($c->righe as $r) {
+                    fputcsv($out, array_merge($base, [
+                        $r->menuItem?->nome,
+                        $r->quantita,
+                        (float) $r->prezzo_unitario,
+                        round($r->quantita * (float) $r->prezzo_unitario, 2),
+                    ]), ';');
+                }
+            }
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 
     public function render()
@@ -54,6 +124,7 @@ class ReportHub extends Component
                 'statistiche' => $this->datiStatistiche($serateFino),
                 'economico' => $this->datiEconomico($serateFino),
                 'consegna' => $this->datiConsegna($serata),
+                'confronto' => $this->datiConfronto($serata),
                 default => [],
             };
         }
@@ -65,6 +136,77 @@ class ReportHub extends Component
             'dati' => $dati,
             'impostazioni' => Impostazione::corrente(),
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+    }
+
+    private function serataPrecedenteId(?int $serataId): ?int
+    {
+        if (! $serataId) {
+            return null;
+        }
+        $corrente = Serata::query()->find($serataId);
+        if (! $corrente) {
+            return null;
+        }
+
+        return Serata::query()
+            ->where('data', '<', $corrente->data->toDateString())
+            ->orderByDesc('data')
+            ->value('id');
+    }
+
+    private function datiConfronto(Serata $serata): array
+    {
+        $altra = $this->serataConfrontoId
+            ? Serata::query()->find($this->serataConfrontoId)
+            : null;
+
+        $a = $this->riepilogoSerataBreve($serata);
+        $b = $altra ? $this->riepilogoSerataBreve($altra) : null;
+
+        $piatti = [];
+        $idsA = $a['qta'];
+        $idsB = $b['qta'] ?? [];
+        $allIds = collect(array_keys($idsA))->merge(array_keys($idsB))->unique()->values();
+        $nomi = MenuItem::query()->whereIn('id', $allIds)->pluck('nome', 'id');
+        foreach ($allIds as $id) {
+            $qa = (int) ($idsA[$id] ?? 0);
+            $qb = (int) ($idsB[$id] ?? 0);
+            if ($qa === 0 && $qb === 0) {
+                continue;
+            }
+            $piatti[] = [
+                'nome' => $nomi[$id] ?? ('#'.$id),
+                'qta_a' => $qa,
+                'qta_b' => $qb,
+                'delta' => $qa - $qb,
+            ];
+        }
+        usort($piatti, fn ($x, $y) => abs($y['delta']) <=> abs($x['delta']));
+
+        return [
+            'a' => $a,
+            'b' => $b,
+            'piatti' => $piatti,
+        ];
+    }
+
+    /**
+     * @return array{label: string, coperti: int, comande: int, incasso: float, contante: float, pos: float, qta: array<int, int>}
+     */
+    private function riepilogoSerataBreve(Serata $serata): array
+    {
+        $comande = Comanda::query()->where('serata_id', $serata->id)->where('stato', 'stampata')->get();
+        $dettaglio = $this->venditeDettaglioPerItem(collect([$serata->id]));
+
+        return [
+            'label' => $serata->data->format('d/m/Y'),
+            'coperti' => (int) $comande->sum('coperti'),
+            'comande' => $comande->count(),
+            'incasso' => round($comande->sum('totale'), 2),
+            'contante' => round($comande->sum(fn ($c) => $c->importoContanteEffettivo()), 2),
+            'pos' => round($comande->sum(fn ($c) => $c->importoPosEffettivo()), 2),
+            'qta' => $dettaglio['qta'],
+        ];
     }
 
     /**

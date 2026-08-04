@@ -49,6 +49,35 @@ class StockService
     }
 
     /**
+     * Aggiunge pezzi a serata già aperta (rifornimento). Aggiorna anche stock_iniziale
+     * così i report “iniziale” restano coerenti con quanto messo a disposizione.
+     */
+    public function rifornisci(int $serataId, int $menuItemId, int $qty): SerataStock
+    {
+        if ($qty <= 0) {
+            throw new RuntimeException('Quantità di rifornimento non valida.');
+        }
+
+        return DB::transaction(function () use ($serataId, $menuItemId, $qty) {
+            $row = SerataStock::query()
+                ->where('serata_id', $serataId)
+                ->where('menu_item_id', $menuItemId)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $row) {
+                throw new RuntimeException('Voce senza stock per questa serata.');
+            }
+
+            $row->stock_residuo = (int) $row->stock_residuo + $qty;
+            $row->stock_iniziale = (int) $row->stock_iniziale + $qty;
+            $row->save();
+
+            return $row;
+        });
+    }
+
+    /**
      * @return array<int, int> menu_item_id => stock_residuo
      */
     public function mappaResidui(int $serataId): array

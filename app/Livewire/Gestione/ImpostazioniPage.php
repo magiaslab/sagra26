@@ -18,6 +18,8 @@ class ImpostazioniPage extends Component
 
     public string $pin_gestione = '';
 
+    public int $stock_soglia_alert = 10;
+
     public string $nuovaPostazione = '';
 
     public string $nuovoPunto = '';
@@ -37,6 +39,7 @@ class ImpostazioniPage extends Component
         $this->intestazione_anno = $i->intestazione_anno;
         $this->intestazione_sottotitolo = (string) ($i->intestazione_sottotitolo ?? '');
         $this->pin_gestione = $i->pin_gestione;
+        $this->stock_soglia_alert = $i->sogliaStockAlert();
         $this->mapValidoDa = now()->toDateString();
     }
 
@@ -48,6 +51,7 @@ class ImpostazioniPage extends Component
             'intestazione_anno' => $this->intestazione_anno,
             'intestazione_sottotitolo' => $this->intestazione_sottotitolo ?: null,
             'pin_gestione' => $this->pin_gestione,
+            'stock_soglia_alert' => max(0, (int) $this->stock_soglia_alert),
         ]);
         $this->errore = '';
         session()->flash('status', 'Impostazioni salvate.');

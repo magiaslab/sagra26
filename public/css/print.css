@@ -75,6 +75,24 @@
     padding: 0 !important;
   }
 
+  .print-sheet--parte-cliente {
+    grid-template-columns: 1fr !important;
+  }
+  .print-sheet--parte-cliente .tag-produzione,
+  .print-sheet--parte-cliente .tag-cameriere { display: none !important; }
+
+  .print-sheet--parte-produzione {
+    grid-template-columns: 1fr !important;
+  }
+  .print-sheet--parte-produzione .tag-cliente,
+  .print-sheet--parte-produzione .tag-cameriere { display: none !important; }
+
+  .print-sheet--parte-cameriere {
+    grid-template-columns: 1fr !important;
+  }
+  .print-sheet--parte-cameriere .tag-cliente,
+  .print-sheet--parte-cameriere .tag-produzione { display: none !important; }
+
   .facsimile-sheet {
     padding: 4mm !important;
   }

@@ -23,6 +23,8 @@ class Comanda extends Model
         'importo_pos',
         'totale',
         'motivo_annullo',
+        'tavolo',
+        'note',
     ];
 
     protected function casts(): array
