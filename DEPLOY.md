@@ -27,6 +27,7 @@ php artisan key:generate
 #   APP_ENV=production
 #   APP_DEBUG=false
 #   APP_URL=http://<host-o-nome-lan>:8000
+#   APP_TIMEZONE=Europe/Rome
 #   DB_CONNECTION=sqlite
 #   DB_DATABASE=/home/<utente>/cassa/database/database.sqlite
 #   PIN_MASTER_RESET=<codice-segreto-non-default>
