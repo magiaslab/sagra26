@@ -20,6 +20,13 @@ class ChiusuraService
      */
     public function salva(Serata $serata, PuntoCassa $puntoCassa, array $dati): Chiusura
     {
+        // Protezione foglio consegna: dati chiusura modificabili solo a serata aperta.
+        if (! $serata->isAperta()) {
+            throw new RuntimeException(
+                'Serata chiusa: il foglio consegna contanti è bloccato. Riapri la serata da Gestione → Serate per correggere.'
+            );
+        }
+
         $chiusura = Chiusura::query()->firstOrNew([
             'serata_id' => $serata->id,
             'punto_cassa_id' => $puntoCassa->id,

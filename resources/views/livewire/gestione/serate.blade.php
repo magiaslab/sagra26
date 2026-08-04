@@ -69,6 +69,11 @@
 
     <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
         <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Storico</h2>
+        <p class="mb-3 text-sm text-sagra-muted">
+            Con serata chiusa puoi comunque ristampare i report.
+            Per correggere comande o conteggi cassa usa <strong>Riapri</strong>.
+            Il foglio consegna contanti è modificabile solo a serata aperta.
+        </p>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-sagra-line text-sm">
                 <thead>
@@ -76,6 +81,7 @@
                         <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Data</th>
                         <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Stato</th>
                         <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Note</th>
+                        <th class="px-3 py-2 text-right font-semibold text-sagra-ink">Azioni</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-sagra-line">
@@ -84,6 +90,27 @@
                         <td class="px-3 py-2">{{ $s->data->format('d/m/Y') }}</td>
                         <td class="px-3 py-2"><span class="text-xs font-medium text-sagra-muted">{{ $s->stato }}</span></td>
                         <td class="px-3 py-2">{{ $s->note }}</td>
+                        <td class="px-3 py-2">
+                            <div class="flex flex-wrap items-center justify-end gap-2">
+                                @if ($s->stato === 'chiusa')
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center rounded-md bg-sagra px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-sagra-dark disabled:opacity-50"
+                                        wire:click="riapri({{ $s->id }})"
+                                        @disabled((bool) $serata)
+                                        title="{{ $serata ? 'Chiudi prima la serata aperta' : 'Riapri per correzioni' }}"
+                                    >Riapri</button>
+                                    <button
+                                        type="button"
+                                        class="inline-flex items-center rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-sagra-danger shadow-sm ring-1 ring-inset ring-sagra-danger/40 hover:bg-sagra-danger-soft"
+                                        wire:click="elimina({{ $s->id }})"
+                                        wire:confirm="Eliminare la serata del {{ $s->data->format('d/m/Y') }} e tutte le comande/chiusure collegate? Operazione irreversibile."
+                                    >Elimina</button>
+                                @else
+                                    <span class="text-xs text-sagra-muted">in corso</span>
+                                @endif
+                            </div>
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>

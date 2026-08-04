@@ -86,7 +86,7 @@
   color: #000;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 22% 78%;
+  grid-template-columns: 29% 71%; /* cliente +2cm circa vs 22%; resto produzione+cameriere */
   font-size: 12px;
   line-height: 1.25;
   box-shadow: 0 2px 12px rgba(0,0,0,.15);
@@ -105,7 +105,7 @@
 
 .tag-right {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: 1fr 1fr; /* produzione e cameriere stessa larghezza */
   overflow: hidden;
   min-height: 0;
 }
@@ -531,7 +531,7 @@
   background: #fff;
   border: 1px solid #999;
   display: grid;
-  grid-template-columns: 22% 78%;
+  grid-template-columns: 29% 71%;
   font-size: 11px;
   color: #111;
   overflow: hidden;
@@ -548,7 +548,7 @@
 }
 .a4-right {
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: 1fr 1fr;
   min-height: 0;
   overflow: hidden;
 }

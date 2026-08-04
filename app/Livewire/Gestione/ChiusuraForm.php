@@ -31,6 +31,8 @@ class ChiusuraForm extends Component
 
     public ?array $riconciliazione = null;
 
+    public ?string $errore = null;
+
     public function mount(RiconciliazioneService $ric): void
     {
         foreach (array_keys(Chiusura::TAGLI) as $campo) {
@@ -129,17 +131,32 @@ class ChiusuraForm extends Component
 
     public function salva(ChiusuraService $service): void
     {
+        $this->errore = null;
         $serata = Serata::query()->findOrFail($this->serataId);
         $punto = PuntoCassa::query()->findOrFail($this->puntoCassaId);
-        $service->salva($serata, $punto, array_merge($this->pezzi, [
-            'fondo_iniziale' => $this->fondo_iniziale,
-            'fondo_trattenuto' => $this->fondo_trattenuto,
-            'totale_pos' => $this->totale_pos,
-            'totale_z' => $this->totale_z,
-            'note' => $this->note,
-        ]));
-        session()->flash('status', 'Chiusura salvata.');
-        $this->carica();
+        try {
+            $service->salva($serata, $punto, array_merge($this->pezzi, [
+                'fondo_iniziale' => $this->fondo_iniziale,
+                'fondo_trattenuto' => $this->fondo_trattenuto,
+                'totale_pos' => $this->totale_pos,
+                'totale_z' => $this->totale_z,
+                'note' => $this->note,
+            ]));
+            session()->flash('status', 'Chiusura salvata.');
+            $this->carica();
+        } catch (\Throwable $e) {
+            $this->errore = $e->getMessage();
+        }
+    }
+
+    public function serataBloccata(): bool
+    {
+        if (! $this->serataId) {
+            return false;
+        }
+        $serata = Serata::query()->find($this->serataId);
+
+        return $serata !== null && ! $serata->isAperta();
     }
 
     public function render()
@@ -148,6 +165,7 @@ class ChiusuraForm extends Component
             'serate' => Serata::query()->orderByDesc('data')->get(),
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'tagli' => Chiusura::TAGLI,
+            'bloccata' => $this->serataBloccata(),
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
     }
 }
