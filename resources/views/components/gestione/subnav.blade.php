@@ -7,9 +7,10 @@
         ['label' => 'Report', 'route' => 'gestione.report', 'match' => 'gestione.report'],
         ['label' => 'Impostazioni', 'route' => 'gestione.impostazioni', 'match' => 'gestione.impostazioni'],
         ['label' => 'Stato', 'route' => 'gestione.stato', 'match' => 'gestione.stato'],
+        ['label' => 'Guida', 'route' => 'gestione.guida', 'match' => 'gestione.guida'],
     ];
 @endphp
-<nav class="no-print mb-6 flex gap-6 border-b border-sagra-line" aria-label="Sezioni gestione">
+<nav class="no-print mb-6 flex flex-wrap gap-x-6 gap-y-1 border-b border-sagra-line" aria-label="Sezioni gestione">
     @foreach ($links as $link)
         <a
             href="{{ route($link['route'], absolute: false) }}"
