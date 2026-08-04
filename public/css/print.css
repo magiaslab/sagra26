@@ -1,6 +1,7 @@
 /* ===== PRINT COMANDA / FACSIMILE =====
-   A4 landscape. Margine interno ≥4mm sopra e a sinistra (evita taglio stampante).
-   Comanda: 3 terzi uguali nell’area utile. Font invariati (titolo sagra più grande). */
+   A4 landscape. I tre terzi (tagli tipografia) occupano tutto il foglio 297×210
+   senza padding sul container: le linee tratteggiate restano a 99 / 198 mm.
+   Il margine ≥4mm (stampante) sta solo sul contenuto dentro ogni terzo. */
 @page {
   size: A4 landscape;
   margin: 0;
@@ -70,7 +71,8 @@
   }
 
   .print-sheet {
-    padding: 4mm 0 0 4mm !important;
+    /* Nessun padding: i terzi devono coincidere con i tagli (99 / 198 mm). */
+    padding: 0 !important;
   }
 
   .facsimile-sheet {
@@ -78,13 +80,13 @@
   }
 }
 
-/* Comanda: A4 pieno, padding top/left 4mm, 3 terzi uguali */
+/* Comanda: 3 terzi a tutta larghezza A4; margine solo nel contenuto */
 .print-sheet {
   width: 297mm;
   height: 210mm;
   max-width: 297mm;
   max-height: 210mm;
-  padding: 4mm 0 0 4mm;
+  padding: 0;
   border: 1px solid #ccc;
   margin: 1rem auto;
   background: #fff;
@@ -100,7 +102,8 @@
 
 .tag-cliente {
   border-right: 2px dashed #000;
-  padding: 2.5mm 2.5mm;
+  /* top/left: bordo stampante; right: stacco dal taglio */
+  padding: 4mm 2.5mm 2.5mm 4mm;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -118,6 +121,7 @@
   min-height: 0;
   min-width: 0;
   box-sizing: border-box;
+  padding: 4mm 0 0;
 }
 
 .tag-box-zona {
@@ -144,7 +148,8 @@
 }
 
 .tag-cameriere {
-  padding: 2mm 2.5mm;
+  /* top/right: bordo stampante; left: stacco dal taglio */
+  padding: 4mm 4mm 2.5mm 2.5mm;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -545,7 +550,7 @@
   color: #111;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 4mm 0 0 4mm;
+  padding: 0; /* terzi a tutta larghezza, come in stampa */
 }
 .a4-tag { padding: 2.5mm; overflow: hidden; box-sizing: border-box; }
 .a4-cliente {
@@ -555,7 +560,7 @@
   min-height: 0;
   min-width: 0;
   font-size: 11px;
-  padding: 2.5mm;
+  padding: 4mm 2.5mm 2.5mm 4mm;
   box-sizing: border-box;
 }
 .a4-produzione {
@@ -566,6 +571,7 @@
   min-width: 0;
   overflow: hidden;
   box-sizing: border-box;
+  padding: 4mm 0 0;
 }
 .a4-box-zona {
   flex: 1 1 0;
@@ -595,7 +601,7 @@
   min-width: 0;
   overflow: hidden;
   font-size: 11px;
-  padding: 2mm 2.2mm;
+  padding: 4mm 4mm 2.5mm 2.5mm;
   box-sizing: border-box;
 }
 .a4-head--compact {
