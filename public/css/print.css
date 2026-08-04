@@ -1,6 +1,7 @@
 /* ===== PRINT COMANDA / FACSIMILE =====
-   A4 landscape. Comanda su foglio preforato 27cm = 3×9cm (Cliente|Produzione|Cameriere),
-   senza margini. Facsimile resta a pagina piena. */
+   A4 landscape pieno. Comanda: 3 terzi uguali (Cliente|Produzione|Cameriere)
+   = 297÷3 mm ciascuno, senza margini (foglio preforato). Font invariati.
+   Facsimile resta a pagina piena con padding interno. */
 @page {
   size: A4 landscape;
   margin: 0;
@@ -63,31 +64,26 @@
     break-after: avoid !important;
     break-before: avoid !important;
     box-sizing: border-box !important;
-  }
-
-  /* Preforato 27cm × 21cm, allineato a sinistra (tagli a 9 / 18 / 27 cm) */
-  .print-sheet {
-    width: 270mm !important;
-    height: 210mm !important;
-    max-width: 270mm !important;
-    max-height: 210mm !important;
-    padding: 0 !important;
-  }
-
-  .facsimile-sheet {
     width: 297mm !important;
     height: 210mm !important;
     max-width: 297mm !important;
     max-height: 210mm !important;
+  }
+
+  .print-sheet {
+    padding: 0 !important;
+  }
+
+  .facsimile-sheet {
     padding: 4mm !important;
   }
 }
 
-/* Comanda: esattamente 3 parti da 90mm (27cm totali), font invariati */
+/* Comanda: foglio A4 intero, 3 terzi uguali (≈99mm), font invariati */
 .print-sheet {
-  width: 270mm;
+  width: 297mm;
   height: 210mm;
-  max-width: 270mm;
+  max-width: 297mm;
   max-height: 210mm;
   padding: 0;
   border: 1px solid #ccc;
@@ -96,7 +92,7 @@
   color: #000;
   overflow: hidden;
   display: grid;
-  grid-template-columns: 90mm 90mm 90mm;
+  grid-template-columns: 1fr 1fr 1fr;
   font-size: 13.5px;
   line-height: 1.28;
   box-shadow: 0 2px 12px rgba(0,0,0,.15);
@@ -536,13 +532,13 @@
   flex-shrink: 0;
 }
 .a4-sheet {
-  width: 270mm;
+  width: 297mm;
   height: 210mm;
   margin: 0;
   background: #fff;
   border: 1px solid #999;
   display: grid;
-  grid-template-columns: 90mm 90mm 90mm;
+  grid-template-columns: 1fr 1fr 1fr;
   font-size: 12.5px;
   color: #111;
   overflow: hidden;

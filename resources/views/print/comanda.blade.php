@@ -49,7 +49,7 @@
 @endunless
 
 <div class="print-sheet">
-    {{-- Foglio preforato: 27cm = 3×9cm (Cliente | Produzione | Cameriere), senza margini --}}
+    {{-- Foglio preforato A4 landscape: 3 terzi uguali (Cliente | Produzione | Cameriere) --}}
     <section class="tag-cliente">
         <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
         @if ($sottotitolo)
