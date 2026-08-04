@@ -48,17 +48,18 @@
         @endif
 
         <header class="border-b border-sagra-dark/30 bg-sagra text-white">
-            <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
-                {{-- Sinistra: postazione + comanda --}}
-                <div class="flex min-w-0 items-stretch gap-2 sm:gap-2.5">
-                    <div class="flex shrink-0 flex-col justify-center rounded-lg bg-white/10 px-2.5 py-1.5 ring-1 ring-inset ring-white/15 sm:px-3">
-                        <label class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55" for="cassa-postazione">Postazione</label>
+            {{-- Una sola riga: ottimizzata per notebook 15–16" (~1366px) --}}
+            <div class="flex h-14 items-center gap-2 px-3 xl:gap-3 xl:px-4">
+                {{-- Sinistra --}}
+                <div class="flex min-w-0 shrink-0 items-center gap-1.5 xl:gap-2">
+                    <div class="flex h-10 items-center gap-1.5 rounded-md bg-white/10 px-2 ring-1 ring-inset ring-white/15">
+                        <label class="sr-only" for="cassa-postazione">Postazione</label>
                         <select
                             id="cassa-postazione"
                             x-model.number="postazioneId"
                             @change="salvaPostazione()"
                             aria-label="Seleziona postazione cassa"
-                            class="mt-0.5 h-8 max-w-[8.5rem] cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-white focus:outline-none focus:ring-0 sm:max-w-[10.5rem]"
+                            class="h-8 max-w-[7.5rem] cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-white focus:outline-none focus:ring-0 xl:max-w-[9rem]"
                         >
                             <template x-for="p in postazioni" :key="p.id">
                                 <option :value="p.id" x-text="p.nome" class="text-black"></option>
@@ -66,89 +67,80 @@
                         </select>
                     </div>
 
-                    <div class="min-w-0 rounded-lg bg-white/10 px-2.5 py-1.5 ring-1 ring-inset ring-white/15 sm:px-3">
-                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                            <span class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55">Comanda</span>
-                            <span class="text-2xl font-bold tabular-nums leading-none tracking-tight" x-text="numeroDiSerataDisplay"></span>
-                            <span class="text-xs font-medium text-white/65">di stasera</span>
-                            <span
-                                class="rounded-md bg-amber-300/25 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-100 ring-1 ring-inset ring-amber-200/30"
-                                x-show="comandaId"
-                                x-cloak
-                                x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"
-                            ></span>
-                        </div>
-                        <div class="mt-0.5 text-xs font-medium tabular-nums text-white/55" x-text="'rif. #' + numeroDisplay"></div>
+                    <div class="flex h-10 min-w-0 items-center gap-1.5 rounded-md bg-white/10 px-2 ring-1 ring-inset ring-white/15 xl:px-2.5">
+                        <span class="hidden text-[0.65rem] font-semibold uppercase tracking-wider text-white/55 sm:inline">Comanda</span>
+                        <span class="text-xl font-bold tabular-nums leading-none xl:text-2xl" x-text="numeroDiSerataDisplay"></span>
+                        <span class="hidden text-xs font-medium text-white/65 md:inline">di stasera</span>
+                        <span class="text-xs font-medium tabular-nums text-white/55" x-text="'· #' + numeroDisplay"></span>
+                        <span
+                            class="rounded bg-amber-300/25 px-1 py-0.5 text-[0.6rem] font-semibold uppercase tracking-wide text-amber-100 ring-1 ring-inset ring-amber-200/30"
+                            x-show="comandaId"
+                            x-cloak
+                            x-text="correzioniCount > 0 ? ('corr.×' + correzioniCount) : 'mod.'"
+                        ></span>
                     </div>
 
-                    <div class="flex shrink-0 flex-col justify-center rounded-lg bg-white/15 px-2.5 py-1.5 text-center ring-1 ring-inset ring-white/20 sm:min-w-[5.5rem] sm:px-3">
-                        <span class="text-[0.65rem] font-semibold uppercase leading-tight tracking-wider text-white/55">Coperti totali</span>
-                        <span class="text-xl font-bold tabular-nums leading-tight sm:text-2xl" x-text="copertiTotali"></span>
+                    <div class="flex h-10 shrink-0 flex-col items-center justify-center rounded-md bg-white/15 px-2 ring-1 ring-inset ring-white/20 xl:min-w-[4.75rem] xl:px-2.5">
+                        <span class="text-[0.6rem] font-semibold uppercase leading-none tracking-wider text-white/55">Coperti tot.</span>
+                        <span class="text-lg font-bold tabular-nums leading-none xl:text-xl" x-text="copertiTotali"></span>
                     </div>
                 </div>
 
-                {{-- Centro: brand (solo desktop largo) --}}
-                <div class="hidden min-w-0 px-4 text-center lg:block">
-                    <div class="truncate text-sm font-semibold tracking-wide text-white/95" x-text="brand"></div>
+                {{-- Centro: brand (si accorcia, mai seconda riga) --}}
+                <div class="min-w-0 flex-1 px-1 text-center">
+                    <div class="truncate text-xs font-semibold tracking-wide text-white/90 xl:text-sm" x-text="brand" title="" :title="brand"></div>
                 </div>
 
-                {{-- Destra: nav + metriche --}}
-                <div class="flex items-center justify-end gap-1.5 sm:gap-3">
-                    <nav class="flex items-center gap-0.5 sm:gap-1" aria-label="Uscita cassa">
+                {{-- Destra --}}
+                <div class="flex shrink-0 items-center gap-1.5 xl:gap-2">
+                    <nav class="flex items-center" aria-label="Uscita cassa">
                         <a
-                            class="inline-flex h-8 items-center rounded-lg px-2 text-xs font-medium text-white/80 no-underline transition hover:bg-white/10 hover:text-white sm:h-9 sm:px-3 sm:text-sm"
+                            class="inline-flex h-8 items-center rounded-md px-1.5 text-xs font-medium text-white/80 no-underline hover:bg-white/10 hover:text-white xl:px-2.5 xl:text-sm"
                             :href="urls.gestione"
                         >Gestione</a>
                         <a
-                            class="inline-flex h-8 items-center rounded-lg px-2 text-xs font-medium text-white/80 no-underline transition hover:bg-white/10 hover:text-white sm:h-9 sm:px-3 sm:text-sm"
+                            class="inline-flex h-8 items-center rounded-md px-1.5 text-xs font-medium text-white/80 no-underline hover:bg-white/10 hover:text-white xl:px-2.5 xl:text-sm"
                             :href="urls.home"
                         >Home</a>
                     </nav>
 
-                    <div class="hidden h-10 w-px bg-white/20 sm:block" aria-hidden="true"></div>
-
-                    <div class="flex items-stretch gap-1.5 sm:gap-2">
-                        <div class="flex min-w-[3.75rem] flex-col justify-center rounded-lg bg-white/10 px-2.5 py-1.5 text-center ring-1 ring-inset ring-white/15 sm:min-w-[4.5rem] sm:px-3">
-                            <span class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55">Coperti</span>
-                            <span class="text-lg font-bold tabular-nums leading-tight sm:text-xl" x-text="coperti"></span>
+                    <div class="flex items-stretch gap-1.5">
+                        <div class="flex h-10 min-w-[3.25rem] flex-col justify-center rounded-md bg-white/10 px-2 text-center ring-1 ring-inset ring-white/15 xl:min-w-[4rem]">
+                            <span class="text-[0.6rem] font-semibold uppercase leading-none tracking-wider text-white/55">Coperti</span>
+                            <span class="text-lg font-bold tabular-nums leading-none" x-text="coperti"></span>
                         </div>
-                        <div class="flex min-w-[6.25rem] flex-col justify-center rounded-lg bg-white/15 px-2.5 py-1.5 text-right ring-1 ring-inset ring-white/20 sm:min-w-[7.25rem] sm:px-3">
-                            <span class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55">Totale</span>
-                            <span class="text-lg font-bold tabular-nums leading-tight sm:text-2xl" x-text="formatEuro(totale)"></span>
+                        <div class="flex h-10 min-w-[5.5rem] flex-col justify-center rounded-md bg-white/15 px-2 text-right ring-1 ring-inset ring-white/20 xl:min-w-[6.5rem] xl:px-2.5">
+                            <span class="text-[0.6rem] font-semibold uppercase leading-none tracking-wider text-white/55">Totale</span>
+                            <span class="text-lg font-bold tabular-nums leading-none xl:text-xl" x-text="formatEuro(totale)"></span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            {{-- Brand su schermi medi (sotto la riga principale) --}}
-            <div class="border-t border-white/10 px-4 py-1.5 text-center lg:hidden">
-                <div class="truncate text-xs font-semibold tracking-wide text-white/80" x-text="brand"></div>
-            </div>
         </header>
 
-        <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-sagra-line bg-white px-4 py-2">
-            <div class="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1 text-[0.78rem] font-medium text-sagra-muted" aria-hidden="true">
-                <span class="inline-flex items-center gap-1 px-2 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd> riga dopo</span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>↑</kbd> riga prima</span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>←</kbd><kbd>→</kbd> categoria</span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>+</kbd><kbd>-</kbd> quantità</span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Canc</kbd> azzera</span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F9</kbd> conferma</span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>F2</kbd> richiama</span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-2 py-0.5"><kbd>Esc</kbd> annulla</span>
+        <div class="flex h-12 items-center justify-between gap-2 border-b border-sagra-line bg-white px-3 xl:px-4">
+            <div class="hidden min-w-0 items-center gap-x-0.5 text-[0.72rem] font-medium text-sagra-muted lg:flex" aria-hidden="true">
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd></span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>↑</kbd></span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>←</kbd><kbd>→</kbd></span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>+</kbd><kbd>-</kbd></span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>Canc</kbd></span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>F9</kbd></span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>F2</kbd></span>
+                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>Esc</kbd></span>
             </div>
-            <div class="ml-auto flex flex-wrap items-center justify-end gap-2">
+            <div class="ml-auto flex shrink-0 flex-nowrap items-center justify-end gap-2">
                 <span class="mr-1 whitespace-nowrap text-sm font-medium text-sagra-muted" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
-                <div class="w-44 min-h-9" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
+                <div class="w-40 min-h-9 xl:w-44" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
                     <input class="block h-9 w-full rounded-md bg-white px-2.5 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
                            placeholder="Motivo correzione" autocomplete="off"
                            :tabindex="comandaId ? 0 : -1" :aria-hidden="!comandaId">
                 </div>
-                <button type="button" class="inline-flex h-9 items-center rounded-md bg-sagra px-3.5 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" @click="apriPagamento()" :disabled="!serataAperta">
+                <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-sagra px-3 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50 xl:px-3.5" @click="apriPagamento()" :disabled="!serataAperta">
                     Conferma e stampa <kbd class="ml-1.5 border-white/40 bg-black/15 text-inherit">F9</kbd>
                 </button>
-                <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <kbd class="ml-1">F2</kbd></button>
-                <button type="button" class="inline-flex h-9 items-center rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <kbd class="ml-1">Esc</kbd></button>
+                <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <kbd class="ml-1">F2</kbd></button>
+                <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <kbd class="ml-1">Esc</kbd></button>
             </div>
         </div>
     </div>

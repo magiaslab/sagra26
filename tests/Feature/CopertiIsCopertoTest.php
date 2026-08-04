@@ -70,7 +70,7 @@ it('espone i coperti totali di serata in cassa e li aggiorna dopo conferma e ann
 
     $html = $this->get(route('cassa'))->assertOk()->getContent();
     expect($html)->toContain('copertiTotali: 0')
-        ->and($html)->toContain('Coperti totali');
+        ->and($html)->toContain('Coperti tot.');
 
     $comanda = app(ComandaService::class)->confermaEStampa(
         $serata,
