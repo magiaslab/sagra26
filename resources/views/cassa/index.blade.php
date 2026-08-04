@@ -557,17 +557,17 @@ function cassaApp(cfg) {
             const s = this.a4Scale || 1;
             return {
                 transform: `scale(${s})`,
-                width: '270mm',
-                height: '190mm',
+                width: '297mm',
+                height: '210mm',
             };
         },
 
         fitAnteprima() {
             const box = this.$refs.a4Fit;
             if (!box) return;
-            // Foglio A4 landscape utile: 270×190 mm → CSS px a 96dpi
-            const sheetW = 270 * (96 / 25.4);
-            const sheetH = 190 * (96 / 25.4);
+            // Foglio A4 landscape pieno (3 terzi uguali): 297×210 mm → CSS px a 96dpi
+            const sheetW = 297 * (96 / 25.4);
+            const sheetH = 210 * (96 / 25.4);
             const pad = 16;
             const sx = (box.clientWidth - pad) / sheetW;
             const sy = (box.clientHeight - pad) / sheetH;
