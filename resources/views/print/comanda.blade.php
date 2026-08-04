@@ -29,7 +29,8 @@
     $classeVoce = function (array $v): string {
         return match ($v['stato']) {
             'aggiunta', 'aumentata' => 'tag-voce--aggiunta',
-            'tolta', 'ridotta' => 'tag-voce--tolta',
+            'tolta' => 'tag-voce--tolta',
+            'ridotta' => 'tag-voce--ridotta',
             default => 'tag-voce--invariata',
         };
     };

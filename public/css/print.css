@@ -453,10 +453,22 @@
   text-transform: uppercase;
 }
 
-.tag-voce--invariata,
-.tag-voce--tolta {
+.tag-voce--invariata {
   text-decoration: line-through;
   opacity: 0.72;
+}
+
+/* Tolte/ridotte: stesse evidenza delle aggiunte, con barrato + bordo */
+.tag-voce--tolta,
+.tag-voce--ridotta {
+  text-decoration: line-through;
+  font-weight: 900;
+  opacity: 1;
+  border: 2.5px solid #000;
+  background: #fff;
+  padding: 0.4mm 0.8mm;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .tag-voce--aggiunta,
@@ -474,14 +486,25 @@
   color: #fff;
 }
 
-.tag-voce--tolta .tag-voce-lbl {
+.tag-voce--tolta .tag-voce-lbl,
+.tag-voce--ridotta .tag-voce-lbl {
   text-decoration: none;
+  background: #000;
+  color: #fff;
+  padding: 0.15mm 0.7mm;
+  margin-left: 0.5em;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
 }
 
 .tag-line.tag-voce--aggiunta,
 .tag-line.tag-voce--aumentata,
+.tag-line.tag-voce--tolta,
+.tag-line.tag-voce--ridotta,
 .tag-line-check.tag-voce--aggiunta,
-.tag-line-check.tag-voce--aumentata {
+.tag-line-check.tag-voce--aumentata,
+.tag-line-check.tag-voce--tolta,
+.tag-line-check.tag-voce--ridotta {
   border-radius: 1px;
 }
 
@@ -818,10 +841,18 @@
   margin-left: 0.3em;
   text-transform: uppercase;
 }
-.a4-voce--invariata,
-.a4-voce--tolta {
+.a4-voce--invariata {
   text-decoration: line-through;
   opacity: 0.7;
+}
+.a4-voce--tolta,
+.a4-voce--ridotta {
+  text-decoration: line-through;
+  font-weight: 900;
+  opacity: 1;
+  border: 2.5px solid #000;
+  background: #fff;
+  padding: 0.3mm 0.6mm;
 }
 .a4-voce--aggiunta,
 .a4-voce--aumentata {
@@ -829,6 +860,13 @@
   background: #000;
   color: #fff;
   padding: 0.3mm 0.6mm;
+}
+.a4-voce--tolta .a4-voce-lbl,
+.a4-voce--ridotta .a4-voce-lbl {
+  text-decoration: none;
+  background: #000;
+  color: #fff;
+  padding: 0.1mm 0.5mm;
 }
 .a4-box--muted {
   opacity: 0.35;

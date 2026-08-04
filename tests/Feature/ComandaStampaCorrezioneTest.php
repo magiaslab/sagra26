@@ -91,6 +91,7 @@ it('in stampa di correzione mostra le voci tolte barrate', function () {
     $html = $this->get(route('cassa.stampa', $corretta))->assertOk()->getContent();
     expect($html)->toContain('TOLTA')
         ->and($html)->toContain('tag-voce--tolta')
+        ->and($html)->toContain('tag-voce--invariata')
         ->and($html)->toContain('Da restituire')
         ->and($html)->toContain('Coca-Cola Lattina');
 });
