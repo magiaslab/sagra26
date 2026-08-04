@@ -1,9 +1,28 @@
 <div>
+    @php
+        $reportLandscape = in_array($tipo, [
+            'cucina_1', 'cucina_2', 'griglia', 'bevande', 'economico', 'confronto',
+        ], true);
+    @endphp
+
+    <style>
+        @media print {
+            @page {
+                size: A4 {{ $reportLandscape ? 'landscape' : 'portrait' }};
+                margin: 8mm;
+            }
+        }
+    </style>
+
     <x-gestione.subnav />
-    <x-gestione.page-header title="Report / Stampe" subtitle="Cucina, griglia, bevande, economico, confronto e CSV">
+    <x-gestione.page-header
+        class="print:hidden"
+        title="Report / Stampe"
+        subtitle="Cucina, griglia, bevande, economico, confronto e CSV"
+    >
         <x-slot:actions>
-            <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer print:hidden" type="button" wire:click="exportCsv">Export CSV</button>
-            <button class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark print:hidden" type="button" onclick="window.print()">Stampa / PDF</button>
+            <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" wire:click="exportCsv">Export CSV</button>
+            <button class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" onclick="window.print()">Stampa / PDF</button>
         </x-slot:actions>
     </x-gestione.page-header>
 
@@ -53,21 +72,32 @@
                 @endif
             </div>
         </div>
+        <p class="mt-1 text-xs text-sagra-muted">
+            Stampa:
+            @if ($reportLandscape)
+                A4 orizzontale
+            @else
+                A4 verticale
+            @endif
+            (impostato automaticamente per questo report).
+        </p>
     </div>
 
-    @if (!$serata)
-        <x-ui.alert type="warn">Nessuna serata selezionata.</x-ui.alert>
-    @elseif (in_array($tipo, ['cucina_1', 'cucina_2', 'griglia'], true))
-        @include('livewire.report.partials.reparto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
-    @elseif ($tipo === 'bevande')
-        @include('livewire.report.partials.bevande', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
-    @elseif ($tipo === 'statistiche')
-        @include('livewire.report.partials.statistiche', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni, 'completo' => $completo])
-    @elseif ($tipo === 'economico')
-        @include('livewire.report.partials.economico', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
-    @elseif ($tipo === 'consegna')
-        @include('livewire.report.partials.consegna', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
-    @elseif ($tipo === 'confronto')
-        @include('livewire.report.partials.confronto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
-    @endif
+    <div @class(['report-print', 'report-print--landscape' => $reportLandscape])>
+        @if (!$serata)
+            <x-ui.alert type="warn">Nessuna serata selezionata.</x-ui.alert>
+        @elseif (in_array($tipo, ['cucina_1', 'cucina_2', 'griglia'], true))
+            @include('livewire.report.partials.reparto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
+        @elseif ($tipo === 'bevande')
+            @include('livewire.report.partials.bevande', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
+        @elseif ($tipo === 'statistiche')
+            @include('livewire.report.partials.statistiche', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni, 'completo' => $completo])
+        @elseif ($tipo === 'economico')
+            @include('livewire.report.partials.economico', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
+        @elseif ($tipo === 'consegna')
+            @include('livewire.report.partials.consegna', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
+        @elseif ($tipo === 'confronto')
+            @include('livewire.report.partials.confronto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
+        @endif
+    </div>
 </div>
