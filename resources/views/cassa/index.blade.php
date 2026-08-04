@@ -832,18 +832,37 @@ function cassaApp(cfg) {
             this.$nextTick(() => this.scrollActive());
         },
 
+        /**
+         * Porta la sezione della voce attiva al centro della viewport utile
+         * (sotto l’header fisso). Se la sezione è più alta dello schermo,
+         * centra la riga attiva così restano visibili anche le voci successive.
+         */
         scrollActive() {
             const el = this.$refs.menuList?.querySelector(`[data-id="${this.activeId}"]`);
             if (!el) return;
+            const section = el.closest('section');
+            if (!section) return;
+
             this.syncTopPad();
-            const topPad = (this.topPad || 0) + 8;
-            const rect = el.getBoundingClientRect();
+            const viewTop = (this.topPad || 0) + 8;
             const viewBottom = window.innerHeight - 8;
-            if (rect.top < topPad) {
-                window.scrollBy({ top: rect.top - topPad, left: 0, behavior: 'auto' });
-            } else if (rect.bottom > viewBottom) {
-                window.scrollBy({ top: rect.bottom - viewBottom, left: 0, behavior: 'auto' });
+            const viewHeight = Math.max(120, viewBottom - viewTop);
+            const viewMid = viewTop + viewHeight / 2;
+
+            const sec = section.getBoundingClientRect();
+            let targetMid;
+            if (sec.height <= viewHeight * 0.92) {
+                // Sezione intera: centrata nella zona utile sotto l’header
+                targetMid = sec.top + sec.height / 2;
+            } else {
+                // Sezione troppo alta: centra la voce attiva
+                const item = el.getBoundingClientRect();
+                targetMid = item.top + item.height / 2;
             }
+
+            const delta = targetMid - viewMid;
+            if (Math.abs(delta) < 4) return;
+            window.scrollBy({ top: delta, left: 0, behavior: 'auto' });
         },
 
         move(delta) {
