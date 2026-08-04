@@ -1,7 +1,6 @@
 /* ===== PRINT COMANDA / FACSIMILE =====
-   A4 landscape pieno. Comanda: 3 terzi uguali (Cliente|Produzione|Cameriere)
-   = 297÷3 mm ciascuno, senza margini (foglio preforato). Font invariati.
-   Facsimile resta a pagina piena con padding interno. */
+   A4 landscape. Margine interno ≥4mm sopra e a sinistra (evita taglio stampante).
+   Comanda: 3 terzi uguali nell’area utile. Font invariati (titolo sagra più grande). */
 @page {
   size: A4 landscape;
   margin: 0;
@@ -71,7 +70,7 @@
   }
 
   .print-sheet {
-    padding: 0 !important;
+    padding: 4mm 0 0 4mm !important;
   }
 
   .facsimile-sheet {
@@ -79,13 +78,13 @@
   }
 }
 
-/* Comanda: foglio A4 intero, 3 terzi uguali (≈99mm), font invariati */
+/* Comanda: A4 pieno, padding top/left 4mm, 3 terzi uguali */
 .print-sheet {
   width: 297mm;
   height: 210mm;
   max-width: 297mm;
   max-height: 210mm;
-  padding: 0;
+  padding: 4mm 0 0 4mm;
   border: 1px solid #ccc;
   margin: 1rem auto;
   background: #fff;
@@ -180,11 +179,11 @@
 .tag-cameriere .campo-mano { margin-top: 1.5mm; }
 
 .tag-brand {
-  font-weight: 800;
-  font-size: 11.5px;
+  font-weight: 900;
+  font-size: 15px;
   line-height: 1.15;
 }
-.tag-cliente .tag-brand { font-size: 11px; }
+.tag-cliente .tag-brand { font-size: 15px; }
 .tag-sub {
   font-size: 8.5px;
   margin: 0.4mm 0 1mm;
@@ -192,6 +191,7 @@
 }
 .tag-role {
   font-weight: 900;
+  font-size: 0.95em;
   letter-spacing: .04em;
   text-transform: uppercase;
 }
@@ -412,7 +412,7 @@
   height: 210mm;
   max-width: 297mm;
   max-height: 210mm;
-  padding: 4mm;
+  padding: 4mm 4mm 4mm 4mm;
   margin: 1rem auto;
   background: #fff;
   border: 1px solid #ccc;
@@ -545,6 +545,7 @@
   color: #111;
   overflow: hidden;
   box-sizing: border-box;
+  padding: 4mm 0 0 4mm;
 }
 .a4-tag { padding: 2.5mm; overflow: hidden; box-sizing: border-box; }
 .a4-cliente {
@@ -614,7 +615,7 @@
 .a4-cameriere .a4-check { padding: .35mm 0; }
 .a4-cameriere .a4-qty { font-size: 1.2em; }
 .a4-cameriere .a4-mano { margin-top: auto; padding-top: 1mm; }
-.a4-brand { font-weight: 700; font-size: 12px; }
+.a4-brand { font-weight: 900; font-size: 15px; }
 .a4-sub { font-size: 9px; color: #555; margin: 0.5mm 0 1mm; }
 .a4-role { font-weight: 800; letter-spacing: .04em; }
 .a4-head {
