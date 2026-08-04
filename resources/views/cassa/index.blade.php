@@ -695,7 +695,8 @@ function cassaApp(cfg) {
 
         classeVoceAnteprima(stato) {
             if (stato === 'aggiunta' || stato === 'aumentata') return 'a4-voce--aggiunta';
-            if (stato === 'tolta' || stato === 'ridotta') return 'a4-voce--tolta';
+            if (stato === 'tolta') return 'a4-voce--tolta';
+            if (stato === 'ridotta') return 'a4-voce--ridotta';
             if (stato === 'invariata') return 'a4-voce--invariata';
             return '';
         },
