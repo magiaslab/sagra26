@@ -96,6 +96,14 @@ class ComandaService
                     );
                 }
 
+                // Snapshot pagamento prima della correzione: Contante/POS scelti
+                // dal cassiere valgono solo per la differenza, non per tutto il totale.
+                $pagamentoPrecedente = [
+                    'totale' => (float) $comanda->totale,
+                    'contante' => $comanda->importoContanteEffettivo(),
+                    'pos' => $comanda->importoPosEffettivo(),
+                ];
+
                 ComandaCorrezione::query()->create([
                     'comanda_id' => $comanda->id,
                     'postazione_id' => $postazione->id,
@@ -123,18 +131,20 @@ class ComandaService
                     'punto_cassa_id' => $puntoCassa->id,
                     'version' => 1,
                 ]);
+                $pagamentoPrecedente = null;
             }
 
             $totale = 0.0;
             $comanda->coperti = $coperti;
             $comanda->stato = 'stampata';
-            $comanda->metodo_pagamento = $metodoPagamento;
-            $comanda->importo_contante = $metodoPagamento === 'misto' ? $importoContante : null;
-            $comanda->importo_pos = $metodoPagamento === 'misto' ? $importoPos : null;
             $comanda->totale = 0;
             if ($esistente) {
                 $comanda->version = (int) $comanda->version + 1;
             }
+            // Metodo/importi definitivi dopo il ricalcolo totale (correzione = solo delta).
+            $comanda->metodo_pagamento = $metodoPagamento;
+            $comanda->importo_contante = null;
+            $comanda->importo_pos = null;
             $comanda->save();
 
             foreach ($righeNormalizzate as $riga) {
@@ -152,11 +162,90 @@ class ComandaService
                 ]);
             }
 
-            $comanda->totale = round($totale, 2);
+            $totale = round($totale, 2);
+            $comanda->totale = $totale;
+
+            if ($pagamentoPrecedente !== null) {
+                $pagamento = $this->risolviPagamentoCorrezione(
+                    $pagamentoPrecedente,
+                    $totale,
+                    $metodoPagamento,
+                );
+                $comanda->metodo_pagamento = $pagamento['metodo'];
+                $comanda->importo_contante = $pagamento['importo_contante'];
+                $comanda->importo_pos = $pagamento['importo_pos'];
+            } else {
+                $comanda->metodo_pagamento = $metodoPagamento;
+                $comanda->importo_contante = $metodoPagamento === 'misto' ? $importoContante : null;
+                $comanda->importo_pos = $metodoPagamento === 'misto' ? $importoPos : null;
+            }
+
             $comanda->save();
 
             return $comanda->load(['righe.menuItem.categoria', 'postazione', 'puntoCassa', 'serata']);
         });
+    }
+
+    /**
+     * In correzione Contante/POS scelti dal cassiere riguardano solo la differenza
+     * rispetto al totale già pagato; lo split finale sulla comanda si aggiorna di conseguenza.
+     *
+     * @param  array{totale: float, contante: float, pos: float}  $precedente
+     * @return array{metodo: string, importo_contante: ?float, importo_pos: ?float}
+     */
+    private function risolviPagamentoCorrezione(array $precedente, float $nuovoTotale, string $metodoDelta): array
+    {
+        $delta = round($nuovoTotale - $precedente['totale'], 2);
+        $contante = round($precedente['contante'], 2);
+        $pos = round($precedente['pos'], 2);
+
+        if (abs($delta) >= 0.005) {
+            if (! in_array($metodoDelta, ['contante', 'pos'], true)) {
+                throw new RuntimeException('Per la differenza scegli Contante o POS.');
+            }
+            if ($metodoDelta === 'contante') {
+                $contante = round($contante + $delta, 2);
+            } else {
+                $pos = round($pos + $delta, 2);
+            }
+        }
+
+        return $this->normalizzaMetodoImporti($contante, $pos);
+    }
+
+    /**
+     * @return array{metodo: string, importo_contante: ?float, importo_pos: ?float}
+     */
+    private function normalizzaMetodoImporti(float $contante, float $pos): array
+    {
+        if (abs($contante) < 0.005) {
+            $contante = 0.0;
+        }
+        if (abs($pos) < 0.005) {
+            $pos = 0.0;
+        }
+
+        if ($contante !== 0.0 && $pos !== 0.0) {
+            return [
+                'metodo' => 'misto',
+                'importo_contante' => $contante,
+                'importo_pos' => $pos,
+            ];
+        }
+
+        if ($pos !== 0.0) {
+            return [
+                'metodo' => 'pos',
+                'importo_contante' => null,
+                'importo_pos' => null,
+            ];
+        }
+
+        return [
+            'metodo' => 'contante',
+            'importo_contante' => null,
+            'importo_pos' => null,
+        ];
     }
 
     public function annulla(Comanda $comanda, string $motivo): Comanda
