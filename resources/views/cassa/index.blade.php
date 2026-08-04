@@ -45,50 +45,77 @@
             </div>
         @endif
 
-        <header class="border-b border-sagra-dark/20 bg-sagra text-white">
-            <div class="flex h-14 items-center gap-4 px-4">
-                <div class="flex min-w-0 items-center gap-3">
-                    <select
-                        x-model.number="postazioneId"
-                        @change="salvaPostazione()"
-                        aria-label="Seleziona postazione cassa"
-                        class="h-9 max-w-[10rem] cursor-pointer rounded-md border-0 bg-white/10 px-2.5 text-sm font-medium text-white ring-1 ring-inset ring-white/25 focus:outline-none focus:ring-2 focus:ring-white/50"
-                    >
-                        <template x-for="p in postazioni" :key="p.id">
-                            <option :value="p.id" x-text="p.nome" class="text-black"></option>
-                        </template>
-                    </select>
-                    <div class="flex min-w-0 flex-col leading-tight">
-                        <div class="flex items-baseline gap-1.5 whitespace-nowrap text-sm">
-                            <span class="font-medium text-white/70">Comanda</span>
-                            <span class="text-xl font-semibold tabular-nums" x-text="numeroDiSerataDisplay"></span>
-                            <span class="text-sm font-medium text-white/70">di stasera</span>
-                            <span class="text-xs font-medium text-white/65"
-                                  x-show="comandaId" x-cloak
-                                  x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"></span>
+        <header class="border-b border-sagra-dark/30 bg-sagra text-white">
+            <div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-2.5 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]">
+                {{-- Sinistra: postazione + comanda --}}
+                <div class="flex min-w-0 items-stretch gap-2 sm:gap-2.5">
+                    <div class="flex shrink-0 flex-col justify-center rounded-lg bg-white/10 px-2.5 py-1.5 ring-1 ring-inset ring-white/15 sm:px-3">
+                        <label class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55" for="cassa-postazione">Postazione</label>
+                        <select
+                            id="cassa-postazione"
+                            x-model.number="postazioneId"
+                            @change="salvaPostazione()"
+                            aria-label="Seleziona postazione cassa"
+                            class="mt-0.5 h-8 max-w-[8.5rem] cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-white focus:outline-none focus:ring-0 sm:max-w-[10.5rem]"
+                        >
+                            <template x-for="p in postazioni" :key="p.id">
+                                <option :value="p.id" x-text="p.nome" class="text-black"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div class="min-w-0 rounded-lg bg-white/10 px-2.5 py-1.5 ring-1 ring-inset ring-white/15 sm:px-3">
+                        <div class="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            <span class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55">Comanda</span>
+                            <span class="text-2xl font-bold tabular-nums leading-none tracking-tight" x-text="numeroDiSerataDisplay"></span>
+                            <span class="text-xs font-medium text-white/65">di stasera</span>
+                            <span
+                                class="rounded-md bg-amber-300/25 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-amber-100 ring-1 ring-inset ring-amber-200/30"
+                                x-show="comandaId"
+                                x-cloak
+                                x-text="correzioniCount > 0 ? ('corr. ×' + correzioniCount) : 'modifica'"
+                            ></span>
                         </div>
-                        <div class="text-[0.7rem] font-medium text-white/60 tabular-nums" x-text="'rif. #' + numeroDisplay"></div>
+                        <div class="mt-0.5 text-xs font-medium tabular-nums text-white/55" x-text="'rif. #' + numeroDisplay"></div>
                     </div>
                 </div>
 
-                <div class="mx-auto hidden h-full min-w-0 items-stretch gap-6 sm:flex">
-                    <span class="flex items-center truncate text-sm font-semibold tracking-wide" x-text="brand"></span>
-                    <nav class="flex items-stretch gap-1" aria-label="Uscita cassa">
-                        <a class="inline-flex items-center border-b-2 border-transparent px-2 text-sm font-medium text-white/75 no-underline hover:border-white/40 hover:text-white" :href="urls.gestione">Gestione</a>
-                        <a class="inline-flex items-center border-b-2 border-transparent px-2 text-sm font-medium text-white/75 no-underline hover:border-white/40 hover:text-white" :href="urls.home">Home</a>
+                {{-- Centro: brand (solo desktop largo) --}}
+                <div class="hidden min-w-0 px-4 text-center lg:block">
+                    <div class="truncate text-sm font-semibold tracking-wide text-white/95" x-text="brand"></div>
+                </div>
+
+                {{-- Destra: nav + metriche --}}
+                <div class="flex items-center justify-end gap-1.5 sm:gap-3">
+                    <nav class="flex items-center gap-0.5 sm:gap-1" aria-label="Uscita cassa">
+                        <a
+                            class="inline-flex h-8 items-center rounded-lg px-2 text-xs font-medium text-white/80 no-underline transition hover:bg-white/10 hover:text-white sm:h-9 sm:px-3 sm:text-sm"
+                            :href="urls.gestione"
+                        >Gestione</a>
+                        <a
+                            class="inline-flex h-8 items-center rounded-lg px-2 text-xs font-medium text-white/80 no-underline transition hover:bg-white/10 hover:text-white sm:h-9 sm:px-3 sm:text-sm"
+                            :href="urls.home"
+                        >Home</a>
                     </nav>
-                </div>
 
-                <div class="ml-auto flex items-center gap-6">
-                    <div class="text-right">
-                        <div class="text-[0.68rem] font-medium uppercase tracking-wide text-white/65">Coperti</div>
-                        <div class="text-xl font-semibold tabular-nums leading-none" x-text="coperti"></div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-[0.68rem] font-medium uppercase tracking-wide text-white/65">Totale</div>
-                        <div class="text-2xl font-semibold tabular-nums leading-none" x-text="formatEuro(totale)"></div>
+                    <div class="hidden h-10 w-px bg-white/20 sm:block" aria-hidden="true"></div>
+
+                    <div class="flex items-stretch gap-1.5 sm:gap-2">
+                        <div class="flex min-w-[3.75rem] flex-col justify-center rounded-lg bg-white/10 px-2.5 py-1.5 text-center ring-1 ring-inset ring-white/15 sm:min-w-[4.5rem] sm:px-3">
+                            <span class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55">Coperti</span>
+                            <span class="text-lg font-bold tabular-nums leading-tight sm:text-xl" x-text="coperti"></span>
+                        </div>
+                        <div class="flex min-w-[6.25rem] flex-col justify-center rounded-lg bg-white/15 px-2.5 py-1.5 text-right ring-1 ring-inset ring-white/20 sm:min-w-[7.25rem] sm:px-3">
+                            <span class="text-[0.65rem] font-semibold uppercase tracking-wider text-white/55">Totale</span>
+                            <span class="text-lg font-bold tabular-nums leading-tight sm:text-2xl" x-text="formatEuro(totale)"></span>
+                        </div>
                     </div>
                 </div>
+            </div>
+
+            {{-- Brand su schermi medi (sotto la riga principale) --}}
+            <div class="border-t border-white/10 px-4 py-1.5 text-center lg:hidden">
+                <div class="truncate text-xs font-semibold tracking-wide text-white/80" x-text="brand"></div>
             </div>
         </header>
 
