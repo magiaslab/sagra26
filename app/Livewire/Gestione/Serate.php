@@ -7,8 +7,10 @@ use App\Models\Impostazione;
 use App\Models\MenuItem;
 use App\Models\PuntoCassa;
 use App\Models\Serata;
+use App\Models\SerataStock;
 use App\Services\RiconciliazioneService;
 use App\Services\SerataService;
+use App\Services\StockService;
 use Livewire\Component;
 
 class Serate extends Component
@@ -23,6 +25,9 @@ class Serate extends Component
     /** @var array<int, string> */
     public array $fondiIniziali = [];
 
+    /** @var array<int, string> qty da aggiungere in rifornimento mid-serata */
+    public array $rifornimenti = [];
+
     public ?string $errore = null;
 
     /** @var list<string> Nomi punti cassa senza chiusura completata (chiusa_at). */
@@ -33,10 +38,31 @@ class Serate extends Component
         $this->data = now()->toDateString();
         foreach (MenuItem::query()->whereNotNull('stock_default')->where('attivo', true)->get() as $item) {
             $this->stockOverrides[$item->id] = (int) $item->stock_default;
+            $this->rifornimenti[$item->id] = '';
         }
         foreach (PuntoCassa::query()->where('attivo', true)->get() as $punto) {
             $suggerito = $ric->fondoInizialeSuggerito($punto);
             $this->fondiIniziali[$punto->id] = $suggerito !== null ? (string) $suggerito : '';
+        }
+    }
+
+    public function rifornisciStock(int $menuItemId, StockService $stock): void
+    {
+        $this->errore = null;
+        $serata = Serata::corrente();
+        if (! $serata) {
+            $this->errore = 'Nessuna serata aperta.';
+
+            return;
+        }
+
+        $qty = (int) ($this->rifornimenti[$menuItemId] ?? 0);
+        try {
+            $stock->rifornisci($serata->id, $menuItemId, $qty);
+            $this->rifornimenti[$menuItemId] = '';
+            session()->flash('status', 'Stock aggiornato (+'.$qty.').');
+        } catch (\Throwable $e) {
+            $this->errore = $e->getMessage();
         }
     }
 
@@ -149,8 +175,22 @@ class Serate extends Component
 
     public function render()
     {
+        $serata = Serata::corrente();
+        $stockSerata = collect();
+        if ($serata) {
+            app(StockService::class)->assicuraStockLimitati($serata->id);
+            $stockSerata = SerataStock::query()
+                ->with('menuItem')
+                ->where('serata_id', $serata->id)
+                ->get()
+                ->sortBy(fn (SerataStock $s) => $s->menuItem?->ordinamento ?? 0)
+                ->values();
+        }
+
         return view('livewire.gestione.serate', [
-            'serata' => Serata::corrente(),
+            'serata' => $serata,
+            'stockSerata' => $stockSerata,
+            'sogliaAlert' => Impostazione::corrente()->sogliaStockAlert(),
             'storico' => Serata::query()->orderByDesc('data')->limit(20)->get(),
             'limitati' => MenuItem::query()->whereNotNull('stock_default')->where('attivo', true)->orderBy('ordinamento')->get(),
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),

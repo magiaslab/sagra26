@@ -28,6 +28,11 @@
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">PIN gestione</label>
                 <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model="pin_gestione">
             </div>
+            <div class="mb-3">
+                <label class="mb-1 block text-sm font-medium text-sagra-ink">Soglia alert stock (cassa)</label>
+                <input class="block w-full max-w-[140px] rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" min="0" wire:model="stock_soglia_alert">
+                <p class="mt-1 text-xs text-sagra-muted">Avviso «quasi esaurito» quando il residuo è ≤ questo valore.</p>
+            </div>
             <button class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" wire:click="salvaIntestazione">Salva</button>
         </div>
 

@@ -138,6 +138,8 @@ class CassaController extends Controller
             'importo_pos' => 'nullable|numeric',
             'comanda_id' => 'nullable|exists:comande,id',
             'motivo' => 'nullable|string|max:255',
+            'tavolo' => 'nullable|string|max:40',
+            'note' => 'nullable|string|max:255',
             'version' => 'nullable|integer|min:1',
             'righe' => 'required|array|min:1',
             'righe.*.menu_item_id' => 'required|exists:menu_items,id',
@@ -165,6 +167,8 @@ class CassaController extends Controller
                 $esistente,
                 $data['motivo'] ?? null,
                 isset($data['version']) ? (int) $data['version'] : null,
+                $data['tavolo'] ?? null,
+                $data['note'] ?? null,
             );
 
             return response()->json([
@@ -242,6 +246,8 @@ class CassaController extends Controller
             'coperti' => $comanda->coperti,
             'metodo_pagamento' => $comanda->metodo_pagamento,
             'totale' => (float) $comanda->totale,
+            'tavolo' => $comanda->tavolo,
+            'note' => $comanda->note,
             'correzioni_count' => $comanda->correzioni()->count(),
             'righe' => $comanda->righe->map(fn ($r) => [
                 'menu_item_id' => $r->menu_item_id,
@@ -279,6 +285,7 @@ class CassaController extends Controller
             'impostazioni' => $impostazioni,
             'numeroDiSerata' => $comanda->numeroDiSerata(),
             'autoPrint' => request()->boolean('print'),
+            'parte' => request()->string('parte')->toString() ?: 'tutte',
         ]);
     }
 

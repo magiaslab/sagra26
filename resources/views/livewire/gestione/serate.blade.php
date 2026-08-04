@@ -35,6 +35,46 @@
                 </div>
             @endif
         </div>
+
+        <div class="mb-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
+            <h2 class="mb-1 mt-0 text-xl font-semibold text-sagra-ink">Stock in serata</h2>
+            <p class="mb-3 text-sm text-sagra-muted">
+                Rifornisci pezzi senza chiudere la serata. Soglia alert cassa: ≤ {{ $sogliaAlert }} residui
+                (modificabile in Impostazioni).
+            </p>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-sagra-line text-sm">
+                    <thead>
+                        <tr class="bg-sagra-softer text-left">
+                            <th class="px-3 py-2 font-semibold">Voce</th>
+                            <th class="px-3 py-2 font-semibold">Iniziale</th>
+                            <th class="px-3 py-2 font-semibold">Residuo</th>
+                            <th class="px-3 py-2 font-semibold">Aggiungi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-sagra-line">
+                        @forelse ($stockSerata as $row)
+                            <tr @class([
+                                'bg-sagra-danger-soft/40' => (int) $row->stock_residuo <= 0,
+                                'bg-amber-50' => (int) $row->stock_residuo > 0 && (int) $row->stock_residuo <= $sogliaAlert,
+                            ])>
+                                <td class="px-3 py-2 font-medium text-sagra-ink">{{ $row->menuItem?->nome ?? '#' }}</td>
+                                <td class="px-3 py-2 tabular-nums">{{ $row->stock_iniziale }}</td>
+                                <td class="px-3 py-2 tabular-nums font-semibold">{{ $row->stock_residuo }}</td>
+                                <td class="px-3 py-2">
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <input class="block w-20 rounded-md bg-white px-2 py-1.5 text-sm shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" min="1" wire:model="rifornimenti.{{ $row->menu_item_id }}" placeholder="+">
+                                        <button type="button" class="inline-flex items-center rounded-md bg-sagra px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-sagra-dark" wire:click="rifornisciStock({{ $row->menu_item_id }})">Rifornisci</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="4" class="px-3 py-4 text-sagra-muted">Nessuna voce a stock limitato.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
     @else
         <div class="mb-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
             <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Apri nuova serata</h2>

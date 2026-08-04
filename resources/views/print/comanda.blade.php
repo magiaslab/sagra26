@@ -88,10 +88,18 @@
     <button class="btn btn-primary" onclick="window.print()">Stampa</button>
     <a class="btn" href="{{ route('cassa', absolute: false) }}">Torna alla cassa</a>
     <p>Comanda #{{ $num }} — {{ number_format($comanda->totale, 2, ',', '.') }} €</p>
+    <p style="margin-top:.75rem">
+        Ristampa:
+        <a class="btn" href="{{ route('cassa.stampa', $comanda, absolute: false) }}?parte=tutte">Tutto</a>
+        <a class="btn" href="{{ route('cassa.stampa', $comanda, absolute: false) }}?parte=cliente">Cliente</a>
+        <a class="btn" href="{{ route('cassa.stampa', $comanda, absolute: false) }}?parte=produzione">Produzione</a>
+        <a class="btn" href="{{ route('cassa.stampa', $comanda, absolute: false) }}?parte=cameriere">Cameriere</a>
+    </p>
 </div>
 @endunless
 
-<div class="print-sheet {{ $isCorrezione ? 'print-sheet--correzione' : '' }}">
+@php $parteStampa = in_array($parte ?? 'tutte', ['cliente', 'produzione', 'cameriere', 'tutte'], true) ? ($parte ?? 'tutte') : 'tutte'; @endphp
+<div class="print-sheet {{ $isCorrezione ? 'print-sheet--correzione' : '' }} print-sheet--parte-{{ $parteStampa }}">
     {{-- Foglio preforato A4 landscape: 3 terzi uguali (Cliente | Produzione | Cameriere) --}}
     <section class="tag-cliente">
         <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
@@ -103,6 +111,13 @@
             <span class="tag-num">Comanda {{ $numSerata }} di stasera</span>
         </div>
         <div class="meta-small">rif. #{{ $num }} · {{ $comanda->serata->data->format('d/m/Y') }} · {{ $comanda->created_at->format('H:i') }}</div>
+        @if (filled($comanda->tavolo) || filled($comanda->note))
+            <div class="meta-small tag-tavolo-note">
+                @if (filled($comanda->tavolo)) Tavolo {{ $comanda->tavolo }}@endif
+                @if (filled($comanda->tavolo) && filled($comanda->note)) · @endif
+                @if (filled($comanda->note)) {{ $comanda->note }}@endif
+            </div>
+        @endif
 
         @if ($isCorrezione)
             <div class="tag-corr-banner">CORREZIONE — già in corso · non è una comanda nuova</div>
@@ -190,6 +205,8 @@
                 ▭ POS
             @else
                 MISTO
+                · € {{ number_format($comanda->importoContanteEffettivo(), 2, ',', '.') }}
+                + ▭ {{ number_format($comanda->importoPosEffettivo(), 2, ',', '.') }}
             @endif
         </div>
         @if ($haCongelati)
@@ -254,6 +271,13 @@
             <span class="tag-role">CAMERIERE{{ $isCorrezione ? ' · CORR.' : '' }}</span>
             <span class="tag-num">comanda num. #{{ $num }}</span>
         </div>
+        @if (filled($comanda->tavolo) || filled($comanda->note))
+            <div class="tag-corr-hint">
+                @if (filled($comanda->tavolo)) <strong>Tavolo {{ $comanda->tavolo }}</strong>@endif
+                @if (filled($comanda->tavolo) && filled($comanda->note)) · @endif
+                @if (filled($comanda->note)) {{ $comanda->note }}@endif
+            </div>
+        @endif
         @if ($isCorrezione)
             <div class="tag-corr-hint">Barrato = già in corso · in evidenza = modifica</div>
         @endif

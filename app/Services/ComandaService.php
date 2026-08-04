@@ -42,6 +42,8 @@ class ComandaService
         ?Comanda $esistente = null,
         ?string $motivo = null,
         ?int $versionAttesa = null,
+        ?string $tavolo = null,
+        ?string $note = null,
     ): Comanda {
         if (! $serata->isAperta()) {
             throw new RuntimeException('Nessuna serata aperta.');
@@ -78,6 +80,8 @@ class ComandaService
             $esistente,
             $motivo,
             $versionAttesa,
+            $tavolo,
+            $note,
         ) {
             if ($esistente) {
                 $comanda = Comanda::query()->with('righe.menuItem')->lockForUpdate()->findOrFail($esistente->id);
@@ -175,6 +179,12 @@ class ComandaService
 
             $totale = round($totale, 2);
             $comanda->totale = $totale;
+            $comanda->tavolo = ($tavolo !== null && trim($tavolo) !== '')
+                ? mb_substr(trim($tavolo), 0, 40)
+                : null;
+            $comanda->note = ($note !== null && trim($note) !== '')
+                ? mb_substr(trim($note), 0, 255)
+                : null;
 
             if ($pagamentoPrecedente !== null) {
                 $pagamento = $this->risolviPagamentoCorrezione(
@@ -185,10 +195,21 @@ class ComandaService
                 $comanda->metodo_pagamento = $pagamento['metodo'];
                 $comanda->importo_contante = $pagamento['importo_contante'];
                 $comanda->importo_pos = $pagamento['importo_pos'];
+            } elseif ($metodoPagamento === 'misto') {
+                $c = round((float) $importoContante, 2);
+                $p = round((float) $importoPos, 2);
+                if ($c < 0 || $p < 0 || abs(($c + $p) - $totale) > 0.01) {
+                    throw new RuntimeException(
+                        'Pagamento misto: contante + POS devono eguagliare il totale ('.$totale.' €).'
+                    );
+                }
+                $comanda->metodo_pagamento = 'misto';
+                $comanda->importo_contante = $c;
+                $comanda->importo_pos = $p;
             } else {
                 $comanda->metodo_pagamento = $metodoPagamento;
-                $comanda->importo_contante = $metodoPagamento === 'misto' ? $importoContante : null;
-                $comanda->importo_pos = $metodoPagamento === 'misto' ? $importoPos : null;
+                $comanda->importo_contante = null;
+                $comanda->importo_pos = null;
             }
 
             $comanda->save();
