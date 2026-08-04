@@ -229,6 +229,7 @@ class Comanda extends Model
                 'stato' => $stato,
                 'delta_q' => $deltaQ,
                 'prezzo_unitario' => $att[$id]['prezzo_unitario'] ?? ($prezziPrec[$id] ?? 0.0),
+                'delta_euro' => round($deltaQ * ($att[$id]['prezzo_unitario'] ?? ($prezziPrec[$id] ?? 0.0)), 2),
                 'area_stampa' => $att[$id]['area_stampa'] ?? ($areeMancanti[$id] ?? null),
                 'congelato' => $att[$id]['congelato'] ?? ($congelatiMancanti[$id] ?? false),
             ];
@@ -236,13 +237,21 @@ class Comanda extends Model
 
         $totalePrec = (float) $ultima->totale_precedente;
         $totaleAtt = (float) $this->totale;
+        $deltaImporto = round($totaleAtt - $totalePrec, 2);
+        $movimenti = array_values(array_filter(
+            $voci,
+            fn (array $v) => in_array($v['stato'], ['aggiunta', 'tolta', 'aumentata', 'ridotta'], true),
+        ));
+        $deltaVoci = round(array_sum(array_map(fn (array $v) => $v['delta_euro'], $movimenti)), 2);
 
         return [
             'count' => $this->correzioni->count(),
             'motivo' => $ultima->motivo,
             'totale_precedente' => $totalePrec,
             'totale_attuale' => $totaleAtt,
-            'delta_importo' => round($totaleAtt - $totalePrec, 2),
+            'delta_importo' => $deltaImporto,
+            'delta_voci' => $deltaVoci,
+            'movimenti' => $movimenti,
             'voci' => $voci,
         ];
     }

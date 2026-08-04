@@ -141,6 +141,25 @@
 
         @if ($isCorrezione)
             <div class="tag-corr-riepilogo">
+                @if (($diff['movimenti'] ?? []) !== [])
+                    <div class="tag-corr-movimenti">
+                        @foreach ($diff['movimenti'] as $m)
+                            <div class="tag-corr-movimento">
+                                <span>
+                                    @if ($m['stato'] === 'aggiunta') +{{ $m['quantita'] }}
+                                    @elseif ($m['stato'] === 'tolta') −{{ $m['quantita'] }}
+                                    @elseif ($m['delta_q'] > 0) +{{ $m['delta_q'] }}
+                                    @else {{ $m['delta_q'] }}
+                                    @endif
+                                    {{ $m['nome'] }}
+                                </span>
+                                <span class="tag-corr-movimento-euro">
+                                    {{ $m['delta_euro'] > 0 ? '+' : '−' }}{{ number_format(abs($m['delta_euro']), 2, ',', '.') }} €
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
                 @if ($deltaImporto > 0)
                     Da chiedere {{ number_format($deltaImporto, 2, ',', '.') }} €
                 @elseif ($deltaImporto < 0)

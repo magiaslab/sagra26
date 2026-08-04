@@ -54,6 +54,7 @@ it('in stampa di correzione evidenzia aggiunte e barra le voci già in corso', f
         ->and($html)->toContain('AGGIUNTA')
         ->and($html)->toContain('già ok')
         ->and($html)->toContain('Da chiedere')
+        ->and($html)->toContain('tag-corr-movimento')
         ->and($html)->toContain('Barrato = già in corso');
 });
 
