@@ -18,7 +18,7 @@ use Livewire\Component;
 
 class ReportHub extends Component
 {
-    public string $tipo = 'cucina_1';
+    public string $tipo = 'cumulativo';
 
     public ?int $serataId = null;
 
@@ -117,6 +117,7 @@ class ReportHub extends Component
             $idsStasera = collect([$serata->id]);
 
             $dati = match ($this->tipo) {
+                'cumulativo' => $this->datiReparto($idsStasera, $idsFino, $serata, null),
                 'cucina_1' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina_1'),
                 'cucina_2' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina_2'),
                 'griglia' => $this->datiReparto($idsStasera, $idsFino, $serata, 'griglia'),
@@ -239,33 +240,78 @@ class ReportHub extends Component
         return $this->venditeDettaglioPerItem($serataIds)['qta'];
     }
 
-    private function datiReparto($idsStasera, $idsFino, Serata $serata, string $area): array
+    /**
+     * Report produzione: un'area (dettaglio) oppure tutte cucina_1/2 + griglia (cumulativo).
+     *
+     * @param  Collection<int, int>  $idsStasera
+     * @param  Collection<int, int>  $idsFino
+     * @return array{
+     *   mode: string,
+     *   area: ?string,
+     *   titolo: string,
+     *   sezioni: list<array{area: string, label: string, categorie: \Illuminate\Support\Collection}>,
+     *   stasera: array<int, int>,
+     *   cumulato: array<int, int>,
+     *   stock: \Illuminate\Support\Collection,
+     *   copertiStasera: int,
+     *   copertiCum: int
+     * }
+     */
+    private function datiReparto($idsStasera, $idsFino, Serata $serata, ?string $area): array
     {
         $stasera = $this->venditePerItem($idsStasera);
         $cumulato = $this->venditePerItem($idsFino);
         $stock = SerataStock::query()->where('serata_id', $serata->id)->get()->keyBy('menu_item_id');
 
-        $categorie = Categoria::query()
+        $aree = $area === null
+            ? ['cucina_1', 'cucina_2', 'griglia']
+            : [$area];
+
+        $tutteCategorie = Categoria::query()
             ->with(['menuItems' => fn ($q) => $q->orderBy('ordinamento')])
             ->orderBy('ordinamento')
-            ->get()
-            ->map(function (Categoria $cat) use ($area) {
-                $items = $cat->menuItems->filter(
-                    fn (MenuItem $item) => $item->areaStampaEffettiva() === $area
-                )->values();
-                $cat->setRelation('menuItems', $items);
+            ->get();
 
-                return $cat;
-            })
-            ->filter(fn (Categoria $cat) => $cat->menuItems->isNotEmpty())
-            ->values();
+        $sezioni = [];
+        foreach ($aree as $codiceArea) {
+            $categorie = $tutteCategorie
+                ->map(function (Categoria $cat) use ($codiceArea) {
+                    $clone = clone $cat;
+                    $items = $cat->menuItems->filter(
+                        fn (MenuItem $item) => $item->areaStampaEffettiva() === $codiceArea
+                    )->values();
+                    $clone->setRelation('menuItems', $items);
+
+                    return $clone;
+                })
+                ->filter(fn (Categoria $cat) => $cat->menuItems->isNotEmpty())
+                ->values();
+
+            if ($categorie->isEmpty()) {
+                continue;
+            }
+
+            $sezioni[] = [
+                'area' => $codiceArea,
+                'label' => MenuItem::etichettaArea($codiceArea),
+                'categorie' => $categorie,
+            ];
+        }
 
         $copertiStasera = (int) Comanda::query()->whereIn('serata_id', $idsStasera)->where('stato', 'stampata')->sum('coperti');
         $copertiCum = (int) Comanda::query()->whereIn('serata_id', $idsFino)->where('stato', 'stampata')->sum('coperti');
 
+        $mode = $area === null ? 'cumulativo' : 'dettaglio';
+
         return [
+            'mode' => $mode,
             'area' => $area,
-            'categorie' => $categorie,
+            'titolo' => $mode === 'cumulativo'
+                ? 'Cumulativo produzione'
+                : ('Dettaglio '.MenuItem::etichettaArea($area)),
+            'sezioni' => $sezioni,
+            // Compat test legacy: flat categorie della prima (unica) sezione dettaglio
+            'categorie' => collect($sezioni)->flatMap(fn ($s) => $s['categorie'])->values(),
             'stasera' => $stasera,
             'cumulato' => $cumulato,
             'stock' => $stock,
