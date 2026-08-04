@@ -38,8 +38,15 @@ it('usa A4 landscape per report a tabella larga e portrait per statistiche', fun
 
     Livewire::test(ReportHub::class)
         ->set('serataId', $serata->id)
+        ->set('tipo', 'cumulativo')
+        ->assertSeeHtml('size: A4 landscape')
+        ->assertSee('Cumulativo produzione');
+
+    Livewire::test(ReportHub::class)
+        ->set('serataId', $serata->id)
         ->set('tipo', 'cucina_1')
-        ->assertSeeHtml('size: A4 landscape');
+        ->assertSeeHtml('size: A4 landscape')
+        ->assertSee('Dettaglio Cucina 1');
 
     Livewire::test(ReportHub::class)
         ->set('serataId', $serata->id)

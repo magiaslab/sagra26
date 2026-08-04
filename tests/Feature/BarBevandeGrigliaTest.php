@@ -105,3 +105,33 @@ it('il report Griglia rispetta areaStampaEffettiva per categorie miste', functio
     expect($nomiCucina)->toContain('Frittura di Mare')
         ->and($nomiCucina)->not->toContain('Bistecca di Manzo 300/350 gr.');
 });
+
+it('il report cumulativo include cucina e griglia suddivise per area', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+
+    $hub = new ReportHub;
+    $method = new \ReflectionMethod(ReportHub::class, 'datiReparto');
+    $method->setAccessible(true);
+    $dati = $method->invoke($hub, collect([$serata->id]), collect([$serata->id]), $serata, null);
+
+    expect($dati['mode'])->toBe('cumulativo')
+        ->and($dati['titolo'])->toBe('Cumulativo produzione')
+        ->and(collect($dati['sezioni'])->pluck('area')->all())->toContain('cucina_1', 'griglia');
+
+    $nomi = collect($dati['sezioni'])->flatMap(
+        fn ($s) => $s['categorie']->flatMap(fn ($c) => $c->menuItems->pluck('nome'))
+    );
+
+    expect($nomi)->toContain('Frittura di Mare')
+        ->and($nomi)->toContain('Bistecca di Manzo 300/350 gr.');
+
+    Livewire::test(ReportHub::class)
+        ->set('serataId', $serata->id)
+        ->set('tipo', 'cumulativo')
+        ->assertSee('Cumulativo produzione')
+        ->assertSee('Cucina 1')
+        ->assertSee('Griglia')
+        ->assertSee('Frittura di Mare')
+        ->assertSee('Bistecca di Manzo 300/350 gr.');
+});
