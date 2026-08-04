@@ -202,7 +202,7 @@
                                         x-text="stockLabel(item)"
                                     ></div>
                                 </div>
-                                <div class="whitespace-nowrap text-[0.98rem] tabular-nums text-sagra-muted" x-text="formatEuro(item.prezzo)"></div>
+                                <div class="whitespace-nowrap text-[0.98rem] tabular-nums text-sagra-muted" x-text="formatEuro(prezzoUnitario(item))"></div>
                                 <div
                                     class="flex h-10 items-center justify-center rounded-md text-center text-lg font-bold tabular-nums ring-1 ring-inset"
                                     :class="qtyBoxClass(item)"
@@ -503,6 +503,7 @@ function cassaApp(cfg) {
         correzioniCount: 0,
         totaleOriginale: null,
         qtyOriginali: {},
+        prezziStorici: {},
         motivo: '',
         richiamoNumero: '',
         storico: [],
@@ -534,9 +535,17 @@ function cassaApp(cfg) {
             let t = 0;
             for (const item of this.menu) {
                 const q = this.qty[item.id] || 0;
-                if (q) t += q * item.prezzo;
+                if (q) t += q * this.prezzoUnitario(item);
             }
             return Math.round(t * 100) / 100;
+        },
+
+        /** In correzione: prezzo già pagato sulla comanda; voci nuove → prezzo menù. */
+        prezzoUnitario(item) {
+            if (this.comandaId && this.prezziStorici && this.prezziStorici[item.id] != null) {
+                return Number(this.prezziStorici[item.id]);
+            }
+            return Number(item.prezzo);
         },
 
         /** Differenza vs totale al richiamo: >0 da chiedere, <0 da restituire. */
@@ -582,14 +591,17 @@ function cassaApp(cfg) {
         get righeOrdine() {
             return this.menu
                 .filter(i => (this.qty[i.id] || 0) > 0)
-                .map(i => ({
-                    id: i.id,
-                    nome: i.nome,
-                    q: this.qty[i.id],
-                    prezzo: i.prezzo,
-                    importo: Math.round(this.qty[i.id] * i.prezzo * 100) / 100,
-                    area_stampa: i.area_stampa,
-                }));
+                .map(i => {
+                    const prezzo = this.prezzoUnitario(i);
+                    return {
+                        id: i.id,
+                        nome: i.nome,
+                        q: this.qty[i.id],
+                        prezzo,
+                        importo: Math.round(this.qty[i.id] * prezzo * 100) / 100,
+                        area_stampa: i.area_stampa,
+                    };
+                });
         },
 
         /** Voci per anteprima: in correzione include tolte + stato (barrate / evidenziate). */
@@ -642,8 +654,8 @@ function cassaApp(cfg) {
                     q: qAtt,
                     qShow,
                     qPrec,
-                    prezzo: item.prezzo,
-                    importo: Math.round(qShow * item.prezzo * 100) / 100,
+                    prezzo: this.prezzoUnitario(item),
+                    importo: Math.round(qShow * this.prezzoUnitario(item) * 100) / 100,
                     area_stampa: item.area_stampa,
                     stato,
                     delta_q: delta,
@@ -931,6 +943,7 @@ function cassaApp(cfg) {
             this.correzioniCount = 0;
             this.totaleOriginale = null;
             this.qtyOriginali = {};
+            this.prezziStorici = {};
             this.motivo = '';
             this.metodo = null;
             this.metodoOriginale = null;
@@ -1155,8 +1168,13 @@ function cassaApp(cfg) {
                     : Math.round(Number(data.totale || 0) * 100) / 100;
                 this.metodoOriginale = data.metodo_pagamento || null;
                 const orig = {};
-                for (const r of data.righe) orig[r.menu_item_id] = r.quantita;
+                const prezzi = {};
+                for (const r of data.righe) {
+                    orig[r.menu_item_id] = r.quantita;
+                    prezzi[r.menu_item_id] = Number(r.prezzo_unitario);
+                }
                 this.qtyOriginali = orig;
+                this.prezziStorici = prezzi;
                 this.motivo = '';
                 this.chiudiModal();
                 this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')
