@@ -254,13 +254,14 @@ class CassaController extends Controller
 
     public function stampa(Comanda $comanda): View
     {
-        $comanda->load(['righe.menuItem.categoria', 'serata']);
+        $comanda->load(['righe.menuItem.categoria', 'serata', 'correzioni']);
         $impostazioni = Impostazione::corrente();
 
         $righe = $comanda->righe->map(function ($r) {
             $prezzo = (float) $r->prezzo_unitario;
 
             return [
+                'menu_item_id' => (int) $r->menu_item_id,
                 'quantita' => $r->quantita,
                 'nome' => $r->menuItem->nome,
                 // Live dal menù: non storicizzato su comanda_righe (a differenza di bar/prezzo).
@@ -274,6 +275,7 @@ class CassaController extends Controller
         return view('print.comanda', [
             'comanda' => $comanda,
             'righe' => $righe,
+            'diffCorrezione' => $comanda->diffUltimaCorrezione(),
             'impostazioni' => $impostazioni,
             'numeroDiSerata' => $comanda->numeroDiSerata(),
             'autoPrint' => request()->boolean('print'),
