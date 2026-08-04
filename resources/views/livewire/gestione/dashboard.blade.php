@@ -68,4 +68,26 @@
             </div>
         </a>
     </div>
+
+    <h2 class="mb-3 mt-8 text-base font-semibold text-sagra-ink">Documenti e aiuto</h2>
+    <div class="divide-y divide-sagra-line overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.guida', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Aiuto</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Guida operativa cassa</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Come aprire la serata, prendere comande, correggere, chiudere — passo dopo passo</p>
+            </div>
+            <span class="self-center text-sm font-medium text-sagra">Apri →</span>
+        </a>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.documenti.liberatoria', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Moduli</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Liberatoria volontari minori</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">PDF da scaricare, stampare e far firmare al genitore/tutore</p>
+            </div>
+            <span class="self-center text-sm font-medium text-sagra">Scarica PDF ↓</span>
+        </a>
+    </div>
 </div>

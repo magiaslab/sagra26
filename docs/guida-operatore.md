@@ -469,6 +469,7 @@ Vedi sezione 2.3. Se sei tu a dover lavorare lì → **Prendi comunque il contro
 
 ## Dove trovare le altre guide tecniche
 
+- **In Gestione (dashboard):** sezione **Documenti e aiuto** → Guida operativa e Liberatoria minori (PDF)
 - Installazione server: `DEPLOY.md`
 - Collegamenti Chrome kiosk sui notebook: `docs/chrome-kiosk-notebook.md`
 

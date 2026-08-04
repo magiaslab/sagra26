@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CassaController;
+use App\Http\Controllers\DocumentiController;
 use App\Http\Controllers\FacsimileController;
 use App\Http\Middleware\PinGestione;
 use App\Livewire\Gestione\ChiusuraForm;
@@ -41,4 +42,7 @@ Route::middleware(PinGestione::class)->prefix('gestione')->name('gestione.')->gr
     Route::get('/report', ReportHub::class)->name('report');
     Route::get('/impostazioni', ImpostazioniPage::class)->name('impostazioni');
     Route::get('/stato', StatoSistema::class)->name('stato');
+    Route::get('/guida', [DocumentiController::class, 'guida'])->name('guida');
+    Route::get('/documenti/guida.md', [DocumentiController::class, 'downloadGuida'])->name('documenti.guida.download');
+    Route::get('/documenti/liberatoria-volontari-minori.pdf', [DocumentiController::class, 'downloadLiberatoria'])->name('documenti.liberatoria');
 });
