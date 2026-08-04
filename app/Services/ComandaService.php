@@ -104,6 +104,13 @@ class ComandaService
                     'pos' => $comanda->importoPosEffettivo(),
                 ];
 
+                // Prezzi già pagati: in correzione non si ricalcolano dal menù attuale
+                // (altrimenti togliere un piatto da 10€ può restituire 9€ se un altro prezzo è cambiato).
+                $prezziStorici = [];
+                foreach ($comanda->righe as $rigaEsistente) {
+                    $prezziStorici[(int) $rigaEsistente->menu_item_id] = (float) $rigaEsistente->prezzo_unitario;
+                }
+
                 ComandaCorrezione::query()->create([
                     'comanda_id' => $comanda->id,
                     'postazione_id' => $postazione->id,
@@ -132,6 +139,7 @@ class ComandaService
                     'version' => 1,
                 ]);
                 $pagamentoPrecedente = null;
+                $prezziStorici = [];
             }
 
             $totale = 0.0;
@@ -149,14 +157,17 @@ class ComandaService
 
             foreach ($righeNormalizzate as $riga) {
                 $item = MenuItem::query()->findOrFail($riga['menu_item_id']);
-                $sub = round($riga['quantita'] * (float) $item->prezzo, 2);
+                $prezzo = array_key_exists((int) $item->id, $prezziStorici)
+                    ? $prezziStorici[(int) $item->id]
+                    : (float) $item->prezzo;
+                $sub = round($riga['quantita'] * $prezzo, 2);
                 $totale += $sub;
 
                 ComandaRiga::query()->create([
                     'comanda_id' => $comanda->id,
                     'menu_item_id' => $item->id,
                     'quantita' => $riga['quantita'],
-                    'prezzo_unitario' => $item->prezzo,
+                    'prezzo_unitario' => $prezzo,
                     'bar' => (bool) $item->bar,
                     'qta_scalata' => $item->stock_default !== null ? $riga['quantita'] : 0,
                 ]);
