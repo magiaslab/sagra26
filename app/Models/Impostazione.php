@@ -13,6 +13,7 @@ class Impostazione extends Model
         'intestazione_anno',
         'intestazione_sottotitolo',
         'pin_gestione',
+        'comunicazione_comanda',
         'chromium_path',
     ];
 

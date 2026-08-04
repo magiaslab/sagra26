@@ -36,6 +36,30 @@ class MenuCrud extends Component
 
     public string $catArea = 'cliente';
 
+    public string $comunicazione_comanda = '';
+
+    public function mount(): void
+    {
+        $this->comunicazione_comanda = (string) (Impostazione::corrente()->comunicazione_comanda ?? '');
+        $this->categoria_id = Categoria::query()->orderBy('ordinamento')->value('id');
+    }
+
+    public function salvaComunicazione(): void
+    {
+        $this->validate([
+            'comunicazione_comanda' => 'nullable|string|max:2000',
+        ]);
+
+        Impostazione::corrente()->update([
+            'comunicazione_comanda' => trim($this->comunicazione_comanda) !== ''
+                ? trim($this->comunicazione_comanda)
+                : null,
+        ]);
+
+        session()->flash('status', 'Comunicazione comanda salvata.');
+        $this->dispatch('toast', message: 'Comunicazione comanda salvata.', type: 'ok');
+    }
+
     public function edit(int $id): void
     {
         $item = MenuItem::query()->findOrFail($id);
@@ -159,7 +183,7 @@ class MenuCrud extends Component
     {
         $this->validate([
             'catNome' => 'required|string|max:255',
-            'catArea' => 'required|in:cucina,griglia,cliente',
+            'catArea' => 'required|in:cliente,cucina_1,cucina_2,griglia',
         ]);
         $ord = (int) Categoria::query()->max('ordinamento') + 1;
         Categoria::query()->create([

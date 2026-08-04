@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class MenuItem extends Model
 {
+    public const AREE_STAMPA = ['cliente', 'cucina_1', 'cucina_2', 'griglia'];
+
     protected $table = 'menu_items';
 
     protected $fillable = [
@@ -49,6 +51,22 @@ class MenuItem extends Model
 
     public function areaStampaEffettiva(): string
     {
-        return $this->area_stampa ?? $this->categoria->area_stampa;
+        $area = $this->area_stampa ?? $this->categoria->area_stampa;
+
+        return match ($area) {
+            'cucina' => 'cucina_1', // legacy pre-split
+            default => (string) $area,
+        };
+    }
+
+    public static function etichettaArea(?string $area): string
+    {
+        return match ($area) {
+            'cucina_1', 'cucina' => 'Cucina 1',
+            'cucina_2' => 'Cucina 2',
+            'griglia' => 'Griglia',
+            'cliente' => 'Cliente',
+            default => (string) $area,
+        };
     }
 }

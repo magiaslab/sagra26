@@ -6,6 +6,22 @@
         </x-slot:actions>
     </x-gestione.page-header>
 
+    <div class="mb-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
+        <h2 class="mb-1 mt-0 text-xl font-semibold text-sagra-ink">Comunicazione sulle comande</h2>
+        <p class="mb-3 mt-0 text-sm text-sagra-muted">Testo libero stampato in grassetto sul talloncino Cliente, tra l’elenco piatti e il totale. Lascia vuoto per non mostrare nulla.</p>
+        <textarea
+            class="mb-3 block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra"
+            rows="3"
+            maxlength="2000"
+            wire:model="comunicazione_comanda"
+            placeholder="Es. Grazie e buon appetito! · Ritirare al banco bevande…"
+        ></textarea>
+        @error('comunicazione_comanda')
+            <x-ui.alert type="danger" class="mb-3">{{ $message }}</x-ui.alert>
+        @enderror
+        <button type="button" class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" wire:click="salvaComunicazione">Salva comunicazione</button>
+    </div>
+
     <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <div class="flex flex-col gap-4">
             <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
@@ -30,7 +46,8 @@
                     <label class="mb-1 block text-sm font-medium text-sagra-ink">Area stampa (override)</label>
                     <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model="area_stampa">
                         <option value="">(ereditata dalla categoria)</option>
-                        <option value="cucina">cucina</option>
+                        <option value="cucina_1">cucina 1</option>
+                        <option value="cucina_2">cucina 2</option>
                         <option value="griglia">griglia</option>
                         <option value="cliente">cliente</option>
                     </select>
@@ -65,7 +82,8 @@
                     <label class="mb-1 block text-sm font-medium text-sagra-ink">Area stampa</label>
                     <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model="catArea">
                         <option value="cliente">cliente</option>
-                        <option value="cucina">cucina</option>
+                        <option value="cucina_1">cucina 1</option>
+                        <option value="cucina_2">cucina 2</option>
                         <option value="griglia">griglia</option>
                     </select>
                 </div>

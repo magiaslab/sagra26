@@ -5,8 +5,19 @@
 @section('content')
 @php
     $tutte = $righe;
-    $cucina = $righe->filter(fn ($r) => $r['area_stampa'] === 'cucina');
-    $griglia = $righe->filter(fn ($r) => $r['area_stampa'] === 'griglia');
+    $zonaDi = function (?string $area): string {
+        return match ($area) {
+            'cucina_1', 'cucina' => 'cucina_1',
+            'cucina_2' => 'cucina_2',
+            'griglia' => 'griglia',
+            default => 'coperto', // cliente e altro → coperto / sala
+        };
+    };
+
+    $cucina1 = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'cucina_1');
+    $cucina2 = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'cucina_2');
+    $griglia = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'griglia');
+    $coperto = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'coperto');
     $haCongelati = $righe->contains(fn ($r) => ! empty($r['congelato']));
     $metodo = $comanda->metodo_pagamento;
     $nome = $impostazioni->intestazione_nome;
@@ -14,6 +25,19 @@
     $sottotitolo = $impostazioni->intestazione_sottotitolo;
     $num = $comanda->numero_progressivo;
     $numSerata = $numeroDiSerata ?? $comanda->numeroDiSerata();
+
+    $zoneProduzione = [
+        ['key' => 'cucina_1', 'label' => 'CUCINA 1', 'righe' => $cucina1],
+        ['key' => 'cucina_2', 'label' => 'CUCINA 2', 'righe' => $cucina2],
+        ['key' => 'griglia', 'label' => 'GRIGLIA', 'righe' => $griglia],
+    ];
+
+    $zoneCameriere = [
+        ['key' => 'coperto', 'label' => 'COPERTO', 'righe' => $coperto],
+        ['key' => 'cucina_1', 'label' => 'CUCINA 1', 'righe' => $cucina1],
+        ['key' => 'cucina_2', 'label' => 'CUCINA 2', 'righe' => $cucina2],
+        ['key' => 'griglia', 'label' => 'GRIGLIA', 'righe' => $griglia],
+    ];
 @endphp
 
 @unless ($autoPrint)
@@ -25,7 +49,7 @@
 @endunless
 
 <div class="print-sheet">
-    {{-- 1. CLIENTE: colonna sinistra intera --}}
+    {{-- 1. CLIENTE: colonna sinistra (più stretta per far spazio a produzione) --}}
     <section class="tag-cliente">
         <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
         @if ($sottotitolo)
@@ -54,6 +78,10 @@
             @endforeach
         </div>
 
+        @if (filled($impostazioni->comunicazione_comanda))
+            <div class="tag-comunicazione">{{ $impostazioni->comunicazione_comanda }}</div>
+        @endif
+
         <div class="totale-print">
             TOTALE PAGATO {{ number_format($comanda->totale, 2, ',', '.') }} €
         </div>
@@ -72,76 +100,58 @@
     </section>
 
     <div class="tag-right">
-        <div class="tag-top">
-            {{-- 2. CUCINA --}}
-            <section class="tag-cucina">
-                <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
-                <div class="tag-head">
-                    <span class="tag-role">CUCINA</span>
-                    <span class="tag-num">n.{{ $num }}</span>
-                </div>
-                <div class="tag-body">
-                    @forelse ($cucina as $r)
-                        <div class="tag-line-check">
-                            <span class="tag-qty">{{ $r['quantita'] }}</span>
-                            <span class="dotted">{{ $r['nome'] }}</span>
-                            <span class="check-box" aria-hidden="true"></span>
-                        </div>
-                    @empty
-                        <div class="meta-small">— nessuna voce —</div>
-                    @endforelse
-                </div>
-                <div class="campo-mano campo-mano--full">
-                    <span class="campo-mano-lbl">Cameriere</span>
-                    <span class="campo-mano-linea"></span>
-                </div>
-            </section>
-
-            {{-- 3. CAMERIERE --}}
-            <section class="tag-cameriere">
-                <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
-                <div class="tag-head">
-                    <span class="tag-role">CAMERIERE</span>
-                    <span class="tag-num">n.{{ $num }}</span>
-                </div>
-                <div class="campo-mano campo-mano--full campo-mano--top">
-                    <span class="campo-mano-lbl">Tavolo</span>
-                    <span class="campo-mano-linea"></span>
-                </div>
-                <div class="tag-body">
-                    @foreach ($tutte as $r)
-                        <div class="tag-line-check">
-                            <span class="tag-qty">{{ $r['quantita'] }}</span>
-                            <span class="dotted">{{ $r['nome'] }}</span>
-                            <span class="check-box" aria-hidden="true"></span>
-                        </div>
-                    @endforeach
-                </div>
-            </section>
+        {{-- 2. PRODUZIONE: 3 box verticali tagliabili --}}
+        <div class="tag-produzione">
+            @foreach ($zoneProduzione as $zona)
+                <section class="tag-box-zona" data-zona="{{ $zona['key'] }}">
+                    <div class="tag-box-head">
+                        <span class="tag-role">{{ $zona['label'] }}</span>
+                        <span class="tag-num">n.{{ $num }}</span>
+                    </div>
+                    <div class="tag-body">
+                        @forelse ($zona['righe'] as $r)
+                            <div class="tag-line-check">
+                                <span class="tag-qty">{{ $r['quantita'] }}</span>
+                                <span class="dotted">{{ $r['nome'] }}</span>
+                                <span class="check-box" aria-hidden="true"></span>
+                            </div>
+                        @empty
+                            <div class="meta-small">— nessuna voce —</div>
+                        @endforelse
+                    </div>
+                    <div class="campo-mano campo-mano--full">
+                        <span class="campo-mano-lbl">Cameriere</span>
+                        <span class="campo-mano-linea"></span>
+                    </div>
+                </section>
+            @endforeach
         </div>
 
-        {{-- 4. GRIGLIA: sotto Cucina+Cameriere, senza checkbox --}}
-        <section class="tag-griglia">
-            <div class="tag-griglia-head">
-                <div class="tag-griglia-brand">
-                    <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
-                    <span class="tag-role">GRIGLIA</span>
-                </div>
-                <div class="campo-mano campo-mano--full campo-mano--inline">
-                    <span class="campo-mano-lbl">Cameriere</span>
-                    <span class="campo-mano-linea"></span>
-                </div>
+        {{-- 3. CAMERIERE: riepilogo per zone, tavolo in basso --}}
+        <section class="tag-cameriere">
+            <div class="tag-head tag-head--compact">
+                <span class="tag-role">CAMERIERE</span>
                 <span class="tag-num">n.{{ $num }}</span>
             </div>
-            <div class="tag-body tag-body--griglia">
-                @forelse ($griglia as $r)
-                    <div class="tag-line-griglia">
-                        <span class="tag-qty">{{ $r['quantita'] }}</span>
-                        <span>{{ $r['nome'] }}</span>
+            <div class="tag-body">
+                @foreach ($zoneCameriere as $zona)
+                    <div class="tag-cameriere-zona" data-zona-cameriere="{{ $zona['key'] }}">
+                        <div class="tag-cameriere-zona-lbl">{{ $zona['label'] }}</div>
+                        @forelse ($zona['righe'] as $r)
+                            <div class="tag-line-check">
+                                <span class="tag-qty">{{ $r['quantita'] }}</span>
+                                <span class="dotted">{{ $r['nome'] }}</span>
+                                <span class="check-box" aria-hidden="true"></span>
+                            </div>
+                        @empty
+                            <div class="meta-small">—</div>
+                        @endforelse
                     </div>
-                @empty
-                    <div class="meta-small">— nessuna voce —</div>
-                @endforelse
+                @endforeach
+            </div>
+            <div class="campo-mano campo-mano--full">
+                <span class="campo-mano-lbl">Tavolo</span>
+                <span class="campo-mano-linea"></span>
             </div>
         </section>
     </div>

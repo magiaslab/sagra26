@@ -49,7 +49,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'nome' => 'Antipasti',
-                'area_stampa' => 'cucina',
+                'area_stampa' => 'cucina_1',
                 'voci' => [
                     ['nome' => 'Insalata di Mare', 'prezzo' => 9.00],
                     ['nome' => 'Cozze alla Marinara', 'prezzo' => 8.00],
@@ -58,7 +58,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'nome' => 'Primi Piatti',
-                'area_stampa' => 'cucina',
+                'area_stampa' => 'cucina_1',
                 'voci' => [
                     ['nome' => 'Cacciucchetto', 'prezzo' => 18.00, 'stock_default' => 100],
                     ['nome' => 'Spaghetti Vongole e Lupino', 'prezzo' => 10.00],
@@ -70,9 +70,9 @@ class MenuSeeder extends Seeder
             ],
             [
                 'nome' => 'Secondi Piatti',
-                'area_stampa' => 'cucina',
+                'area_stampa' => 'cucina_1',
                 'voci' => [
-                    ['nome' => 'Frittura di Mare', 'prezzo' => 13.00, 'area_stampa' => 'cucina'],
+                    ['nome' => 'Frittura di Mare', 'prezzo' => 13.00, 'area_stampa' => 'cucina_1'],
                     ['nome' => 'Pesce alla Griglia (Orata)', 'prezzo' => 12.00, 'area_stampa' => 'griglia'],
                     ['nome' => 'Bistecca di Manzo 300/350 gr.', 'prezzo' => 15.00, 'area_stampa' => 'griglia'],
                     ['nome' => 'Grigliata Mista di Carne', 'prezzo' => 10.00, 'area_stampa' => 'griglia'],
@@ -83,7 +83,7 @@ class MenuSeeder extends Seeder
             ],
             [
                 'nome' => 'Contorni',
-                'area_stampa' => 'cucina',
+                'area_stampa' => 'cucina_1',
                 'voci' => [
                     ['nome' => 'Patate Fritte', 'prezzo' => 3.50],
                     ['nome' => 'Insalata Mista', 'prezzo' => 3.50],
