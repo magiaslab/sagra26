@@ -52,6 +52,7 @@ class CassaController extends Controller
         $impostazioni = Impostazione::corrente();
         $prossimoNumero = (int) (Comanda::query()->max('numero_progressivo') ?? 0) + 1;
         $prossimoNumeroDiSerata = Comanda::prossimoNumeroDiSerata($serata?->id);
+        $copertiTotali = Comanda::copertiTotaliSerata($serata?->id);
 
         return view('cassa.index', [
             'serata' => $serata,
@@ -62,6 +63,7 @@ class CassaController extends Controller
             'impostazioni' => $impostazioni,
             'prossimoNumero' => $prossimoNumero,
             'prossimoNumeroDiSerata' => $prossimoNumeroDiSerata,
+            'copertiTotali' => $copertiTotali,
         ]);
     }
 
@@ -115,12 +117,15 @@ class CassaController extends Controller
 
         $serata = Serata::corrente();
         if (! $serata) {
-            return response()->json(['stock' => []]);
+            return response()->json(['stock' => [], 'coperti_totali' => 0]);
         }
 
         $stock->assicuraStockLimitati($serata->id);
 
-        return response()->json(['stock' => $stock->mappaResidui($serata->id)]);
+        return response()->json([
+            'stock' => $stock->mappaResidui($serata->id),
+            'coperti_totali' => Comanda::copertiTotaliSerata($serata->id),
+        ]);
     }
 
     public function conferma(Request $request, ComandaService $service): JsonResponse
@@ -169,6 +174,7 @@ class CassaController extends Controller
                 'version' => $comanda->version,
                 'print_url' => route('cassa.stampa', $comanda, absolute: false),
                 'stock' => app(StockService::class)->mappaResidui($serata->id),
+                'coperti_totali' => Comanda::copertiTotaliSerata($serata->id),
             ]);
         } catch (ComandaConflittoException $e) {
             return response()->json(['error' => $e->getMessage(), 'conflitto' => true], 409);
@@ -283,7 +289,10 @@ class CassaController extends Controller
         try {
             $service->annulla($comanda, $data['motivo']);
 
-            return response()->json(['ok' => true]);
+            return response()->json([
+                'ok' => true,
+                'coperti_totali' => Comanda::copertiTotaliSerata($comanda->serata_id),
+            ]);
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }

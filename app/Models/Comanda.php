@@ -85,6 +85,21 @@ class Comanda extends Model
         return (int) static::query()->where('serata_id', $serataId)->count() + 1;
     }
 
+    /**
+     * Coperti già fatti nella serata (comande stampate, tutte le postazioni).
+     */
+    public static function copertiTotaliSerata(?int $serataId): int
+    {
+        if (! $serataId) {
+            return 0;
+        }
+
+        return (int) static::query()
+            ->where('serata_id', $serataId)
+            ->where('stato', 'stampata')
+            ->sum('coperti');
+    }
+
     public function importoContanteEffettivo(): float
     {
         return match ($this->metodo_pagamento) {
