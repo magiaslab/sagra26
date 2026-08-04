@@ -20,6 +20,7 @@
         serataAperta: {{ $serata ? 'true' : 'false' }},
         prossimoNumero: {{ (int) $prossimoNumero }},
         prossimoNumeroDiSerata: {{ (int) $prossimoNumeroDiSerata }},
+        copertiTotali: {{ (int) $copertiTotali }},
         brand: @js(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? '')),
         sottotitolo: @js($impostazioni->intestazione_sottotitolo ?? ''),
         csrf: '{{ csrf_token() }}',
@@ -77,6 +78,11 @@
                             ></span>
                         </div>
                         <div class="mt-0.5 text-xs font-medium tabular-nums text-white/55" x-text="'rif. #' + numeroDisplay"></div>
+                    </div>
+
+                    <div class="flex shrink-0 flex-col justify-center rounded-lg bg-white/15 px-2.5 py-1.5 text-center ring-1 ring-inset ring-white/20 sm:min-w-[5.5rem] sm:px-3">
+                        <span class="text-[0.65rem] font-semibold uppercase leading-tight tracking-wider text-white/55">Coperti totali</span>
+                        <span class="text-xl font-bold tabular-nums leading-tight sm:text-2xl" x-text="copertiTotali"></span>
                     </div>
                 </div>
 
@@ -426,6 +432,7 @@ function cassaApp(cfg) {
         serataAperta: cfg.serataAperta,
         prossimoNumero: cfg.prossimoNumero || 1,
         prossimoNumeroDiSerata: cfg.prossimoNumeroDiSerata || 1,
+        copertiTotali: cfg.copertiTotali || 0,
         brand: cfg.brand,
         sottotitolo: cfg.sottotitolo || '',
         csrf: cfg.csrf,
@@ -798,6 +805,7 @@ function cassaApp(cfg) {
                 }
                 if (!res.ok) throw new Error(data.error || 'Errore salvataggio');
                 if (data.stock) this.stock = data.stock;
+                if (typeof data.coperti_totali === 'number') this.copertiTotali = data.coperti_totali;
                 if (data.numero) this.prossimoNumero = data.numero + 1;
                 if (!this.comandaId) this.prossimoNumeroDiSerata += 1;
                 this.chiudiModal();
@@ -871,6 +879,7 @@ function cassaApp(cfg) {
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Annullamento fallito');
+                if (typeof data.coperti_totali === 'number') this.copertiTotali = data.coperti_totali;
                 this.storico = this.storico.map(c =>
                     c.comanda_id === id
                         ? { ...c, stato: 'annullata', motivo_annullo: motivo }
@@ -968,6 +977,7 @@ function cassaApp(cfg) {
                 const res = await fetch(this.urls.stock, { headers: { 'Accept': 'application/json' } });
                 const data = await res.json();
                 if (data.stock) this.stock = data.stock;
+                if (typeof data.coperti_totali === 'number') this.copertiTotali = data.coperti_totali;
             } catch (_) {}
         },
 

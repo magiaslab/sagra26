@@ -62,6 +62,35 @@ it('il seeder marca Coperto con is_coperto e la cassa lo espone nel payload', fu
     expect($html)->toContain('is_coperto&quot;:true');
 });
 
+it('espone i coperti totali di serata in cassa e li aggiorna dopo conferma e annullo', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->firstOrFail();
+    $coperto = MenuItem::query()->where('is_coperto', true)->firstOrFail();
+
+    $html = $this->get(route('cassa'))->assertOk()->getContent();
+    expect($html)->toContain('copertiTotali: 0')
+        ->and($html)->toContain('Coperti totali');
+
+    $comanda = app(ComandaService::class)->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $coperto->id, 'quantita' => 4]],
+        0,
+        'contante',
+    );
+
+    expect(\App\Models\Comanda::copertiTotaliSerata($serata->id))->toBe(4);
+
+    $this->getJson(route('cassa.stock'))
+        ->assertOk()
+        ->assertJsonPath('coperti_totali', 4);
+
+    $this->postJson(route('cassa.annulla', $comanda), ['motivo' => 'errore test'])
+        ->assertOk()
+        ->assertJsonPath('coperti_totali', 0);
+});
+
 it('impedisce due voci attive con is_coperto', function () {
     $coperto = MenuItem::query()->where('is_coperto', true)->firstOrFail();
     $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
