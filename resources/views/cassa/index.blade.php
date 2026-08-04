@@ -113,6 +113,17 @@
                             <span class="text-[0.6rem] font-semibold uppercase leading-none tracking-wider text-white/55">Totale</span>
                             <span class="text-lg font-bold tabular-nums leading-none xl:text-xl" x-text="formatEuro(totale)"></span>
                         </div>
+                        <div
+                            class="flex h-10 min-w-[6.5rem] flex-col justify-center rounded-md px-2 text-right ring-1 ring-inset xl:min-w-[7.5rem] xl:px-2.5"
+                            x-show="comandaId"
+                            x-cloak
+                            :class="deltaCorrezione > 0
+                                ? 'bg-amber-300/25 ring-amber-200/40'
+                                : (deltaCorrezione < 0 ? 'bg-sky-300/20 ring-sky-200/40' : 'bg-white/10 ring-white/15')"
+                        >
+                            <span class="text-[0.6rem] font-semibold uppercase leading-none tracking-wider text-white/55" x-text="deltaCorrezioneLabel"></span>
+                            <span class="text-lg font-bold tabular-nums leading-none xl:text-xl" x-text="formatDeltaEuro(deltaCorrezione)"></span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,6 +142,15 @@
             </div>
             <div class="ml-auto flex shrink-0 flex-nowrap items-center justify-end gap-2">
                 <span class="mr-1 whitespace-nowrap text-sm font-medium text-sagra-muted" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
+                <span
+                    class="mr-1 whitespace-nowrap rounded-md px-2 py-1 text-sm font-semibold tabular-nums"
+                    x-show="comandaId"
+                    x-cloak
+                    :class="deltaCorrezione > 0
+                        ? 'bg-sagra-amber-soft text-sagra-amber'
+                        : (deltaCorrezione < 0 ? 'bg-sky-50 text-sky-800 ring-1 ring-sky-200' : 'bg-sagra-softer text-sagra-muted')"
+                    x-text="deltaCorrezioneMessaggio"
+                ></span>
                 <div class="w-40 min-h-9 xl:w-44" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
                     <input class="block h-9 w-full rounded-md bg-white px-2.5 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
                            placeholder="Motivo correzione" autocomplete="off"
@@ -213,15 +233,32 @@
                 Comanda <span x-text="numeroDiSerataDisplay"></span> di stasera
                 <span class="block text-sm font-medium text-sagra-muted">rif. #<span x-text="numeroDisplay"></span> · <span x-text="formatEuro(totale)"></span></span>
             </h2>
-            <p class="mt-2 text-sm text-sagra-muted">Come paga il cliente?</p>
+            <template x-if="!comandaId">
+                <p class="mt-2 text-sm text-sagra-muted">Come paga il cliente?</p>
+            </template>
+            <template x-if="comandaId">
+                <div class="mt-3">
+                    <p class="text-base font-bold tabular-nums"
+                       :class="deltaCorrezione > 0 ? 'text-sagra-amber' : 'text-sky-800'"
+                       x-text="deltaCorrezioneMessaggio"></p>
+                    <p class="mt-1 text-sm text-sagra-muted"
+                       x-text="deltaCorrezione > 0
+                           ? 'Incassa solo la differenza (il resto è già pagato).'
+                           : 'Restituisci solo la differenza.'"></p>
+                </div>
+            </template>
             <div class="mt-5 grid grid-cols-2 gap-3">
                 <button type="button" class="rounded-md bg-sagra px-3 py-4 text-base font-semibold text-white hover:bg-sagra-dark" @click="scegliMetodo('contante')">
                     <span class="block font-mono text-xs text-white/70">C</span>
-                    Contante
+                    <span x-text="comandaId
+                        ? (deltaCorrezione > 0 ? 'Incassa contante' : 'Restituisci contante')
+                        : 'Contante'"></span>
                 </button>
                 <button type="button" class="rounded-md bg-white px-3 py-4 text-base font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="scegliMetodo('pos')">
                     <span class="block font-mono text-xs text-sagra-muted">P</span>
-                    POS
+                    <span x-text="comandaId
+                        ? (deltaCorrezione > 0 ? 'Incassa POS' : 'Restituisci POS')
+                        : 'POS'"></span>
                 </button>
             </div>
             <p class="mt-4 text-xs text-sagra-muted">Esc per annullare</p>
@@ -232,9 +269,20 @@
         <div class="flex h-[96vh] w-[min(1100px,98vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line" @click.stop>
             <div class="flex shrink-0 items-center justify-between gap-3 border-b border-sagra-line px-4 py-2.5">
                 <h2 class="m-0 text-sm font-bold sm:text-base">Anteprima stampa — Invio per confermare</h2>
-                <span class="rounded bg-sagra-softer px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-sagra"
-                      :class="metodo === 'contante' ? 'ring-2 ring-sagra-ink' : ''"
-                      x-text="metodo === 'contante' ? 'CONTANTE' : 'POS'"></span>
+                <div class="flex items-center gap-2">
+                    <span
+                        class="rounded px-2 py-0.5 text-xs font-semibold tabular-nums"
+                        x-show="comandaId && deltaCorrezione !== 0"
+                        x-cloak
+                        :class="deltaCorrezione > 0
+                            ? 'bg-sagra-amber-soft text-sagra-amber'
+                            : 'bg-sky-50 text-sky-800'"
+                        x-text="deltaCorrezioneMessaggio"
+                    ></span>
+                    <span class="rounded bg-sagra-softer px-2 py-0.5 text-xs font-semibold uppercase tracking-wide text-sagra"
+                          :class="metodo === 'contante' ? 'ring-2 ring-sagra-ink' : ''"
+                          x-text="badgeMetodoAnteprima"></span>
+                </div>
             </div>
             <div class="a4-preview min-h-0 flex-1" x-ref="a4Fit">
                 <div class="a4-scale" :style="a4ScaleStyle">
@@ -265,8 +313,9 @@
                                 <div class="a4-comunicazione" x-text="comunicazioneComanda"></div>
                             @endif
                             <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
-                            <div class="a4-pay" :class="metodo === 'contante' ? 'a4-pay--contante' : 'a4-pay--pos'"
-                                 x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
+                            <div class="a4-pay"
+                                 :class="metodo === 'contante' ? 'a4-pay--contante' : (metodo === 'pos' ? 'a4-pay--pos' : 'a4-pay--misto')"
+                                 x-text="badgeMetodoAnteprima"></div>
                         </section>
                         <div class="a4-produzione">
                             <template x-for="zona in zoneProduzione" :key="zona.key">
@@ -429,11 +478,13 @@ function cassaApp(cfg) {
         a4Scale: 1,
         topPad: 120,
         metodo: null,
+        metodoOriginale: null,
         comandaId: null,
         numeroRichiamato: null,
         numeroDiSerataRichiamato: null,
         comandaVersion: null,
         correzioniCount: 0,
+        totaleOriginale: null,
         motivo: '',
         richiamoNumero: '',
         storico: [],
@@ -468,6 +519,40 @@ function cassaApp(cfg) {
                 if (q) t += q * item.prezzo;
             }
             return Math.round(t * 100) / 100;
+        },
+
+        /** Differenza vs totale al richiamo: >0 da chiedere, <0 da restituire. */
+        get deltaCorrezione() {
+            if (!this.comandaId || this.totaleOriginale == null) return 0;
+            return Math.round((this.totale - Number(this.totaleOriginale)) * 100) / 100;
+        },
+
+        get deltaCorrezioneLabel() {
+            if (this.deltaCorrezione > 0) return 'Da chiedere';
+            if (this.deltaCorrezione < 0) return 'Da restituire';
+            return 'Differenza';
+        },
+
+        get deltaCorrezioneMessaggio() {
+            const d = this.deltaCorrezione;
+            if (d > 0) return 'Da chiedere ' + this.formatEuro(d);
+            if (d < 0) return 'Da restituire ' + this.formatEuro(Math.abs(d));
+            return 'Nessuna differenza · ' + this.formatEuro(this.totale);
+        },
+
+        get badgeMetodoAnteprima() {
+            if (this.comandaId && this.deltaCorrezione === 0) {
+                if (this.metodo === 'pos') return 'POS (invariato)';
+                if (this.metodo === 'misto') return 'MISTO (invariato)';
+                return 'CONTANTE (invariato)';
+            }
+            if (this.comandaId && this.deltaCorrezione < 0) {
+                return this.metodo === 'pos' ? 'RESTO POS' : 'RESTO CONTANTE';
+            }
+            if (this.comandaId && this.deltaCorrezione > 0) {
+                return this.metodo === 'pos' ? '+ POS' : '+ CONTANTE';
+            }
+            return this.metodo === 'contante' ? 'CONTANTE' : (this.metodo === 'pos' ? 'POS' : 'MISTO');
         },
 
         get coperti() {
@@ -576,6 +661,14 @@ function cassaApp(cfg) {
 
         formatEuro(n) {
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(n || 0);
+        },
+
+        formatDeltaEuro(n) {
+            const v = Number(n) || 0;
+            const abs = this.formatEuro(Math.abs(v));
+            if (v > 0) return '+' + abs;
+            if (v < 0) return '−' + abs;
+            return abs;
         },
 
         stockResiduo(item) {
@@ -719,8 +812,10 @@ function cassaApp(cfg) {
             this.numeroDiSerataRichiamato = null;
             this.comandaVersion = null;
             this.correzioniCount = 0;
+            this.totaleOriginale = null;
             this.motivo = '';
             this.metodo = null;
+            this.metodoOriginale = null;
             this.errore = null;
             this.messaggio = null;
             this.activeId = this.menu[0]?.id ?? null;
@@ -758,8 +853,19 @@ function cassaApp(cfg) {
                     return;
                 }
             }
-            this.metodo = null;
             this.errore = null;
+            // Correzione senza differenza: nessun incasso/resto, solo ristampa.
+            if (this.comandaId && this.deltaCorrezione === 0) {
+                this.metodo = this.metodoOriginale || 'contante';
+                this.modalPagamento = false;
+                this.modalAnteprima = true;
+                this.$nextTick(() => {
+                    this.fitAnteprima();
+                    requestAnimationFrame(() => this.fitAnteprima());
+                });
+                return;
+            }
+            this.metodo = null;
             this.modalPagamento = true;
         },
 
@@ -926,10 +1032,15 @@ function cassaApp(cfg) {
                 this.numeroDiSerataRichiamato = data.numero_di_serata ?? null;
                 this.comandaVersion = data.version ?? 1;
                 this.correzioniCount = data.correzioni_count || 0;
+                this.totaleOriginale = typeof data.totale === 'number'
+                    ? data.totale
+                    : Math.round(Number(data.totale || 0) * 100) / 100;
+                this.metodoOriginale = data.metodo_pagamento || null;
                 this.motivo = '';
                 this.chiudiModal();
                 this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')
                     + 'rif. #' + data.numero
+                    + ' · pagato ' + this.formatEuro(this.totaleOriginale)
                     + (this.correzioniCount ? ' (già corretta ' + this.correzioniCount + '×)' : '');
             } catch (e) {
                 this.errore = e.message;

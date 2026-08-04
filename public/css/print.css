@@ -706,6 +706,7 @@
 }
 .a4-pay--contante { border: 4px double #000; }
 .a4-pay--pos { border: 2px solid #000; }
+.a4-pay--misto { border: 2px dashed #000; }
 .a4-check {
   display: grid;
   grid-template-columns: auto 1fr 12px;
