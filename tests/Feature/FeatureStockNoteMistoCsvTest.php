@@ -62,7 +62,8 @@ it('salva tavolo e note sulla comanda e li espone in richiamo/stampa', function 
         ->assertJson([
             'tavolo' => 'T12',
             'note' => 'Senza ghiaccio',
-        ]);
+        ])
+        ->assertJsonPath('print_url', route('cassa.stampa', $comanda, absolute: false));
 
     $this->get(route('cassa.stampa', $comanda, absolute: false))
         ->assertOk()
