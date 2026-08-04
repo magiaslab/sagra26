@@ -52,6 +52,12 @@ php artisan test
 Vedi [DEPLOY.md](DEPLOY.md) per la copia sul server Ubuntu. Unit systemd e script
 di backup sono in `deploy/`.
 
+## Guida per chi lavora in cassa
+
+Manuale passo-passo (linguaggio non tecnico): [docs/guida-operatore.md](docs/guida-operatore.md).
+
+Collegamenti Chrome kiosk sui notebook: [docs/chrome-kiosk-notebook.md](docs/chrome-kiosk-notebook.md).
+
 ## Note offline
 
 Nessuna dipendenza da CDN/API esterne a runtime: UI con Tailwind via Vite
