@@ -99,7 +99,7 @@ it('il report Griglia rispetta areaStampaEffettiva per categorie miste', functio
         ->and($nomi)->not->toContain('Frittura di Mare')
         ->and($nomi)->toContain('Pesce alla Griglia (Orata)');
 
-    $cucina = $method->invoke($hub, collect([$serata->id]), collect([$serata->id]), $serata, 'cucina');
+    $cucina = $method->invoke($hub, collect([$serata->id]), collect([$serata->id]), $serata, 'cucina_1');
     $nomiCucina = $cucina['categorie']->flatMap(fn ($c) => $c->menuItems->pluck('nome'));
 
     expect($nomiCucina)->toContain('Frittura di Mare')
