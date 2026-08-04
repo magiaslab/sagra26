@@ -100,5 +100,10 @@ it('assegna una voce a cucina_2 e la stampa nel box corretto', function () {
 
     expect($html)->toContain('data-zona="cucina_2"')
         ->and($html)->toContain('Patate Fritte')
-        ->and($html)->toContain('Cucina 2'); // etichetta nel riepilogo cameriere
+        ->and($html)->toContain('data-zona-cameriere="cucina_2"')
+        ->and($html)->toContain('data-zona-cameriere="coperto"')
+        ->and($html)->toContain('>COPERTO</div>');
+
+    // Niente brand sagra nel blocco cameriere (solo ruolo + numero).
+    expect(preg_match('/tag-cameriere[\s\S]*?tag-brand/', $html))->toBe(0);
 });

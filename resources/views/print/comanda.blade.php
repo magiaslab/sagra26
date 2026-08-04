@@ -4,12 +4,20 @@
 
 @section('content')
 @php
-    use App\Models\MenuItem;
-
     $tutte = $righe;
-    $cucina1 = $righe->filter(fn ($r) => ($r['area_stampa'] ?? '') === 'cucina_1');
-    $cucina2 = $righe->filter(fn ($r) => ($r['area_stampa'] ?? '') === 'cucina_2');
-    $griglia = $righe->filter(fn ($r) => ($r['area_stampa'] ?? '') === 'griglia');
+    $zonaDi = function (?string $area): string {
+        return match ($area) {
+            'cucina_1', 'cucina' => 'cucina_1',
+            'cucina_2' => 'cucina_2',
+            'griglia' => 'griglia',
+            default => 'coperto', // cliente e altro → coperto / sala
+        };
+    };
+
+    $cucina1 = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'cucina_1');
+    $cucina2 = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'cucina_2');
+    $griglia = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'griglia');
+    $coperto = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'coperto');
     $haCongelati = $righe->contains(fn ($r) => ! empty($r['congelato']));
     $metodo = $comanda->metodo_pagamento;
     $nome = $impostazioni->intestazione_nome;
@@ -19,6 +27,13 @@
     $numSerata = $numeroDiSerata ?? $comanda->numeroDiSerata();
 
     $zoneProduzione = [
+        ['key' => 'cucina_1', 'label' => 'CUCINA 1', 'righe' => $cucina1],
+        ['key' => 'cucina_2', 'label' => 'CUCINA 2', 'righe' => $cucina2],
+        ['key' => 'griglia', 'label' => 'GRIGLIA', 'righe' => $griglia],
+    ];
+
+    $zoneCameriere = [
+        ['key' => 'coperto', 'label' => 'COPERTO', 'righe' => $coperto],
         ['key' => 'cucina_1', 'label' => 'CUCINA 1', 'righe' => $cucina1],
         ['key' => 'cucina_2', 'label' => 'CUCINA 2', 'righe' => $cucina2],
         ['key' => 'griglia', 'label' => 'GRIGLIA', 'righe' => $griglia],
@@ -112,26 +127,31 @@
             @endforeach
         </div>
 
-        {{-- 3. CAMERIERE: riepilogo totale con zona --}}
+        {{-- 3. CAMERIERE: riepilogo per zone, tavolo in basso --}}
         <section class="tag-cameriere">
-            <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
-            <div class="tag-head">
+            <div class="tag-head tag-head--compact">
                 <span class="tag-role">CAMERIERE</span>
                 <span class="tag-num">n.{{ $num }}</span>
             </div>
-            <div class="campo-mano campo-mano--full campo-mano--top">
-                <span class="campo-mano-lbl">Tavolo</span>
-                <span class="campo-mano-linea"></span>
-            </div>
             <div class="tag-body">
-                @foreach ($tutte as $r)
-                    <div class="tag-line-check tag-line-check--zona">
-                        <span class="tag-qty">{{ $r['quantita'] }}</span>
-                        <span class="dotted">{{ $r['nome'] }}</span>
-                        <span class="tag-zona">{{ MenuItem::etichettaArea($r['area_stampa'] ?? null) }}</span>
-                        <span class="check-box" aria-hidden="true"></span>
+                @foreach ($zoneCameriere as $zona)
+                    <div class="tag-cameriere-zona" data-zona-cameriere="{{ $zona['key'] }}">
+                        <div class="tag-cameriere-zona-lbl">{{ $zona['label'] }}</div>
+                        @forelse ($zona['righe'] as $r)
+                            <div class="tag-line-check">
+                                <span class="tag-qty">{{ $r['quantita'] }}</span>
+                                <span class="dotted">{{ $r['nome'] }}</span>
+                                <span class="check-box" aria-hidden="true"></span>
+                            </div>
+                        @empty
+                            <div class="meta-small">—</div>
+                        @endforelse
                     </div>
                 @endforeach
+            </div>
+            <div class="campo-mano campo-mano--full">
+                <span class="campo-mano-lbl">Tavolo</span>
+                <span class="campo-mano-linea"></span>
             </div>
         </section>
     </div>

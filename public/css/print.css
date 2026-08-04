@@ -111,13 +111,37 @@
 }
 
 .tag-cameriere {
-  padding: 2.5mm 2.8mm;
+  padding: 2mm 2.5mm;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  font-size: 10.5px;
+  font-size: 10px;
 }
+
+.tag-head--compact {
+  margin: 0 0 1.2mm;
+  padding-bottom: 0.6mm;
+}
+
+.tag-cameriere-zona {
+  margin-bottom: 1.2mm;
+}
+.tag-cameriere-zona:last-child { margin-bottom: 0; }
+
+.tag-cameriere-zona-lbl {
+  font-size: 0.78em;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  margin: 0 0 0.5mm;
+  padding-bottom: 0.3mm;
+}
+
+.tag-cameriere .tag-line-check { margin: 0.4mm 0; }
+.tag-cameriere .tag-qty { font-size: 1.2em; }
+.tag-cameriere .campo-mano { margin-top: 1.5mm; }
 
 .tag-brand {
   font-weight: 800;
@@ -535,8 +559,26 @@
   flex-direction: column;
   min-height: 0;
   overflow: hidden;
-  font-size: 10px;
+  font-size: 9.5px;
+  padding: 2mm 2.2mm;
 }
+.a4-head--compact {
+  margin: 0 0 1mm;
+  padding-bottom: 0.5mm;
+}
+.a4-cameriere-zona { margin-bottom: 1mm; }
+.a4-cameriere-zona-lbl {
+  font-size: 0.75em;
+  font-weight: 900;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #000;
+  margin-bottom: 0.4mm;
+  padding-bottom: 0.25mm;
+}
+.a4-cameriere .a4-check { padding: .3mm 0; }
+.a4-cameriere .a4-qty { font-size: 1.15em; }
+.a4-cameriere .a4-mano { margin-top: auto; padding-top: 1mm; }
 .a4-brand { font-weight: 700; font-size: 11px; }
 .a4-sub { font-size: 8px; color: #555; margin: 0.5mm 0 1mm; }
 .a4-role { font-weight: 800; letter-spacing: .04em; }

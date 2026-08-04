@@ -264,20 +264,24 @@
                                 </template>
                             </div>
                             <section class="a4-tag a4-cameriere">
-                                <div class="a4-brand" x-text="brand"></div>
-                                <div class="a4-head">
+                                <div class="a4-head a4-head--compact">
                                     <span class="a4-role">CAMERIERE</span>
                                     <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
                                 </div>
-                                <div class="a4-mano a4-mano--top"><span>Tavolo</span><span class="a4-linea"></span></div>
-                                <template x-for="r in righeOrdine" :key="'w-'+r.id">
-                                    <div class="a4-check a4-check--zona">
-                                        <span class="a4-qty" x-text="r.q"></span>
-                                        <span class="a4-dotted" x-text="r.nome"></span>
-                                        <span class="a4-zona" x-text="etichettaArea(r.area_stampa)"></span>
-                                        <span class="a4-box"></span>
+                                <template x-for="zona in zoneCameriere" :key="'cam-'+zona.key">
+                                    <div class="a4-cameriere-zona">
+                                        <div class="a4-cameriere-zona-lbl" x-text="zona.label"></div>
+                                        <template x-for="r in zona.righe" :key="'w-'+zona.key+'-'+r.id">
+                                            <div class="a4-check">
+                                                <span class="a4-qty" x-text="r.q"></span>
+                                                <span class="a4-dotted" x-text="r.nome"></span>
+                                                <span class="a4-box"></span>
+                                            </div>
+                                        </template>
+                                        <div class="a4-empty" x-show="zona.righe.length === 0">—</div>
                                     </div>
                                 </template>
+                                <div class="a4-mano"><span>Tavolo</span><span class="a4-linea"></span></div>
                             </section>
                         </div>
                     </div>
@@ -473,6 +477,13 @@ function cassaApp(cfg) {
             return this.righeOrdine.filter(r => r.area_stampa === 'griglia');
         },
 
+        get righeCoperto() {
+            return this.righeOrdine.filter(r => {
+                const a = r.area_stampa;
+                return a !== 'cucina_1' && a !== 'cucina' && a !== 'cucina_2' && a !== 'griglia';
+            });
+        },
+
         get zoneProduzione() {
             return [
                 { key: 'cucina_1', label: 'CUCINA 1', righe: this.righeCucina1 },
@@ -481,12 +492,13 @@ function cassaApp(cfg) {
             ];
         },
 
-        etichettaArea(area) {
-            if (area === 'cucina_1' || area === 'cucina') return 'Cucina 1';
-            if (area === 'cucina_2') return 'Cucina 2';
-            if (area === 'griglia') return 'Griglia';
-            if (area === 'cliente') return 'Cliente';
-            return area || '';
+        get zoneCameriere() {
+            return [
+                { key: 'coperto', label: 'COPERTO', righe: this.righeCoperto },
+                { key: 'cucina_1', label: 'CUCINA 1', righe: this.righeCucina1 },
+                { key: 'cucina_2', label: 'CUCINA 2', righe: this.righeCucina2 },
+                { key: 'griglia', label: 'GRIGLIA', righe: this.righeGriglia },
+            ];
         },
 
         get flatIds() {
