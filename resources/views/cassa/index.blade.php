@@ -23,6 +23,7 @@
         copertiTotali: {{ (int) $copertiTotali }},
         brand: @js(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? '')),
         sottotitolo: @js($impostazioni->intestazione_sottotitolo ?? ''),
+        comunicazioneComanda: @js($impostazioni->comunicazione_comanda ?? ''),
         csrf: '{{ csrf_token() }}',
         urls: {
             conferma: '{{ route('cassa.conferma', absolute: false) }}',
@@ -268,60 +269,52 @@
                                     <span class="a4-importo" x-text="formatEuro(r.importo).replace(/\s/g,'')"></span>
                                 </div>
                             </template>
+                            @if (filled($impostazioni->comunicazione_comanda))
+                                <div class="a4-comunicazione" x-text="comunicazioneComanda"></div>
+                            @endif
                             <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
                             <div class="a4-pay" :class="metodo === 'contante' ? 'a4-pay--contante' : 'a4-pay--pos'"
                                  x-text="metodo === 'contante' ? '€ CONTANTE' : '▭ POS'"></div>
                         </section>
                         <div class="a4-right">
-                            <div class="a4-top">
-                                <section class="a4-tag a4-cucina">
-                                    <div class="a4-brand" x-text="brand"></div>
-                                    <div class="a4-head">
-                                        <span class="a4-role">CUCINA</span>
-                                        <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
-                                    </div>
-                                    <template x-for="r in righeCucina" :key="'k-'+r.id">
-                                        <div class="a4-check">
-                                            <span class="a4-qty" x-text="r.q"></span>
-                                            <span class="a4-dotted" x-text="r.nome"></span>
-                                            <span class="a4-box"></span>
+                            <div class="a4-produzione">
+                                <template x-for="zona in zoneProduzione" :key="zona.key">
+                                    <section class="a4-box-zona">
+                                        <div class="a4-box-head">
+                                            <span class="a4-role" x-text="zona.label"></span>
+                                            <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
                                         </div>
-                                    </template>
-                                    <div class="a4-empty" x-show="righeCucina.length === 0">—</div>
-                                    <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
-                                </section>
-                                <section class="a4-tag a4-cameriere">
-                                    <div class="a4-brand" x-text="brand"></div>
-                                    <div class="a4-head">
-                                        <span class="a4-role">CAMERIERE</span>
-                                        <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
-                                    </div>
-                                    <div class="a4-mano a4-mano--top"><span>Tavolo</span><span class="a4-linea"></span></div>
-                                    <template x-for="r in righeOrdine" :key="'w-'+r.id">
-                                        <div class="a4-check">
-                                            <span class="a4-qty" x-text="r.q"></span>
-                                            <span class="a4-dotted" x-text="r.nome"></span>
-                                            <span class="a4-box"></span>
-                                        </div>
-                                    </template>
-                                </section>
+                                        <template x-for="r in zona.righe" :key="zona.key + '-' + r.id">
+                                            <div class="a4-check">
+                                                <span class="a4-qty" x-text="r.q"></span>
+                                                <span class="a4-dotted" x-text="r.nome"></span>
+                                                <span class="a4-box"></span>
+                                            </div>
+                                        </template>
+                                        <div class="a4-empty" x-show="zona.righe.length === 0">— nessuna voce —</div>
+                                        <div class="a4-mano"><span>Cameriere</span><span class="a4-linea"></span></div>
+                                    </section>
+                                </template>
                             </div>
-                            <section class="a4-tag a4-griglia">
-                                <div class="a4-griglia-head">
-                                    <div>
-                                        <div class="a4-brand" x-text="brand"></div>
-                                        <div class="a4-role">GRIGLIA</div>
-                                    </div>
-                                    <div class="a4-mano a4-mano--inline"><span>Cameriere</span><span class="a4-linea"></span></div>
+                            <section class="a4-tag a4-cameriere">
+                                <div class="a4-head a4-head--compact">
+                                    <span class="a4-role">CAMERIERE</span>
                                     <span class="a4-num" x-text="'n.' + numeroDisplay"></span>
                                 </div>
-                                <template x-for="r in righeGriglia" :key="'g-'+r.id">
-                                    <div class="a4-line-griglia">
-                                        <span class="a4-qty" x-text="r.q"></span>
-                                        <span x-text="r.nome"></span>
+                                <template x-for="zona in zoneCameriere" :key="'cam-'+zona.key">
+                                    <div class="a4-cameriere-zona">
+                                        <div class="a4-cameriere-zona-lbl" x-text="zona.label"></div>
+                                        <template x-for="r in zona.righe" :key="'w-'+zona.key+'-'+r.id">
+                                            <div class="a4-check">
+                                                <span class="a4-qty" x-text="r.q"></span>
+                                                <span class="a4-dotted" x-text="r.nome"></span>
+                                                <span class="a4-box"></span>
+                                            </div>
+                                        </template>
+                                        <div class="a4-empty" x-show="zona.righe.length === 0">—</div>
                                     </div>
                                 </template>
-                                <div class="a4-empty" x-show="righeGriglia.length === 0">—</div>
+                                <div class="a4-mano"><span>Tavolo</span><span class="a4-linea"></span></div>
                             </section>
                         </div>
                     </div>
@@ -435,6 +428,7 @@ function cassaApp(cfg) {
         copertiTotali: cfg.copertiTotali || 0,
         brand: cfg.brand,
         sottotitolo: cfg.sottotitolo || '',
+        comunicazioneComanda: cfg.comunicazioneComanda || '',
         csrf: cfg.csrf,
         urls: cfg.urls,
         modalPagamento: false,
@@ -505,12 +499,40 @@ function cassaApp(cfg) {
                 }));
         },
 
-        get righeCucina() {
-            return this.righeOrdine.filter(r => r.area_stampa === 'cucina');
+        get righeCucina1() {
+            return this.righeOrdine.filter(r => r.area_stampa === 'cucina_1' || r.area_stampa === 'cucina');
+        },
+
+        get righeCucina2() {
+            return this.righeOrdine.filter(r => r.area_stampa === 'cucina_2');
         },
 
         get righeGriglia() {
             return this.righeOrdine.filter(r => r.area_stampa === 'griglia');
+        },
+
+        get righeCoperto() {
+            return this.righeOrdine.filter(r => {
+                const a = r.area_stampa;
+                return a !== 'cucina_1' && a !== 'cucina' && a !== 'cucina_2' && a !== 'griglia';
+            });
+        },
+
+        get zoneProduzione() {
+            return [
+                { key: 'cucina_1', label: 'CUCINA 1', righe: this.righeCucina1 },
+                { key: 'cucina_2', label: 'CUCINA 2', righe: this.righeCucina2 },
+                { key: 'griglia', label: 'GRIGLIA', righe: this.righeGriglia },
+            ];
+        },
+
+        get zoneCameriere() {
+            return [
+                { key: 'coperto', label: 'COPERTO', righe: this.righeCoperto },
+                { key: 'cucina_1', label: 'CUCINA 1', righe: this.righeCucina1 },
+                { key: 'cucina_2', label: 'CUCINA 2', righe: this.righeCucina2 },
+                { key: 'griglia', label: 'GRIGLIA', righe: this.righeGriglia },
+            ];
         },
 
         get flatIds() {

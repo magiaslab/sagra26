@@ -18,7 +18,7 @@ use Livewire\Component;
 
 class ReportHub extends Component
 {
-    public string $tipo = 'cucina';
+    public string $tipo = 'cucina_1';
 
     public ?int $serataId = null;
 
@@ -47,7 +47,8 @@ class ReportHub extends Component
             $idsStasera = collect([$serata->id]);
 
             $dati = match ($this->tipo) {
-                'cucina' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina'),
+                'cucina_1' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina_1'),
+                'cucina_2' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina_2'),
                 'griglia' => $this->datiReparto($idsStasera, $idsFino, $serata, 'griglia'),
                 'bevande' => $this->datiBevande($idsStasera, $idsFino),
                 'statistiche' => $this->datiStatistiche($serateFino),

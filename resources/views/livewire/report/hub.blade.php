@@ -11,7 +11,8 @@
             <div class="mb-3">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Tipo</label>
                 <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="tipo">
-                    <option value="cucina">Cucina</option>
+                    <option value="cucina_1">Cucina 1</option>
+                    <option value="cucina_2">Cucina 2</option>
                     <option value="griglia">Griglia</option>
                     <option value="bevande">Bevande</option>
                     <option value="statistiche">Statistiche</option>
@@ -43,7 +44,7 @@
 
     @if (!$serata)
         <x-ui.alert type="warn">Nessuna serata selezionata.</x-ui.alert>
-    @elseif ($tipo === 'cucina' || $tipo === 'griglia')
+    @elseif (in_array($tipo, ['cucina_1', 'cucina_2', 'griglia'], true))
         @include('livewire.report.partials.reparto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
     @elseif ($tipo === 'bevande')
         @include('livewire.report.partials.bevande', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])

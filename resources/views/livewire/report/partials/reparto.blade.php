@@ -2,7 +2,7 @@
     <div class="flex flex-wrap items-baseline justify-between gap-2">
         <div>
             <h2 class="m-0 text-xl font-semibold text-sagra-ink">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</h2>
-            <div class="text-xs text-sagra-muted">Report {{ strtoupper($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
+            <div class="text-xs text-sagra-muted">Report {{ \App\Models\MenuItem::etichettaArea($dati['area']) }} — {{ $serata->data->format('d/m/Y') }}</div>
         </div>
         <div class="flex flex-wrap gap-2">
             <span class="text-xs font-medium text-sagra-muted">Coperti stasera {{ $dati['copertiStasera'] }}</span>

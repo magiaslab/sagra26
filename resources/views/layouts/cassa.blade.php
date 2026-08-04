@@ -7,7 +7,7 @@
     <title>@yield('title', 'Cassa') — {{ $impostazioni->intestazione_nome ?? 'Cassa' }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     {{-- Anteprima A4 in modale: regole mm (non Tailwind) --}}
-    <link rel="stylesheet" href="/css/print.css">
+    <link rel="stylesheet" href="/css/print.css?v={{ @filemtime(public_path('css/print.css')) ?: time() }}">
     @livewireStyles
     @stack('head')
 </head>
