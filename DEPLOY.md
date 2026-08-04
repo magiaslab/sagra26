@@ -71,8 +71,13 @@ I file finiscono in `storage/backups/`.
 
 ## 6. Postazioni cassa
 
-Sui notebook Windows apri Chrome su `http://<server>:8000/cassa`, seleziona la
-postazione (Cassa A / Cassa B) e usa la stampa su fogli A4 orizzontali.
+Sui notebook Windows apri Chrome in modalità kiosk sulla cassa.
+Guida completa (scorciatoie `.bat` / `.lnk`, due postazioni, flag):
+
+→ [docs/chrome-kiosk-notebook.md](docs/chrome-kiosk-notebook.md)
+
+In sintesi: `http://<server>:8000/cassa`, seleziona la postazione
+(Cassa A / Cassa B) e stampa su fogli A4 orizzontali.
 
 ## 7. PIN gestione e recupero
 
