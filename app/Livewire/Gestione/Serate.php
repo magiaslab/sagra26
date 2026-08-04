@@ -92,11 +92,37 @@ class Serate extends Component
         $this->puntiCassaMancanti = [];
     }
 
+    public function riapri(int $serataId, SerataService $service): void
+    {
+        $this->errore = null;
+        try {
+            $serata = Serata::query()->findOrFail($serataId);
+            $service->riapri($serata);
+            session()->flash('status', 'Serata riaperta.');
+            $this->redirect(route('gestione.serate', absolute: false), navigate: true);
+        } catch (\Throwable $e) {
+            $this->errore = $e->getMessage();
+        }
+    }
+
+    public function elimina(int $serataId, SerataService $service): void
+    {
+        $this->errore = null;
+        try {
+            $serata = Serata::query()->findOrFail($serataId);
+            $service->elimina($serata);
+            session()->flash('status', 'Serata eliminata.');
+            $this->redirect(route('gestione.serate', absolute: false), navigate: true);
+        } catch (\Throwable $e) {
+            $this->errore = $e->getMessage();
+        }
+    }
+
     private function eseguiChiusura(SerataService $service, Serata $serata): void
     {
         $service->chiudi($serata);
         $this->puntiCassaMancanti = [];
-        session()->flash('status', 'Serata chiusa.');
+        session()->flash('status', 'Serata chiusa. I report restano stampabili; per correggere errori riapri la serata.');
     }
 
     /**

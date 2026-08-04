@@ -8,6 +8,9 @@
                 <h2 class="m-0 text-xl font-semibold text-sagra-ink">Consegna incassi</h2>
                 <div class="text-sm text-sagra-ink">{{ $impostazioni->intestazione_nome }} {{ $impostazioni->intestazione_anno }}</div>
                 <div class="text-sm text-sagra-muted">{{ $dati['punto']->nome }}</div>
+                @if (! $serata->isAperta())
+                    <div class="mt-1 text-xs font-medium text-sagra-amber">Serata chiusa — foglio in sola lettura (ristampa ok). Per correzioni: Riapri serata.</div>
+                @endif
             </div>
             <div class="text-lg font-semibold text-sagra-ink">
                 {{ $serata->data->format('d/m/Y') }}

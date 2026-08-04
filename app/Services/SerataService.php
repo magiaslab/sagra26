@@ -67,9 +67,52 @@ class SerataService
 
     public function chiudi(Serata $serata): Serata
     {
+        if (! $serata->isAperta()) {
+            throw new RuntimeException('La serata non è aperta.');
+        }
+
         $serata->stato = 'chiusa';
         $serata->save();
 
         return $serata;
+    }
+
+    /**
+     * Riapre una serata chiusa (per correzioni / ristampa).
+     * Bloccata se ne esiste già un'altra aperta.
+     */
+    public function riapri(Serata $serata): Serata
+    {
+        if ($serata->isAperta()) {
+            throw new RuntimeException('La serata è già aperta.');
+        }
+
+        if (Serata::corrente()) {
+            throw new RuntimeException('Esiste già una serata aperta: chiudila prima di riaprirne un\'altra.');
+        }
+
+        $serata->stato = 'aperta';
+        $serata->save();
+
+        return $serata;
+    }
+
+    /**
+     * Elimina una serata e tutti i dati collegati (comande, stock, chiusure).
+     * Consentita solo se chiusa (o se non è l'unica aperta senza comande — qui: solo chiuse).
+     */
+    public function elimina(Serata $serata): void
+    {
+        if ($serata->isAperta()) {
+            throw new RuntimeException('Chiudi la serata prima di eliminarla.');
+        }
+
+        DB::transaction(function () use ($serata) {
+            // comanda_righe / correzioni: cascadeOnDelete su comande
+            $serata->comande()->delete();
+            $serata->stocks()->delete();
+            $serata->chiusure()->delete();
+            $serata->delete();
+        });
     }
 }

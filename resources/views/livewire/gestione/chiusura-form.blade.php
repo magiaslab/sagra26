@@ -8,6 +8,18 @@
         </x-slot:actions>
     </x-gestione.page-header>
 
+    @if ($errore)
+        <x-ui.alert type="danger">{{ $errore }}</x-ui.alert>
+    @endif
+
+    @if ($bloccata)
+        <x-ui.alert type="warn" class="mb-4">
+            Serata chiusa: i dati del foglio consegna contanti sono in sola lettura.
+            Per correggere errori vai in <a class="font-semibold underline" href="{{ route('gestione.serate', absolute: false) }}">Gestione → Serate</a> e usa <strong>Riapri</strong>.
+            I report restano stampabili.
+        </x-ui.alert>
+    @endif
+
     <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
         <div class="mb-3">
             <label class="mb-1 block text-sm font-medium text-sagra-ink">Serata</label>
@@ -27,38 +39,38 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
+    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2" @if ($bloccata) aria-disabled="true" @endif>
+        <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80 {{ $bloccata ? 'opacity-75' : '' }}">
             <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Conta pezzi</h2>
             <div class="mb-3">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Fondo iniziale</label>
-                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="fondo_iniziale">
+                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="fondo_iniziale" @disabled($bloccata)>
             </div>
             <div class="grid grid-cols-2 gap-2">
                 @foreach ($tagli as $campo => $valore)
                     <div class="mb-3">
                         <label class="mb-1 block text-sm font-medium text-sagra-ink">{{ number_format($valore, $valore < 1 ? 2 : 0, ',', '.') }} €</label>
-                        <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" min="0" wire:model.live="pezzi.{{ $campo }}">
+                        <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" min="0" wire:model.live="pezzi.{{ $campo }}" @disabled($bloccata)>
                     </div>
                 @endforeach
             </div>
             <div class="mb-3 mt-4">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Fondo trattenuto</label>
-                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="fondo_trattenuto">
+                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="fondo_trattenuto" @disabled($bloccata)>
             </div>
             <div class="mb-3">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Totale POS (da terminale)</label>
-                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="totale_pos">
+                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="totale_pos" @disabled($bloccata)>
             </div>
             <div class="mb-3">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Totale Z (registratore)</label>
-                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="totale_z">
+                <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" wire:model.live="totale_z" @disabled($bloccata)>
             </div>
             <div class="mb-3">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Note</label>
-                <textarea class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model="note" rows="2"></textarea>
+                <textarea class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model="note" rows="2" @disabled($bloccata)></textarea>
             </div>
-            <button class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" wire:click="salva">Salva chiusura</button>
+            <button class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50" wire:click="salva" @disabled($bloccata)>Salva chiusura</button>
         </div>
 
         <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
