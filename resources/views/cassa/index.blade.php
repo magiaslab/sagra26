@@ -314,6 +314,13 @@
                                 </div>
                             </template>
                             <div class="a4-corr-riepilogo" x-show="comandaId" x-cloak>
+                                <template x-for="m in movimentiCorrezione" :key="'mov-'+m.id">
+                                    <div class="a4-corr-movimento">
+                                        <span x-text="(m.delta_q > 0 ? '+' + m.delta_q : String(m.delta_q)) + ' ' + m.nome"></span>
+                                        <span class="a4-corr-movimento-euro"
+                                              x-text="(m.delta_euro > 0 ? '+' : '−') + formatEuro(Math.abs(m.delta_euro)).replace(/\s/g,'')"></span>
+                                    </div>
+                                </template>
                                 <span x-text="deltaCorrezioneMessaggio"></span>
                                 <span class="a4-corr-riepilogo-sub"
                                       x-text="'prima ' + formatEuro(totaleOriginale) + ' → ora ' + formatEuro(totale)"></span>
@@ -580,6 +587,16 @@ function cassaApp(cfg) {
                 return this.metodo === 'pos' ? '+ POS' : '+ CONTANTE';
             }
             return this.metodo === 'contante' ? 'CONTANTE' : (this.metodo === 'pos' ? 'POS' : 'MISTO');
+        },
+
+        get movimentiCorrezione() {
+            if (!this.comandaId) return [];
+            return this.vociAnteprima
+                .filter(v => v.stato !== 'invariata' && v.stato !== 'normale')
+                .map(v => ({
+                    ...v,
+                    delta_euro: Math.round(v.delta_q * v.prezzo * 100) / 100,
+                }));
         },
 
         get coperti() {
