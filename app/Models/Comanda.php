@@ -117,4 +117,133 @@ class Comanda extends Model
             default => 0.0,
         };
     }
+
+    /**
+     * Diff rispetto all’ultima correzione: voci invariate / aggiunte / tolte.
+     * Usato in stampa per non far rifare tutta la comanda in cucina.
+     *
+     * @return array{
+     *     count: int,
+     *     motivo: ?string,
+     *     totale_precedente: float,
+     *     totale_attuale: float,
+     *     delta_importo: float,
+     *     voci: list<array{
+     *         menu_item_id: int,
+     *         nome: string,
+     *         quantita: int,
+     *         stato: 'invariata'|'aggiunta'|'tolta'|'aumentata'|'ridotta',
+     *         delta_q: int,
+     *         prezzo_unitario: float,
+     *         area_stampa: ?string,
+     *         congelato: bool
+     *     }>
+     * }|null
+     */
+    public function diffUltimaCorrezione(): ?array
+    {
+        if (! $this->relationLoaded('correzioni')) {
+            $this->load('correzioni');
+        }
+
+        $ultima = $this->correzioni->sortByDesc('id')->first();
+        if (! $ultima) {
+            return null;
+        }
+
+        if (! $this->relationLoaded('righe')) {
+            $this->load('righe.menuItem');
+        } elseif ($this->righe->isNotEmpty() && ! $this->righe->first()->relationLoaded('menuItem')) {
+            $this->load('righe.menuItem');
+        }
+
+        $prec = [];
+        $nomiPrec = [];
+        $prezziPrec = [];
+        foreach ($ultima->righe_precedenti ?? [] as $r) {
+            $id = (int) ($r['menu_item_id'] ?? 0);
+            if ($id <= 0) {
+                continue;
+            }
+            $prec[$id] = (int) ($r['quantita'] ?? 0);
+            $nomiPrec[$id] = (string) ($r['nome'] ?? '');
+            $prezziPrec[$id] = (float) ($r['prezzo_unitario'] ?? 0);
+        }
+
+        $att = [];
+        foreach ($this->righe as $riga) {
+            $att[(int) $riga->menu_item_id] = [
+                'quantita' => (int) $riga->quantita,
+                'nome' => $riga->menuItem->nome,
+                'prezzo_unitario' => (float) $riga->prezzo_unitario,
+                'area_stampa' => $riga->menuItem->areaStampaEffettiva(),
+                'congelato' => (bool) $riga->menuItem->congelato,
+            ];
+        }
+
+        $ids = array_values(array_unique(array_merge(array_keys($prec), array_keys($att))));
+        sort($ids);
+
+        // Area stampa per voci solo tolte (non più nelle righe attuali).
+        $areeMancanti = [];
+        $congelatiMancanti = [];
+        $idsSoloTolti = array_values(array_filter(
+            $ids,
+            fn (int $id) => ! isset($att[$id]) && ($prec[$id] ?? 0) > 0,
+        ));
+        if ($idsSoloTolti !== []) {
+            MenuItem::query()->whereIn('id', $idsSoloTolti)->get()
+                ->each(function (MenuItem $item) use (&$areeMancanti, &$congelatiMancanti) {
+                    $areeMancanti[$item->id] = $item->areaStampaEffettiva();
+                    $congelatiMancanti[$item->id] = (bool) $item->congelato;
+                });
+        }
+
+        $voci = [];
+        foreach ($ids as $id) {
+            $qPrec = $prec[$id] ?? 0;
+            $qAtt = $att[$id]['quantita'] ?? 0;
+            $deltaQ = $qAtt - $qPrec;
+
+            if ($qPrec > 0 && $qAtt === 0) {
+                $stato = 'tolta';
+                $quantita = $qPrec;
+            } elseif ($qPrec === 0 && $qAtt > 0) {
+                $stato = 'aggiunta';
+                $quantita = $qAtt;
+            } elseif ($deltaQ > 0) {
+                $stato = 'aumentata';
+                $quantita = $qAtt;
+            } elseif ($deltaQ < 0) {
+                $stato = 'ridotta';
+                $quantita = $qAtt;
+            } else {
+                $stato = 'invariata';
+                $quantita = $qAtt;
+            }
+
+            $voci[] = [
+                'menu_item_id' => $id,
+                'nome' => $att[$id]['nome'] ?? ($nomiPrec[$id] ?: ('#'.$id)),
+                'quantita' => $quantita,
+                'stato' => $stato,
+                'delta_q' => $deltaQ,
+                'prezzo_unitario' => $att[$id]['prezzo_unitario'] ?? ($prezziPrec[$id] ?? 0.0),
+                'area_stampa' => $att[$id]['area_stampa'] ?? ($areeMancanti[$id] ?? null),
+                'congelato' => $att[$id]['congelato'] ?? ($congelatiMancanti[$id] ?? false),
+            ];
+        }
+
+        $totalePrec = (float) $ultima->totale_precedente;
+        $totaleAtt = (float) $this->totale;
+
+        return [
+            'count' => $this->correzioni->count(),
+            'motivo' => $ultima->motivo,
+            'totale_precedente' => $totalePrec,
+            'totale_attuale' => $totaleAtt,
+            'delta_importo' => round($totaleAtt - $totalePrec, 2),
+            'voci' => $voci,
+        ];
+    }
 }

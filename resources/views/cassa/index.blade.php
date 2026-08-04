@@ -295,20 +295,29 @@
                                 <span class="a4-num" x-text="'Comanda ' + numeroDiSerataDisplay + ' di stasera'"></span>
                             </div>
                             <div class="a4-meta" x-text="'rif. #' + numeroDisplay"></div>
+                            <div class="a4-corr-banner" x-show="comandaId" x-cloak>CORREZIONE — già in corso · non è una comanda nuova</div>
                             <div class="a4-line a4-line-head">
                                 <span>Q.tà</span>
                                 <span>Piatto</span>
                                 <span class="a4-importo">Prezzo</span>
                                 <span class="a4-importo">Totale</span>
                             </div>
-                            <template x-for="r in righeOrdine" :key="'c-'+r.id">
-                                <div class="a4-line">
-                                    <strong x-text="r.q"></strong>
-                                    <span x-text="r.nome"></span>
+                            <template x-for="r in vociAnteprima" :key="'c-'+r.id+'-'+r.stato">
+                                <div class="a4-line" :class="classeVoceAnteprima(r.stato)">
+                                    <strong x-text="r.qShow"></strong>
+                                    <span>
+                                        <span x-text="r.nome"></span>
+                                        <em class="a4-voce-lbl" x-show="r.label" x-text="r.label"></em>
+                                    </span>
                                     <span class="a4-importo" x-text="formatEuro(r.prezzo).replace(/\s/g,'')"></span>
                                     <span class="a4-importo" x-text="formatEuro(r.importo).replace(/\s/g,'')"></span>
                                 </div>
                             </template>
+                            <div class="a4-corr-riepilogo" x-show="comandaId" x-cloak>
+                                <span x-text="deltaCorrezioneMessaggio"></span>
+                                <span class="a4-corr-riepilogo-sub"
+                                      x-text="'prima ' + formatEuro(totaleOriginale) + ' → ora ' + formatEuro(totale)"></span>
+                            </div>
                             @if (filled($impostazioni->comunicazione_comanda))
                                 <div class="a4-comunicazione" x-text="comunicazioneComanda"></div>
                             @endif
@@ -321,14 +330,18 @@
                             <template x-for="zona in zoneProduzione" :key="zona.key">
                                 <section class="a4-box-zona">
                                     <div class="a4-box-head">
-                                        <span class="a4-role" x-text="zona.label"></span>
+                                        <span class="a4-role" x-text="zona.label + (comandaId ? ' · CORR.' : '')"></span>
                                         <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
                                     </div>
-                                    <template x-for="r in zona.righe" :key="zona.key + '-' + r.id">
-                                        <div class="a4-check">
-                                            <span class="a4-qty" x-text="r.q"></span>
-                                            <span class="a4-dotted" x-text="r.nome"></span>
-                                            <span class="a4-box"></span>
+                                    <div class="a4-corr-hint" x-show="comandaId" x-cloak>Barrato = già in corso · in evidenza = modifica</div>
+                                    <template x-for="r in zona.righe" :key="zona.key + '-' + r.id + '-' + r.stato">
+                                        <div class="a4-check" :class="classeVoceAnteprima(r.stato)">
+                                            <span class="a4-qty" x-text="qtyShowProduzione(r)"></span>
+                                            <span class="a4-dotted">
+                                                <span x-text="r.nome"></span>
+                                                <em class="a4-voce-lbl" x-show="r.label" x-text="r.label"></em>
+                                            </span>
+                                            <span class="a4-box" :class="(r.stato === 'invariata' || r.stato === 'tolta') ? 'a4-box--muted' : ''"></span>
                                         </div>
                                     </template>
                                     <div class="a4-empty" x-show="zona.righe.length === 0">— nessuna voce —</div>
@@ -338,17 +351,21 @@
                         </div>
                         <section class="a4-tag a4-cameriere">
                             <div class="a4-head a4-head--compact">
-                                <span class="a4-role">CAMERIERE</span>
+                                <span class="a4-role" x-text="'CAMERIERE' + (comandaId ? ' · CORR.' : '')"></span>
                                 <span class="a4-num" x-text="'comanda num. #' + numeroDisplay"></span>
                             </div>
+                            <div class="a4-corr-hint" x-show="comandaId" x-cloak>Barrato = già in corso · in evidenza = modifica</div>
                             <template x-for="zona in zoneCameriere" :key="'cam-'+zona.key">
                                 <div class="a4-cameriere-zona">
                                     <div class="a4-cameriere-zona-lbl" x-text="zona.label"></div>
-                                    <template x-for="r in zona.righe" :key="'w-'+zona.key+'-'+r.id">
-                                        <div class="a4-check">
-                                            <span class="a4-qty" x-text="r.q"></span>
-                                            <span class="a4-dotted" x-text="r.nome"></span>
-                                            <span class="a4-box"></span>
+                                    <template x-for="r in zona.righe" :key="'w-'+zona.key+'-'+r.id+'-'+r.stato">
+                                        <div class="a4-check" :class="classeVoceAnteprima(r.stato)">
+                                            <span class="a4-qty" x-text="qtyShowProduzione(r)"></span>
+                                            <span class="a4-dotted">
+                                                <span x-text="r.nome"></span>
+                                                <em class="a4-voce-lbl" x-show="r.label" x-text="r.label"></em>
+                                            </span>
+                                            <span class="a4-box" :class="(r.stato === 'invariata' || r.stato === 'tolta') ? 'a4-box--muted' : ''"></span>
                                         </div>
                                     </template>
                                     <div class="a4-empty" x-show="zona.righe.length === 0">—</div>
@@ -485,6 +502,7 @@ function cassaApp(cfg) {
         comandaVersion: null,
         correzioniCount: 0,
         totaleOriginale: null,
+        qtyOriginali: {},
         motivo: '',
         richiamoNumero: '',
         storico: [],
@@ -574,23 +592,88 @@ function cassaApp(cfg) {
                 }));
         },
 
+        /** Voci per anteprima: in correzione include tolte + stato (barrate / evidenziate). */
+        get vociAnteprima() {
+            if (!this.comandaId) {
+                return this.righeOrdine.map(r => ({
+                    ...r,
+                    stato: 'normale',
+                    delta_q: 0,
+                    label: '',
+                    qShow: r.q,
+                }));
+            }
+            const prec = this.qtyOriginali || {};
+            const ids = new Set([
+                ...Object.keys(prec).map(Number),
+                ...Object.keys(this.qty).map(Number),
+            ]);
+            const voci = [];
+            for (const id of [...ids].sort((a, b) => a - b)) {
+                const item = this.menu.find(i => i.id === id);
+                if (!item) continue;
+                const qPrec = Number(prec[id] || 0);
+                const qAtt = Number(this.qty[id] || 0);
+                if (qPrec <= 0 && qAtt <= 0) continue;
+                const delta = qAtt - qPrec;
+                let stato = 'invariata';
+                let qShow = qAtt;
+                let label = 'già ok';
+                if (qPrec > 0 && qAtt === 0) {
+                    stato = 'tolta';
+                    qShow = qPrec;
+                    label = 'TOLTA';
+                } else if (qPrec === 0 && qAtt > 0) {
+                    stato = 'aggiunta';
+                    qShow = qAtt;
+                    label = 'AGGIUNTA';
+                } else if (delta > 0) {
+                    stato = 'aumentata';
+                    qShow = qAtt;
+                    label = 'ora ' + qAtt;
+                } else if (delta < 0) {
+                    stato = 'ridotta';
+                    qShow = qAtt;
+                    label = 'ora ' + qAtt;
+                }
+                voci.push({
+                    id,
+                    nome: item.nome,
+                    q: qAtt,
+                    qShow,
+                    qPrec,
+                    prezzo: item.prezzo,
+                    importo: Math.round(qShow * item.prezzo * 100) / 100,
+                    area_stampa: item.area_stampa,
+                    stato,
+                    delta_q: delta,
+                    label,
+                });
+            }
+            return voci;
+        },
+
+        zonaDiAnteprima(area) {
+            if (area === 'cucina_1' || area === 'cucina') return 'cucina_1';
+            if (area === 'cucina_2') return 'cucina_2';
+            if (area === 'griglia') return 'griglia';
+            return 'coperto';
+        },
+
         get righeCucina1() {
-            return this.righeOrdine.filter(r => r.area_stampa === 'cucina_1' || r.area_stampa === 'cucina');
+            return this.vociAnteprima.filter(r => this.zonaDiAnteprima(r.area_stampa) === 'cucina_1');
         },
 
         get righeCucina2() {
-            return this.righeOrdine.filter(r => r.area_stampa === 'cucina_2');
+            return this.vociAnteprima.filter(r => this.zonaDiAnteprima(r.area_stampa) === 'cucina_2');
         },
 
         get righeGriglia() {
-            return this.righeOrdine.filter(r => r.area_stampa === 'griglia');
+            return this.vociAnteprima.filter(r => this.zonaDiAnteprima(r.area_stampa) === 'griglia');
         },
 
         get righeCoperto() {
-            return this.righeOrdine.filter(r => {
-                const a = r.area_stampa;
-                return a !== 'cucina_1' && a !== 'cucina' && a !== 'cucina_2' && a !== 'griglia';
-            });
+            return this.vociAnteprima.filter(r => this.zonaDiAnteprima(r.area_stampa) === 'coperto');
         },
 
         get zoneProduzione() {
@@ -608,6 +691,20 @@ function cassaApp(cfg) {
                 { key: 'cucina_2', label: 'CUCINA 2', righe: this.righeCucina2 },
                 { key: 'griglia', label: 'GRIGLIA', righe: this.righeGriglia },
             ];
+        },
+
+        classeVoceAnteprima(stato) {
+            if (stato === 'aggiunta' || stato === 'aumentata') return 'a4-voce--aggiunta';
+            if (stato === 'tolta' || stato === 'ridotta') return 'a4-voce--tolta';
+            if (stato === 'invariata') return 'a4-voce--invariata';
+            return '';
+        },
+
+        qtyShowProduzione(r) {
+            if (r.stato === 'aumentata') return '+' + r.delta_q;
+            if (r.stato === 'ridotta') return String(r.delta_q);
+            if (r.stato === 'tolta') return '−' + r.qShow;
+            return String(r.qShow);
         },
 
         get flatIds() {
@@ -813,6 +910,7 @@ function cassaApp(cfg) {
             this.comandaVersion = null;
             this.correzioniCount = 0;
             this.totaleOriginale = null;
+            this.qtyOriginali = {};
             this.motivo = '';
             this.metodo = null;
             this.metodoOriginale = null;
@@ -1036,6 +1134,9 @@ function cassaApp(cfg) {
                     ? data.totale
                     : Math.round(Number(data.totale || 0) * 100) / 100;
                 this.metodoOriginale = data.metodo_pagamento || null;
+                const orig = {};
+                for (const r of data.righe) orig[r.menu_item_id] = r.quantita;
+                this.qtyOriginali = orig;
                 this.motivo = '';
                 this.chiudiModal();
                 this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')

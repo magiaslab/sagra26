@@ -4,21 +4,61 @@
 
 @section('content')
 @php
-    $tutte = $righe;
+    $diff = $diffCorrezione ?? null;
+    $isCorrezione = is_array($diff) && ($diff['voci'] ?? []) !== [];
+
     $zonaDi = function (?string $area): string {
         return match ($area) {
             'cucina_1', 'cucina' => 'cucina_1',
             'cucina_2' => 'cucina_2',
             'griglia' => 'griglia',
-            default => 'coperto', // cliente e altro → coperto / sala
+            default => 'coperto',
         };
     };
 
-    $cucina1 = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'cucina_1');
-    $cucina2 = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'cucina_2');
-    $griglia = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'griglia');
-    $coperto = $righe->filter(fn ($r) => $zonaDi($r['area_stampa'] ?? null) === 'coperto');
-    $haCongelati = $righe->contains(fn ($r) => ! empty($r['congelato']));
+    $etichettaStato = function (array $v): string {
+        return match ($v['stato']) {
+            'aggiunta' => 'AGGIUNTA',
+            'tolta' => 'TOLTA',
+            'aumentata' => '+'.$v['delta_q'],
+            'ridotta' => $v['delta_q'].' (era '.($v['quantita'] - $v['delta_q']).')',
+            default => 'già ok',
+        };
+    };
+
+    $classeVoce = function (array $v): string {
+        return match ($v['stato']) {
+            'aggiunta', 'aumentata' => 'tag-voce--aggiunta',
+            'tolta', 'ridotta' => 'tag-voce--tolta',
+            default => 'tag-voce--invariata',
+        };
+    };
+
+    if ($isCorrezione) {
+        $vociStampa = collect($diff['voci']);
+    } else {
+        $vociStampa = $righe->map(fn ($r) => [
+            'menu_item_id' => $r['menu_item_id'] ?? 0,
+            'nome' => $r['nome'],
+            'quantita' => $r['quantita'],
+            'stato' => 'normale',
+            'delta_q' => 0,
+            'prezzo_unitario' => $r['prezzo_unitario'],
+            'importo' => $r['importo'],
+            'area_stampa' => $r['area_stampa'] ?? null,
+            'congelato' => ! empty($r['congelato']),
+        ]);
+    }
+
+    $filtraZona = fn ($key) => $vociStampa->filter(
+        fn ($v) => $zonaDi($v['area_stampa'] ?? null) === $key
+    );
+
+    $cucina1 = $filtraZona('cucina_1');
+    $cucina2 = $filtraZona('cucina_2');
+    $griglia = $filtraZona('griglia');
+    $coperto = $filtraZona('coperto');
+    $haCongelati = $vociStampa->contains(fn ($v) => ! empty($v['congelato']) && ($v['stato'] ?? '') !== 'tolta');
     $metodo = $comanda->metodo_pagamento;
     $nome = $impostazioni->intestazione_nome;
     $anno = $impostazioni->intestazione_anno;
@@ -38,6 +78,8 @@
         ['key' => 'cucina_2', 'label' => 'CUCINA 2', 'righe' => $cucina2],
         ['key' => 'griglia', 'label' => 'GRIGLIA', 'righe' => $griglia],
     ];
+
+    $deltaImporto = $isCorrezione ? (float) $diff['delta_importo'] : 0.0;
 @endphp
 
 @unless ($autoPrint)
@@ -48,7 +90,7 @@
 </div>
 @endunless
 
-<div class="print-sheet">
+<div class="print-sheet {{ $isCorrezione ? 'print-sheet--correzione' : '' }}">
     {{-- Foglio preforato A4 landscape: 3 terzi uguali (Cliente | Produzione | Cameriere) --}}
     <section class="tag-cliente">
         <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
@@ -61,6 +103,10 @@
         </div>
         <div class="meta-small">rif. #{{ $num }} · {{ $comanda->serata->data->format('d/m/Y') }} · {{ $comanda->created_at->format('H:i') }}</div>
 
+        @if ($isCorrezione)
+            <div class="tag-corr-banner">CORREZIONE — già in corso · non è una comanda nuova</div>
+        @endif
+
         <div class="tag-body">
             <div class="tag-line tag-line-head">
                 <span>Q.tà</span>
@@ -68,15 +114,47 @@
                 <span class="tag-importo">Prezzo</span>
                 <span class="tag-importo">Totale</span>
             </div>
-            @foreach ($tutte as $r)
-                <div class="tag-line">
-                    <strong>{{ $r['quantita'] }}</strong>
-                    <span>{{ $r['nome'] }}@if (! empty($r['congelato'])) *@endif</span>
-                    <span class="tag-importo">{{ number_format($r['prezzo_unitario'], 2, ',', '.') }}</span>
-                    <span class="tag-importo">{{ number_format($r['importo'], 2, ',', '.') }}</span>
+            @foreach ($vociStampa as $v)
+                @php
+                    $stato = $v['stato'] ?? 'normale';
+                    $isMod = in_array($stato, ['aggiunta', 'tolta', 'aumentata', 'ridotta', 'invariata'], true);
+                    $importo = $stato === 'tolta'
+                        ? round($v['quantita'] * $v['prezzo_unitario'], 2)
+                        : round(($stato === 'normale' ? ($v['importo'] ?? $v['quantita'] * $v['prezzo_unitario']) : $v['quantita'] * $v['prezzo_unitario']), 2);
+                @endphp
+                <div class="tag-line {{ $isMod ? $classeVoce($v) : '' }}">
+                    <strong>{{ $v['quantita'] }}</strong>
+                    <span>
+                        {{ $v['nome'] }}@if (! empty($v['congelato']) && $stato !== 'tolta') *@endif
+                        @if ($isMod && $stato !== 'invariata')
+                            <em class="tag-voce-lbl">{{ $etichettaStato($v) }}</em>
+                        @elseif ($stato === 'invariata')
+                            <em class="tag-voce-lbl">già ok</em>
+                        @endif
+                    </span>
+                    <span class="tag-importo">{{ number_format($v['prezzo_unitario'], 2, ',', '.') }}</span>
+                    <span class="tag-importo">{{ number_format($importo, 2, ',', '.') }}</span>
                 </div>
             @endforeach
         </div>
+
+        @if ($isCorrezione)
+            <div class="tag-corr-riepilogo">
+                @if ($deltaImporto > 0)
+                    Da chiedere {{ number_format($deltaImporto, 2, ',', '.') }} €
+                @elseif ($deltaImporto < 0)
+                    Da restituire {{ number_format(abs($deltaImporto), 2, ',', '.') }} €
+                @else
+                    Nessuna differenza di cassa
+                @endif
+                <span class="tag-corr-riepilogo-sub">
+                    prima {{ number_format($diff['totale_precedente'], 2, ',', '.') }} € → ora {{ number_format($diff['totale_attuale'], 2, ',', '.') }} €
+                    @if (filled($diff['motivo'] ?? null))
+                        · {{ $diff['motivo'] }}
+                    @endif
+                </span>
+            </div>
+        @endif
 
         @if (filled($impostazioni->comunicazione_comanda))
             <div class="tag-comunicazione">{{ $impostazioni->comunicazione_comanda }}</div>
@@ -103,15 +181,41 @@
         @foreach ($zoneProduzione as $zona)
             <section class="tag-box-zona" data-zona="{{ $zona['key'] }}">
                 <div class="tag-box-head">
-                    <span class="tag-role">{{ $zona['label'] }}</span>
+                    <span class="tag-role">{{ $zona['label'] }}{{ $isCorrezione ? ' · CORR.' : '' }}</span>
                     <span class="tag-num">comanda num. #{{ $num }}</span>
                 </div>
+                @if ($isCorrezione)
+                    <div class="tag-corr-hint">Barrato = già in corso · in evidenza = modifica</div>
+                @endif
                 <div class="tag-body">
-                    @forelse ($zona['righe'] as $r)
-                        <div class="tag-line-check">
-                            <span class="tag-qty">{{ $r['quantita'] }}</span>
-                            <span class="dotted">{{ $r['nome'] }}</span>
-                            <span class="check-box" aria-hidden="true"></span>
+                    @forelse ($zona['righe'] as $v)
+                        @php $stato = $v['stato'] ?? 'normale'; @endphp
+                        <div class="tag-line-check {{ $stato !== 'normale' ? $classeVoce($v) : '' }}">
+                            <span class="tag-qty">
+                                @if ($stato === 'aumentata')
+                                    +{{ $v['delta_q'] }}
+                                @elseif ($stato === 'ridotta')
+                                    {{ $v['delta_q'] }}
+                                @elseif ($stato === 'tolta')
+                                    −{{ $v['quantita'] }}
+                                @else
+                                    {{ $v['quantita'] }}
+                                @endif
+                            </span>
+                            <span class="dotted">
+                                {{ $v['nome'] }}
+                                @if ($stato === 'aggiunta') <em class="tag-voce-lbl">AGGIUNTA</em>
+                                @elseif ($stato === 'tolta') <em class="tag-voce-lbl">TOLTA</em>
+                                @elseif ($stato === 'aumentata') <em class="tag-voce-lbl">ora {{ $v['quantita'] }}</em>
+                                @elseif ($stato === 'ridotta') <em class="tag-voce-lbl">ora {{ $v['quantita'] }}</em>
+                                @elseif ($stato === 'invariata') <em class="tag-voce-lbl">già ok</em>
+                                @endif
+                            </span>
+                            @if (! in_array($stato, ['invariata', 'tolta'], true))
+                                <span class="check-box" aria-hidden="true"></span>
+                            @else
+                                <span class="check-box check-box--muted" aria-hidden="true"></span>
+                            @endif
                         </div>
                     @empty
                         <div class="meta-small">— nessuna voce —</div>
@@ -127,18 +231,44 @@
 
     <section class="tag-cameriere">
         <div class="tag-head tag-head--compact">
-            <span class="tag-role">CAMERIERE</span>
+            <span class="tag-role">CAMERIERE{{ $isCorrezione ? ' · CORR.' : '' }}</span>
             <span class="tag-num">comanda num. #{{ $num }}</span>
         </div>
+        @if ($isCorrezione)
+            <div class="tag-corr-hint">Barrato = già in corso · in evidenza = modifica</div>
+        @endif
         <div class="tag-body">
             @foreach ($zoneCameriere as $zona)
                 <div class="tag-cameriere-zona" data-zona-cameriere="{{ $zona['key'] }}">
                     <div class="tag-cameriere-zona-lbl">{{ $zona['label'] }}</div>
-                    @forelse ($zona['righe'] as $r)
-                        <div class="tag-line-check">
-                            <span class="tag-qty">{{ $r['quantita'] }}</span>
-                            <span class="dotted">{{ $r['nome'] }}</span>
-                            <span class="check-box" aria-hidden="true"></span>
+                    @forelse ($zona['righe'] as $v)
+                        @php $stato = $v['stato'] ?? 'normale'; @endphp
+                        <div class="tag-line-check {{ $stato !== 'normale' ? $classeVoce($v) : '' }}">
+                            <span class="tag-qty">
+                                @if ($stato === 'aumentata')
+                                    +{{ $v['delta_q'] }}
+                                @elseif ($stato === 'ridotta')
+                                    {{ $v['delta_q'] }}
+                                @elseif ($stato === 'tolta')
+                                    −{{ $v['quantita'] }}
+                                @else
+                                    {{ $v['quantita'] }}
+                                @endif
+                            </span>
+                            <span class="dotted">
+                                {{ $v['nome'] }}
+                                @if ($stato === 'aggiunta') <em class="tag-voce-lbl">AGGIUNTA</em>
+                                @elseif ($stato === 'tolta') <em class="tag-voce-lbl">TOLTA</em>
+                                @elseif ($stato === 'aumentata') <em class="tag-voce-lbl">ora {{ $v['quantita'] }}</em>
+                                @elseif ($stato === 'ridotta') <em class="tag-voce-lbl">ora {{ $v['quantita'] }}</em>
+                                @elseif ($stato === 'invariata') <em class="tag-voce-lbl">già ok</em>
+                                @endif
+                            </span>
+                            @if (! in_array($stato, ['invariata', 'tolta'], true))
+                                <span class="check-box" aria-hidden="true"></span>
+                            @else
+                                <span class="check-box check-box--muted" aria-hidden="true"></span>
+                            @endif
                         </div>
                     @empty
                         <div class="meta-small">—</div>

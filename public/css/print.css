@@ -403,6 +403,98 @@
   flex-shrink: 0;
 }
 
+.tag-corr-banner {
+  margin: 0 0 1.5mm;
+  padding: 1.2mm 1.5mm;
+  border: 2px solid #000;
+  background: #000;
+  color: #fff;
+  font-size: 0.95em;
+  font-weight: 900;
+  letter-spacing: .02em;
+  text-align: center;
+  line-height: 1.2;
+  flex-shrink: 0;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.tag-corr-hint {
+  font-size: 0.72em;
+  font-weight: 700;
+  margin: 0 0 1mm;
+  line-height: 1.15;
+  flex-shrink: 0;
+}
+
+.tag-corr-riepilogo {
+  margin: 2mm 0;
+  padding: 1.5mm 1.5mm;
+  border: 2px solid #000;
+  font-size: 1.05em;
+  font-weight: 900;
+  line-height: 1.25;
+  flex-shrink: 0;
+}
+
+.tag-corr-riepilogo-sub {
+  display: block;
+  margin-top: 0.6mm;
+  font-size: 0.78em;
+  font-weight: 700;
+}
+
+.tag-voce-lbl {
+  font-style: normal;
+  font-size: 0.78em;
+  font-weight: 900;
+  margin-left: 0.35em;
+  letter-spacing: .02em;
+  text-transform: uppercase;
+}
+
+.tag-voce--invariata,
+.tag-voce--tolta {
+  text-decoration: line-through;
+  opacity: 0.72;
+}
+
+.tag-voce--aggiunta,
+.tag-voce--aumentata {
+  font-weight: 900;
+  background: #000;
+  color: #fff;
+  padding: 0.4mm 0.8mm;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.tag-voce--aggiunta .tag-voce-lbl,
+.tag-voce--aumentata .tag-voce-lbl {
+  color: #fff;
+}
+
+.tag-voce--tolta .tag-voce-lbl {
+  text-decoration: none;
+}
+
+.tag-line.tag-voce--aggiunta,
+.tag-line.tag-voce--aumentata,
+.tag-line-check.tag-voce--aggiunta,
+.tag-line-check.tag-voce--aumentata {
+  border-radius: 1px;
+}
+
+.check-box--muted {
+  opacity: 0.35;
+  border-style: dashed;
+}
+
+.tag-cliente:has(.tag-corr-riepilogo) .tag-comunicazione,
+.tag-cliente:has(.tag-corr-banner) .tag-comunicazione {
+  margin-top: 0;
+}
+
 .tag-nota-congelato {
   margin-top: 2mm;
   font-size: .85em;
@@ -684,6 +776,67 @@
   line-height: 1.25;
   white-space: pre-wrap;
   flex-shrink: 0;
+}
+
+.a4-corr-banner {
+  margin: 0 0 1.2mm;
+  padding: 1mm 1.2mm;
+  border: 2px solid #000;
+  background: #000;
+  color: #fff;
+  font-size: 0.85em;
+  font-weight: 900;
+  text-align: center;
+  line-height: 1.15;
+  flex-shrink: 0;
+}
+.a4-corr-hint {
+  font-size: 0.68em;
+  font-weight: 700;
+  margin: 0 0 0.8mm;
+  line-height: 1.1;
+}
+.a4-corr-riepilogo {
+  margin: 1.5mm 0;
+  padding: 1.2mm;
+  border: 2px solid #000;
+  font-size: 0.95em;
+  font-weight: 900;
+  line-height: 1.2;
+  flex-shrink: 0;
+}
+.a4-corr-riepilogo-sub {
+  display: block;
+  margin-top: 0.4mm;
+  font-size: 0.72em;
+  font-weight: 700;
+}
+.a4-voce-lbl {
+  font-style: normal;
+  font-size: 0.75em;
+  font-weight: 900;
+  margin-left: 0.3em;
+  text-transform: uppercase;
+}
+.a4-voce--invariata,
+.a4-voce--tolta {
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+.a4-voce--aggiunta,
+.a4-voce--aumentata {
+  font-weight: 900;
+  background: #000;
+  color: #fff;
+  padding: 0.3mm 0.6mm;
+}
+.a4-box--muted {
+  opacity: 0.35;
+  border-style: dashed;
+}
+.a4-cliente:has(.a4-corr-riepilogo) .a4-comunicazione,
+.a4-cliente:has(.a4-corr-banner) .a4-comunicazione {
+  margin-top: 0;
 }
 
 .a4-totale {
