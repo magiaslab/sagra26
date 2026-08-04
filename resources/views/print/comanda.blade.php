@@ -106,7 +106,7 @@
                 <section class="tag-box-zona" data-zona="{{ $zona['key'] }}">
                     <div class="tag-box-head">
                         <span class="tag-role">{{ $zona['label'] }}</span>
-                        <span class="tag-num">n.{{ $num }}</span>
+                        <span class="tag-num">comanda num. #{{ $num }}</span>
                     </div>
                     <div class="tag-body">
                         @forelse ($zona['righe'] as $r)
@@ -131,7 +131,7 @@
         <section class="tag-cameriere">
             <div class="tag-head tag-head--compact">
                 <span class="tag-role">CAMERIERE</span>
-                <span class="tag-num">n.{{ $num }}</span>
+                <span class="tag-num">comanda num. #{{ $num }}</span>
             </div>
             <div class="tag-body">
                 @foreach ($zoneCameriere as $zona)

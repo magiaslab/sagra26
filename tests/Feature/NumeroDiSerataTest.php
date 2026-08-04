@@ -27,7 +27,9 @@ it('calcola il numero di serata al volo senza toccare numero_progressivo', funct
 
     $html = $this->get(route('cassa.stampa', $c2))->assertOk()->getContent();
     expect($html)->toContain('Comanda 2 di stasera')
-        ->and($html)->toContain('rif. #'.$c2->numero_progressivo);
+        ->and($html)->toContain('rif. #'.$c2->numero_progressivo)
+        ->and($html)->toContain('comanda num. #'.$c2->numero_progressivo)
+        ->and(substr_count($html, 'comanda num. #'.$c2->numero_progressivo))->toBe(4); // 3 zone + cameriere
 });
 
 it('azzera il numero di serata su una nuova serata', function () {
