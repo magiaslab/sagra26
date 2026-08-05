@@ -58,6 +58,20 @@
         </div>
     </div>
 
+    @if ($sospesiAperti->isNotEmpty())
+        <div class="mb-4 rounded-lg bg-sagra-amber-soft px-4 py-4 text-sagra-ink ring-2 ring-inset ring-sagra-warn/50" role="status">
+            <p class="m-0 text-base font-semibold text-sagra-warn">
+                {{ $sospesiAperti->count() }} {{ $sospesiAperti->count() === 1 ? 'conto sospeso ancora aperto' : 'conti sospesi ancora aperti' }},
+                per un totale di {{ number_format($sospesiApertiTotale, 2, ',', '.') }} €.
+            </p>
+            <p class="mt-1 mb-0 text-sm text-sagra-ink">
+                Verificali prima di chiudere la cassa.
+                <a class="font-semibold text-sagra underline hover:text-sagra-dark"
+                   href="{{ route('gestione.sospesi', absolute: false) }}">Vai a Sospesi →</a>
+            </p>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 gap-4 xl:grid-cols-2" @if ($bloccata) aria-disabled="true" @endif>
         <div class="space-y-4 {{ $bloccata ? 'opacity-75' : '' }}">
             <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">

@@ -4,11 +4,13 @@ namespace App\Livewire\Gestione;
 
 use App\Livewire\Concerns\WithToast;
 use App\Models\Chiusura;
+use App\Models\Comanda;
 use App\Models\Impostazione;
 use App\Models\PuntoCassa;
 use App\Models\Serata;
 use App\Services\ChiusuraService;
 use App\Services\RiconciliazioneService;
+use Illuminate\Support\Collection;
 use Livewire\Component;
 
 class ChiusuraForm extends Component
@@ -228,9 +230,30 @@ class ChiusuraForm extends Component
         return $serata !== null && ! $serata->isAperta();
     }
 
+    /**
+     * Conti sospesi ancora aperti per la serata/punto cassa selezionati (solo avviso UI).
+     *
+     * @return Collection<int, Comanda>
+     */
+    public function sospesiAperti(): Collection
+    {
+        if (! $this->serataId || ! $this->puntoCassaId) {
+            return collect();
+        }
+
+        return Comanda::query()
+            ->where('serata_id', $this->serataId)
+            ->where('punto_cassa_id', $this->puntoCassaId)
+            ->where('metodo_pagamento', 'sospeso')
+            ->where('stato', 'stampata')
+            ->orderBy('numero_progressivo')
+            ->get();
+    }
+
     public function render()
     {
         $fondoPezziTotale = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+        $sospesiAperti = $this->sospesiAperti();
 
         return view('livewire.gestione.chiusura-form', [
             'serate' => Serata::query()->orderByDesc('data')->get(),
@@ -239,6 +262,8 @@ class ChiusuraForm extends Component
             'bloccata' => $this->serataBloccata(),
             'fondoPezziTotale' => $fondoPezziTotale,
             'fondoPezziDescrizione' => Chiusura::descrizionePezzi(Chiusura::normalizzaPezzi($this->pezziFondo)),
+            'sospesiAperti' => $sospesiAperti,
+            'sospesiApertiTotale' => (float) $sospesiAperti->sum('totale'),
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
     }
 }
