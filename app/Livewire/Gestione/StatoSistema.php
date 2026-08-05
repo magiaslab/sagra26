@@ -4,8 +4,10 @@ namespace App\Livewire\Gestione;
 
 use App\Models\Impostazione;
 use App\Services\SystemStatusService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class StatoSistema extends Component
 {
     /** @var array<string, mixed> */
@@ -23,7 +25,6 @@ class StatoSistema extends Component
 
     public function render()
     {
-        return view('livewire.gestione.stato-sistema')
-            ->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+        return view('livewire.gestione.stato-sistema');
     }
 }

@@ -1,5 +1,10 @@
 <div>
     <x-gestione.subnav />
+    <div class="mb-4 rounded-lg border border-sagra-amber/40 bg-sagra-amber-soft px-4 py-3 text-sm text-sagra-ink">
+        <strong>Anteprima Filament v5</strong> (branch di test):
+        <a class="font-semibold text-sagra underline" href="/gestione-fi">apri il nuovo pannello Gestione</a>
+        — la Cassa non è toccata; questa UI Livewire resta come fallback.
+    </div>
     <x-gestione.page-header
         title="Gestione"
         subtitle="Apertura serata, menù, chiusure e report"

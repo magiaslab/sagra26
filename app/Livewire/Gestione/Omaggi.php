@@ -7,8 +7,10 @@ use App\Models\Comanda;
 use App\Models\Impostazione;
 use App\Models\Serata;
 use Illuminate\Support\Collection;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class Omaggi extends Component
 {
     use WithToast;
@@ -109,7 +111,7 @@ class Omaggi extends Component
             'totaleValore' => round($omaggi->sum('totale'), 2),
             'totaleCoperti' => (int) $omaggi->sum('coperti'),
             'perAutorizzatore' => $this->riepilogoPerAutorizzatore($omaggi),
-        ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+        ]);
     }
 
     private function serataSelezionata(): ?Serata

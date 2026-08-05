@@ -7,10 +7,12 @@ use App\Models\Comanda;
 use App\Models\Impostazione;
 use App\Models\Serata;
 use App\Services\ComandaService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use RuntimeException;
 use Throwable;
 
+#[Layout('layouts.app')]
 class Sospesi extends Component
 {
     use WithToast;
@@ -159,6 +161,6 @@ class Sospesi extends Component
             'sospesi' => $sospesi,
             'impostazioni' => Impostazione::corrente(),
             'totaleAperto' => round($sospesi->sum('totale'), 2),
-        ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+        ]);
     }
 }

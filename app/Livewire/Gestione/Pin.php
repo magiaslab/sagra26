@@ -68,7 +68,9 @@ class Pin extends Component
             session(['gestione_sbloccata' => true]);
             $this->toastOk('Accesso gestione sbloccato.');
             $this->flashStatus('Accesso gestione sbloccato.');
-            $this->redirect(route('gestione.dashboard', absolute: false), navigate: true);
+            // Branch Filament: dopo PIN si entra nel pannello nuovo (path gestione-fi).
+            // La gestione Livewire legacy resta su /gestione/* per confronto.
+            $this->redirect('/gestione-fi', navigate: false);
 
             return;
         }
@@ -125,7 +127,7 @@ class Pin extends Component
         session(['gestione_sbloccata' => true]);
         $this->toastOk('PIN reimpostato. Accesso sbloccato.');
         $this->flashStatus('PIN reimpostato. Accesso sbloccato.');
-        $this->redirect(route('gestione.dashboard', absolute: false), navigate: true);
+        $this->redirect('/gestione-fi', navigate: false);
     }
 
     private function rateLimitKey(string $scope): string

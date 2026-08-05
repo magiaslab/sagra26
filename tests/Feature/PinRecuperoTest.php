@@ -35,7 +35,7 @@ it('con codice master corretto aggiorna il PIN e autentica in Gestione', functio
         ->set('nuovoPin', '5678')
         ->set('confermaPin', '5678')
         ->call('reimposta')
-        ->assertRedirect(route('gestione.dashboard'))
+        ->assertRedirect('/gestione-fi')
         ->assertSessionHas('gestione_sbloccata', true);
 
     expect(Impostazione::corrente()->fresh()->pin_gestione)->toBe('5678');

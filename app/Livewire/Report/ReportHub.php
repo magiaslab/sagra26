@@ -14,8 +14,10 @@ use App\Models\SerataStock;
 use App\Services\RiconciliazioneService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class ReportHub extends Component
 {
     public string $tipo = 'cumulativo';
@@ -162,7 +164,7 @@ class ReportHub extends Component
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'dati' => $dati,
             'impostazioni' => Impostazione::corrente(),
-        ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+        ]);
     }
 
     private function serataPrecedenteId(?int $serataId): ?int

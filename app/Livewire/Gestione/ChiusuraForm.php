@@ -9,8 +9,10 @@ use App\Models\PuntoCassa;
 use App\Models\Serata;
 use App\Services\ChiusuraService;
 use App\Services\RiconciliazioneService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class ChiusuraForm extends Component
 {
     use WithToast;
@@ -239,6 +241,6 @@ class ChiusuraForm extends Component
             'bloccata' => $this->serataBloccata(),
             'fondoPezziTotale' => $fondoPezziTotale,
             'fondoPezziDescrizione' => Chiusura::descrizionePezzi(Chiusura::normalizzaPezzi($this->pezziFondo)),
-        ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+        ]);
     }
 }

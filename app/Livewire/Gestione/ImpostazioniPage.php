@@ -7,8 +7,11 @@ use App\Models\Impostazione;
 use App\Models\Postazione;
 use App\Models\PostazionePuntoCassa;
 use App\Models\PuntoCassa;
+use App\Support\GestioneEliminaGuardrail;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class ImpostazioniPage extends Component
 {
     use WithToast;
@@ -73,16 +76,8 @@ class ImpostazioniPage extends Component
     {
         $postazione = Postazione::query()->findOrFail($id);
 
-        $nComande = $postazione->comande()->count();
-        if ($nComande > 0) {
-            $this->bloccaEliminazione("Non eliminabile: {$nComande} comande già registrate su questa postazione");
-
-            return;
-        }
-
-        $nMappature = $postazione->mappature()->count();
-        if ($nMappature > 0) {
-            $this->bloccaEliminazione("Non eliminabile: {$nMappature} mappature punto cassa collegate a questa postazione");
+        if ($motivo = GestioneEliminaGuardrail::motivoBloccoPostazione($postazione)) {
+            $this->bloccaEliminazione($motivo);
 
             return;
         }
@@ -105,23 +100,8 @@ class ImpostazioniPage extends Component
     {
         $punto = PuntoCassa::query()->findOrFail($id);
 
-        $nComande = $punto->comande()->count();
-        if ($nComande > 0) {
-            $this->bloccaEliminazione("Non eliminabile: {$nComande} comande già registrate su questo punto cassa");
-
-            return;
-        }
-
-        $nChiusure = $punto->chiusure()->count();
-        if ($nChiusure > 0) {
-            $this->bloccaEliminazione("Non eliminabile: {$nChiusure} chiusure collegate a questo punto cassa");
-
-            return;
-        }
-
-        $nMappature = $punto->mappature()->count();
-        if ($nMappature > 0) {
-            $this->bloccaEliminazione("Non eliminabile: {$nMappature} mappature postazione collegate a questo punto cassa");
+        if ($motivo = GestioneEliminaGuardrail::motivoBloccoPuntoCassa($punto)) {
+            $this->bloccaEliminazione($motivo);
 
             return;
         }
@@ -159,6 +139,6 @@ class ImpostazioniPage extends Component
             'postazioni' => Postazione::query()->orderBy('id')->get(),
             'punti' => PuntoCassa::query()->orderBy('id')->get(),
             'mappature' => PostazionePuntoCassa::query()->with(['postazione', 'puntoCassa'])->orderByDesc('valido_da')->get(),
-        ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+        ]);
     }
 }

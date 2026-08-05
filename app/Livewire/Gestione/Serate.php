@@ -12,8 +12,10 @@ use App\Models\SerataStock;
 use App\Services\RiconciliazioneService;
 use App\Services\SerataService;
 use App\Services\StockService;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 
+#[Layout('layouts.app')]
 class Serate extends Component
 {
     use WithToast;
@@ -211,6 +213,6 @@ class Serate extends Component
             'limitati' => MenuItem::query()->whereNotNull('stock_default')->where('attivo', true)->orderBy('ordinamento')->get(),
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'fondiDescrizione' => $this->fondiDescrizione,
-        ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+        ]);
     }
 }
