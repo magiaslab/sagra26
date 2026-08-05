@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gestione;
 
+use App\Livewire\Concerns\WithToast;
 use App\Models\Comanda;
 use App\Models\Impostazione;
 use App\Models\Serata;
@@ -12,6 +13,8 @@ use Throwable;
 
 class Sospesi extends Component
 {
+    use WithToast;
+
     public ?int $chiudiId = null;
 
     public string $metodo = 'contante';
@@ -129,10 +132,11 @@ class Sospesi extends Component
                 $this->metodo === 'omaggio' ? ($this->pagamentoNote ?: null) : null,
             );
 
-            session()->flash('status', 'Sospeso #'.$comanda->numero_progressivo.' chiuso ('.$this->metodo.').');
+            $this->toastOk('Sospeso #'.$comanda->numero_progressivo.' chiuso ('.$this->metodo.').');
             $this->annullaChiusura();
         } catch (RuntimeException|Throwable $e) {
             $this->errore = $e->getMessage();
+            $this->toastDanger($e->getMessage());
         }
     }
 

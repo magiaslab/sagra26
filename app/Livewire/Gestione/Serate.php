@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gestione;
 
+use App\Livewire\Concerns\WithToast;
 use App\Models\Chiusura;
 use App\Models\Impostazione;
 use App\Models\MenuItem;
@@ -15,6 +16,8 @@ use Livewire\Component;
 
 class Serate extends Component
 {
+    use WithToast;
+
     public string $data = '';
 
     public string $note = '';
@@ -66,9 +69,10 @@ class Serate extends Component
         try {
             $stock->rifornisci($serata->id, $menuItemId, $qty);
             $this->rifornimenti[$menuItemId] = '';
-            session()->flash('status', 'Stock aggiornato (+'.$qty.').');
+            $this->toastOk('Stock aggiornato (+'.$qty.').');
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
+            $this->toastDanger($e->getMessage());
         }
     }
 
@@ -84,10 +88,12 @@ class Serate extends Component
                 $fondi[(int) $id] = (float) $val;
             }
             $service->apri($this->data, $this->note ?: null, $this->stockOverrides, $fondi);
-            session()->flash('status', 'Serata aperta.');
+            $this->toastOk('Serata aperta.');
+            $this->flashStatus('Serata aperta.');
             $this->redirect(route('gestione.serate', absolute: false), navigate: true);
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
+            $this->toastDanger($e->getMessage());
         }
     }
 
@@ -130,10 +136,12 @@ class Serate extends Component
         try {
             $serata = Serata::query()->findOrFail($serataId);
             $service->riapri($serata);
-            session()->flash('status', 'Serata riaperta.');
+            $this->toastOk('Serata riaperta.');
+            $this->flashStatus('Serata riaperta.');
             $this->redirect(route('gestione.serate', absolute: false), navigate: true);
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
+            $this->toastDanger($e->getMessage());
         }
     }
 
@@ -143,10 +151,12 @@ class Serate extends Component
         try {
             $serata = Serata::query()->findOrFail($serataId);
             $service->elimina($serata);
-            session()->flash('status', 'Serata eliminata.');
+            $this->toastOk('Serata eliminata.');
+            $this->flashStatus('Serata eliminata.');
             $this->redirect(route('gestione.serate', absolute: false), navigate: true);
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
+            $this->toastDanger($e->getMessage());
         }
     }
 
@@ -154,7 +164,7 @@ class Serate extends Component
     {
         $service->chiudi($serata);
         $this->puntiCassaMancanti = [];
-        session()->flash('status', 'Serata chiusa. I report restano stampabili; per correggere errori riapri la serata.');
+        $this->toastOk('Serata chiusa. I report restano stampabili; per correggere errori riapri la serata.');
     }
 
     /**

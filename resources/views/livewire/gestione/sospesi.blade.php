@@ -17,11 +17,8 @@
         </x-slot:actions>
     </x-gestione.page-header>
 
-    @if (session('status'))
-        <p class="mb-4 rounded-md bg-emerald-50 px-3 py-2 text-sm text-emerald-900 ring-1 ring-emerald-200">{{ session('status') }}</p>
-    @endif
     @if ($errore)
-        <p class="mb-4 rounded-md bg-red-50 px-3 py-2 text-sm text-red-900 ring-1 ring-red-200">{{ $errore }}</p>
+        <x-ui.alert type="danger" class="mb-4">{{ $errore }}</x-ui.alert>
     @endif
 
     @if (! $serata)

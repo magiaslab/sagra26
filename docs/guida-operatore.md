@@ -35,6 +35,8 @@ Il sistema serve a:
 - tenere il **magazzino** (quanti piatti restano)
 - fare **chiusura cassa** e **report** a fine serata
 
+Dopo salvataggi e modifiche (menù, serate, chiusura, impostazioni, sospesi…) compare in alto a destra un **avviso breve** (toast) che sparisce da solo: conferma che l’operazione è andata a buon fine, senza bloccare il lavoro.
+
 Ci sono due tipi di computer:
 
 | Cosa | Dove | A cosa serve |

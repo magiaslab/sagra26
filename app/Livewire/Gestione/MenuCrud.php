@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gestione;
 
+use App\Livewire\Concerns\WithToast;
 use App\Models\Categoria;
 use App\Models\Impostazione;
 use App\Models\MenuItem;
@@ -10,6 +11,8 @@ use Livewire\Component;
 
 class MenuCrud extends Component
 {
+    use WithToast;
+
     public ?int $editingId = null;
 
     public string $nome = '';
@@ -56,8 +59,7 @@ class MenuCrud extends Component
                 : null,
         ]);
 
-        session()->flash('status', 'Comunicazione comanda salvata.');
-        $this->dispatch('toast', message: 'Comunicazione comanda salvata.', type: 'ok');
+        $this->toastOk('Comunicazione comanda salvata.');
     }
 
     public function edit(int $id): void
@@ -118,18 +120,20 @@ class MenuCrud extends Component
 
         if ($this->editingId) {
             MenuItem::query()->whereKey($this->editingId)->update($data);
+            $this->toastOk('Voce menù aggiornata.');
         } else {
             $data['ordinamento'] = $maxOrd + 1;
             MenuItem::query()->create($data);
+            $this->toastOk('Voce menù creata.');
         }
 
-        session()->flash('status', 'Voce menù salvata.');
         $this->nuovo();
     }
 
     public function disattiva(int $id): void
     {
         MenuItem::query()->whereKey($id)->update(['attivo' => false]);
+        $this->toastOk('Voce disattivata.');
     }
 
     public function attiva(int $id): void
@@ -137,6 +141,7 @@ class MenuCrud extends Component
         $item = MenuItem::query()->findOrFail($id);
         $this->assertUnicoCopertoAttivo($item->id, (bool) $item->is_coperto, true);
         $item->update(['attivo' => true]);
+        $this->toastOk('Voce attivata.');
     }
 
     /**
@@ -192,7 +197,7 @@ class MenuCrud extends Component
             'ordinamento' => $ord,
         ]);
         $this->catNome = '';
-        session()->flash('status', 'Categoria creata.');
+        $this->toastOk('Categoria creata.');
     }
 
     public function render()
