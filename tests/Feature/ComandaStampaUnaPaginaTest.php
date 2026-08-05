@@ -16,7 +16,9 @@ it('il css di stampa forza una sola pagina per la comanda', function () {
     expect($css)
         ->toContain('size: 297mm 210mm')
         ->toContain('position: fixed !important')
-        ->toContain('page-break-after: avoid !important');
+        ->toContain('page-break-after: avoid !important')
+        ->toContain('padding-bottom: 10.5mm')
+        ->toContain('grid-template-columns: 1fr 1fr 1fr');
 });
 
 it('la pagina stampa comanda include il foglio e lo script una-pagina', function () {
