@@ -72,7 +72,8 @@ it('la ui richiamo è allargata e mostra la postazione in lista', function () {
     $html = $this->get(route('cassa'))->assertOk()->getContent();
 
     expect($html)
-        ->toContain('w-[min(52rem,98vw)]')
+        ->toContain('w-[min(56rem,96vw)]')
+        ->toContain('min-h-[4.25rem]')
         ->toContain('c.postazione')
         ->toContain('Emessa da')
         ->toContain('postazioneOriginale');

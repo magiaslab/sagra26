@@ -584,114 +584,127 @@
         </div>
     </div>
 
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-2 sm:p-4" x-show="modalRichiamo" x-cloak>
-        <div class="flex max-h-[94vh] w-[min(52rem,98vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line" @click.stop>
-            <div class="shrink-0 border-b border-sagra-line px-5 py-4">
-                <h2 class="text-xl font-semibold text-sagra-ink">Richiama una comanda</h2>
-                <p class="mt-1 text-sm leading-relaxed text-sagra-muted">
+    {{-- Modal richiamo: ottimizzato notebook 15.6" (~1366×768), righe ariose --}}
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3 sm:p-5" x-show="modalRichiamo" x-cloak>
+        <div class="flex max-h-[92vh] w-[min(56rem,96vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <div class="shrink-0 border-b border-sagra-line px-4 py-3.5 sm:px-6 sm:py-4">
+                <h2 class="text-lg font-semibold text-sagra-ink sm:text-xl">Richiama una comanda</h2>
+                <p class="mt-1 max-w-3xl text-sm leading-relaxed text-sagra-muted">
                     Tutte le casse possono aprire qualsiasi comanda. Nella lista vedi <span class="font-medium text-sagra-ink">chi l’ha emessa</span>.
                     Tocca la riga per correggerla · Ristampa / Annulla a destra.
                 </p>
-                <label class="mb-1 mt-3 block text-sm font-medium text-sagra-ink">Numero progressivo</label>
-                <div class="flex gap-2">
+                <label class="mb-1.5 mt-3.5 block text-sm font-medium text-sagra-ink">Numero progressivo</label>
+                <div class="flex gap-2.5">
                     <input class="block h-11 min-w-0 flex-1 rounded-md bg-white px-3 text-base text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
                            @keydown.enter.prevent="eseguiRichiamo()" placeholder="Es. 42">
-                    <button class="inline-flex shrink-0 items-center rounded-md bg-sagra px-4 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
+                    <button class="inline-flex h-11 shrink-0 items-center rounded-md bg-sagra px-4 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
                 </div>
             </div>
-            <div class="min-h-0 flex-1 overflow-auto px-5 py-3">
-            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-sagra-muted">Ultime comande di stasera</h3>
-            <div x-show="storico.length === 0">
-                <p class="rounded-md bg-sagra-bg p-6 text-center text-sm text-sagra-muted ring-1 ring-inset ring-sagra-line/80">Nessuna comanda stampata ancora in questa serata.</p>
-            </div>
-            <div class="overflow-hidden rounded-lg ring-1 ring-sagra-line/80" x-show="storico.length > 0">
-                <div class="divide-y divide-sagra-line">
-                <template x-for="c in storico" :key="c.comanda_id">
-                    <div class="bg-white"
-                         :class="{
-                             'opacity-60': c.stato === 'annullata',
-                             'bg-sagra-danger-soft/40': annulloId === c.comanda_id,
-                             'bg-sagra-softer': ristampaId === c.comanda_id,
-                         }">
-                        <template x-if="c.stato === 'annullata'">
-                            <div class="px-3 py-2.5">
-                                <div class="flex flex-wrap items-center justify-between gap-2">
-                                    <span class="font-mono text-base font-semibold line-through text-neutral-500">n.<span x-text="c.numero"></span></span>
-                                    <span class="rounded bg-neutral-200/80 px-1.5 py-0.5 text-xs font-semibold text-neutral-600" x-text="c.postazione || '—'"></span>
-                                    <span class="text-xs font-medium text-neutral-500">Annullata</span>
+            <div class="min-h-0 flex-1 overflow-auto px-4 py-3 sm:px-6 sm:py-4">
+                <h3 class="mb-2.5 text-xs font-semibold uppercase tracking-wide text-sagra-muted">Ultime comande di stasera</h3>
+                <div x-show="storico.length === 0">
+                    <p class="rounded-md bg-sagra-bg px-5 py-8 text-center text-sm text-sagra-muted ring-1 ring-inset ring-sagra-line/80">Nessuna comanda stampata ancora in questa serata.</p>
+                </div>
+                <div class="overflow-hidden rounded-lg ring-1 ring-sagra-line/80" x-show="storico.length > 0">
+                    <div class="divide-y divide-sagra-line">
+                    <template x-for="c in storico" :key="c.comanda_id">
+                        <div class="bg-white"
+                             :class="{
+                                 'opacity-60': c.stato === 'annullata',
+                                 'bg-sagra-danger-soft/40': annulloId === c.comanda_id,
+                                 'bg-sagra-softer': ristampaId === c.comanda_id,
+                             }">
+                            <template x-if="c.stato === 'annullata'">
+                                <div class="px-4 py-3.5 sm:px-5 sm:py-4">
+                                    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                        <span class="font-mono text-lg font-semibold line-through text-neutral-500">n.<span x-text="c.numero"></span></span>
+                                        <span class="rounded-md bg-neutral-200/80 px-2 py-1 text-xs font-semibold text-neutral-600" x-text="c.postazione || '—'"></span>
+                                        <span class="text-sm font-medium text-neutral-500">Annullata</span>
+                                    </div>
+                                    <div class="mt-1.5 text-sm text-neutral-500">Motivo: <span x-text="c.motivo_annullo || '—'"></span></div>
                                 </div>
-                                <div class="mt-1 text-xs text-neutral-500">Motivo: <span x-text="c.motivo_annullo || '—'"></span></div>
-                            </div>
-                        </template>
-                        <template x-if="c.stato !== 'annullata'">
-                            <div>
-                                <div class="flex items-stretch">
-                                    <button type="button" class="flex min-h-12 flex-1 flex-wrap items-center gap-x-3 gap-y-1 bg-white px-3 py-2.5 text-left hover:bg-sagra-softer" @click="caricaDaStorico(c)">
-                                        <span class="font-mono text-lg font-semibold">n.<span x-text="c.numero"></span></span>
-                                        <span class="rounded bg-sagra-softer px-1.5 py-0.5 text-xs font-semibold text-sagra-dark ring-1 ring-inset ring-sagra-line/80"
-                                              x-text="c.postazione || '—'"
-                                              :title="'Emessa da ' + (c.postazione || 'postazione sconosciuta')"></span>
-                                        <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm text-sagra-muted">
-                                            <span x-text="c.n_righe + ' voci · ' + c.coperti + ' cop.'"></span>
-                                            <span class="text-xs font-medium text-sagra"
-                                                  :class="c.metodo_pagamento === 'sospeso' ? 'text-sagra-amber' : (c.metodo_pagamento === 'omaggio' ? 'text-sky-800' : 'text-sagra')"
-                                                  x-text="labelMetodoBreve(c.metodo_pagamento)"></span>
-                                            <span class="text-xs text-sagra-muted" x-show="c.nominativo" x-text="c.nominativo"></span>
-                                        </span>
-                                        <span class="font-mono text-base font-semibold tabular-nums" x-text="formatEuro(c.totale)"></span>
-                                        <span class="ml-auto whitespace-nowrap text-sm font-medium text-sagra">Correggi →</span>
-                                    </button>
-                                    <button type="button" class="min-w-[4.5rem] border-l border-sagra-line bg-white px-2 text-xs font-semibold text-sagra-ink hover:bg-sagra-softer"
-                                            @click.stop="apriRistampaStorico(c)" title="Ristampa comanda">Ristampa</button>
-                                    <button type="button" class="min-w-[4.5rem] border-l border-sagra-line bg-white px-3 text-xs font-semibold text-sagra-danger hover:bg-sagra-danger-soft"
-                                            @click.stop="apriConfermaAnnullo(c)" title="Annulla comanda (irreversibile)">Annulla</button>
-                                </div>
-                                <template x-if="ristampaId === c.comanda_id">
-                                    <div class="border-t border-sagra-line bg-sagra-softer p-3">
-                                        <p class="mb-2 text-xs font-medium text-sagra-ink">
-                                            Ristampa n.<strong x-text="c.numero"></strong> — cosa stampare?
-                                        </p>
-                                        <div class="flex flex-wrap gap-2">
-                                            <button type="button" class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark"
-                                                    @click="eseguiRistampa(c.print_url, 'tutte')">Tutto</button>
-                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
-                                                    @click="eseguiRistampa(c.print_url, 'cliente')">Cliente</button>
-                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
-                                                    @click="eseguiRistampa(c.print_url, 'produzione')">Produzione</button>
-                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
-                                                    @click="eseguiRistampa(c.print_url, 'cameriere')">Cameriere</button>
-                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-muted shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
-                                                    @click="chiudiRistampa()">Annulla</button>
+                            </template>
+                            <template x-if="c.stato !== 'annullata'">
+                                <div>
+                                    <div class="flex items-stretch">
+                                        <button type="button"
+                                                class="min-h-[4.25rem] flex-1 bg-white px-4 py-3.5 text-left hover:bg-sagra-softer sm:min-h-[4.75rem] sm:px-5 sm:py-4"
+                                                @click="caricaDaStorico(c)">
+                                            <div class="flex items-start gap-3 sm:gap-4">
+                                                <span class="shrink-0 font-mono text-xl font-bold tabular-nums leading-none text-sagra-ink sm:text-2xl">n.<span x-text="c.numero"></span></span>
+                                                <div class="min-w-0 flex-1">
+                                                    <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                                                        <span class="inline-flex items-center rounded-md bg-sagra-softer px-2 py-1 text-xs font-semibold text-sagra-dark ring-1 ring-inset ring-sagra-line/80 sm:text-sm"
+                                                              x-text="c.postazione || '—'"
+                                                              :title="'Emessa da ' + (c.postazione || 'postazione sconosciuta')"></span>
+                                                        <span class="text-xs font-semibold uppercase tracking-wide"
+                                                              :class="c.metodo_pagamento === 'sospeso' ? 'text-sagra-amber' : (c.metodo_pagamento === 'omaggio' ? 'text-sky-800' : 'text-sagra')"
+                                                              x-text="labelMetodoBreve(c.metodo_pagamento)"></span>
+                                                        <span class="text-sm text-sagra-muted" x-show="c.nominativo" x-text="c.nominativo"></span>
+                                                    </div>
+                                                    <div class="mt-1.5 text-sm text-sagra-muted" x-text="c.n_righe + ' voci · ' + c.coperti + ' coperti'"></div>
+                                                </div>
+                                                <div class="ml-auto flex shrink-0 flex-col items-end gap-1.5 pl-2">
+                                                    <span class="font-mono text-lg font-bold tabular-nums leading-none text-sagra-ink sm:text-xl" x-text="formatEuro(c.totale)"></span>
+                                                    <span class="text-sm font-semibold text-sagra">Correggi →</span>
+                                                </div>
+                                            </div>
+                                        </button>
+                                        <div class="flex w-[4.75rem] shrink-0 flex-col border-l border-sagra-line sm:w-[5.5rem]">
+                                            <button type="button"
+                                                    class="flex flex-1 items-center justify-center px-2 py-2 text-sm font-semibold text-sagra-ink hover:bg-sagra-softer"
+                                                    @click.stop="apriRistampaStorico(c)" title="Ristampa comanda">Ristampa</button>
+                                            <button type="button"
+                                                    class="flex flex-1 items-center justify-center border-t border-sagra-line px-2 py-2 text-sm font-semibold text-sagra-danger hover:bg-sagra-danger-soft"
+                                                    @click.stop="apriConfermaAnnullo(c)" title="Annulla comanda (irreversibile)">Annulla</button>
                                         </div>
                                     </div>
-                                </template>
-                                <template x-if="annulloId === c.comanda_id">
-                                    <div class="border-t border-sagra-danger/30 bg-sagra-danger-soft p-3">
-                                        <p class="mb-2 text-xs font-medium leading-snug text-sagra-danger">
-                                            Annullare definitivamente la comanda n.<strong x-text="c.numero"></strong>?
-                                            Non sarà più possibile richiamarla né correggerla.
-                                        </p>
-                                        <input class="mb-2 block h-10 w-full rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-danger focus:ring-2 focus:ring-sagra-danger" type="text" maxlength="255"
-                                               x-model="annulloMotivo" x-ref="annulloMotivoInput"
-                                               placeholder="Motivo (obbligatorio)"
-                                               @keydown.enter.prevent="annulloMotivo.trim().length >= 2 && confermaAnnullo()">
-                                        <div class="mt-1 flex flex-wrap justify-end gap-2">
-                                            <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="chiudiConfermaAnnullo()">Torna indietro</button>
-                                            <button type="button" class="inline-flex items-center rounded-md bg-sagra-danger px-3 py-2 text-sm font-semibold text-white hover:bg-red-950"
-                                                    :disabled="annulloMotivo.trim().length < 2 || busy"
-                                                    @click="confermaAnnullo()">Conferma annullamento</button>
+                                    <template x-if="ristampaId === c.comanda_id">
+                                        <div class="border-t border-sagra-line bg-sagra-softer px-4 py-3.5 sm:px-5">
+                                            <p class="mb-2.5 text-sm font-medium text-sagra-ink">
+                                                Ristampa n.<strong x-text="c.numero"></strong> — cosa stampare?
+                                            </p>
+                                            <div class="flex flex-wrap gap-2">
+                                                <button type="button" class="inline-flex items-center rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark"
+                                                        @click="eseguiRistampa(c.print_url, 'tutte')">Tutto</button>
+                                                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                        @click="eseguiRistampa(c.print_url, 'cliente')">Cliente</button>
+                                                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                        @click="eseguiRistampa(c.print_url, 'produzione')">Produzione</button>
+                                                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                        @click="eseguiRistampa(c.print_url, 'cameriere')">Cameriere</button>
+                                                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-muted shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-white"
+                                                        @click="chiudiRistampa()">Chiudi</button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </template>
-                            </div>
-                        </template>
+                                    </template>
+                                    <template x-if="annulloId === c.comanda_id">
+                                        <div class="border-t border-sagra-danger/30 bg-sagra-danger-soft px-4 py-3.5 sm:px-5">
+                                            <p class="mb-2.5 text-sm font-medium leading-snug text-sagra-danger">
+                                                Annullare definitivamente la comanda n.<strong x-text="c.numero"></strong>?
+                                                Non sarà più possibile richiamarla né correggerla.
+                                            </p>
+                                            <input class="mb-2.5 block h-11 w-full rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-danger focus:ring-2 focus:ring-sagra-danger" type="text" maxlength="255"
+                                                   x-model="annulloMotivo" x-ref="annulloMotivoInput"
+                                                   placeholder="Motivo (obbligatorio)"
+                                                   @keydown.enter.prevent="annulloMotivo.trim().length >= 2 && confermaAnnullo()">
+                                            <div class="flex flex-wrap justify-end gap-2">
+                                                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="chiudiConfermaAnnullo()">Torna indietro</button>
+                                                <button type="button" class="inline-flex items-center rounded-md bg-sagra-danger px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-950"
+                                                        :disabled="annulloMotivo.trim().length < 2 || busy"
+                                                        @click="confermaAnnullo()">Conferma annullamento</button>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
                     </div>
-                </template>
                 </div>
             </div>
-            </div>
-            <div class="shrink-0 border-t border-sagra-line px-5 py-3 flex justify-end gap-2">
-                <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
+            <div class="flex shrink-0 justify-end gap-2 border-t border-sagra-line px-4 py-3 sm:px-6">
+                <button class="inline-flex h-10 items-center rounded-md bg-white px-4 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
             </div>
         </div>
     </div>
