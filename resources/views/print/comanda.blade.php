@@ -99,7 +99,7 @@
 @endunless
 
 @php $parteStampa = in_array($parte ?? 'tutte', ['cliente', 'produzione', 'cameriere', 'tutte'], true) ? ($parte ?? 'tutte') : 'tutte'; @endphp
-<div class="print-sheet {{ $isCorrezione ? 'print-sheet--correzione' : '' }} print-sheet--parte-{{ $parteStampa }}">
+<div class="print-sheet {{ $isCorrezione ? 'print-sheet--correzione' : '' }} print-sheet--parte-{{ $parteStampa }}" data-print-root>
     {{-- Foglio preforato A4 landscape: 3 terzi uguali (Cliente | Produzione | Cameriere) --}}
     <section class="tag-cliente">
         <div class="tag-brand">{{ $nome }} {{ $anno }}</div>
@@ -333,10 +333,29 @@ window.__autoPrint = @json((bool) $autoPrint);
 
 let giaStampato = false;
 
+function preparaStampaUnaPagina() {
+    // Chrome sui notebook: nasconde tutto tranne il foglio e forza 1 page-box.
+    document.documentElement.classList.add('is-printing');
+    document.body.classList.add('is-printing');
+    const sheet = document.querySelector('[data-print-root]');
+    if (!sheet) return;
+    sheet.style.position = 'fixed';
+    sheet.style.left = '0';
+    sheet.style.top = '0';
+    sheet.style.right = '0';
+    sheet.style.bottom = '0';
+    sheet.style.width = '100%';
+    sheet.style.height = '100%';
+    sheet.style.margin = '0';
+    sheet.style.overflow = 'hidden';
+}
+
 function avviaStampaAutomatica() {
     if (giaStampato) return;
     giaStampato = true;
-    window.print();
+    preparaStampaUnaPagina();
+    // Un frame per applicare gli stili prima del dialogo/kiosk print.
+    requestAnimationFrame(() => window.print());
 }
 
 window.addEventListener('pageshow', (event) => {
@@ -348,6 +367,8 @@ window.addEventListener('pageshow', (event) => {
         avviaStampaAutomatica();
     }
 });
+
+window.addEventListener('beforeprint', preparaStampaUnaPagina);
 
 window.addEventListener('afterprint', () => {
     window.location.replace('/cassa');
