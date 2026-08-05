@@ -20,7 +20,7 @@
     document.addEventListener('livewire:init', () => {
         Livewire.on('toast', (payload) => {
             const data = Array.isArray(payload) ? (payload[0] || {}) : (payload || {});
-            window.sagraToast?.(data.message ?? data[0] ?? '', data.type ?? 'ok', data.timeout ?? 4200);
+            window.sagraToast?.(data.message ?? data[0] ?? '', data.type ?? 'ok', data.timeout ?? 3600);
         });
     });
 </script>

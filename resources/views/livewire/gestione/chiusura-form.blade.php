@@ -16,10 +16,6 @@
         </x-slot:actions>
     </x-gestione.page-header>
 
-    @if (session('status'))
-        <x-ui.alert type="ok" class="mb-4">{{ session('status') }}</x-ui.alert>
-    @endif
-
     @if ($errore)
         <x-ui.alert type="danger">{{ $errore }}</x-ui.alert>
     @endif

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gestione;
 
+use App\Livewire\Concerns\WithToast;
 use App\Models\Impostazione;
 use App\Models\Postazione;
 use App\Models\PostazionePuntoCassa;
@@ -10,6 +11,8 @@ use Livewire\Component;
 
 class ImpostazioniPage extends Component
 {
+    use WithToast;
+
     public string $intestazione_nome = '';
 
     public string $intestazione_anno = '';
@@ -54,8 +57,7 @@ class ImpostazioniPage extends Component
             'stock_soglia_alert' => max(0, (int) $this->stock_soglia_alert),
         ]);
         $this->errore = '';
-        session()->flash('status', 'Impostazioni salvate.');
-        $this->dispatch('toast', message: 'Impostazioni salvate.', type: 'ok');
+        $this->toastOk('Impostazioni salvate.');
     }
 
     public function aggiungiPostazione(): void
@@ -64,6 +66,7 @@ class ImpostazioniPage extends Component
         Postazione::query()->create(['nome' => $this->nuovaPostazione]);
         $this->nuovaPostazione = '';
         $this->errore = '';
+        $this->toastOk('Postazione aggiunta.');
     }
 
     public function eliminaPostazione(int $id): void
@@ -86,7 +89,7 @@ class ImpostazioniPage extends Component
 
         $postazione->delete();
         $this->errore = '';
-        $this->dispatch('toast', message: 'Postazione eliminata.', type: 'ok');
+        $this->toastOk('Postazione eliminata.');
     }
 
     public function aggiungiPunto(): void
@@ -95,6 +98,7 @@ class ImpostazioniPage extends Component
         PuntoCassa::query()->create(['nome' => $this->nuovoPunto, 'attivo' => true]);
         $this->nuovoPunto = '';
         $this->errore = '';
+        $this->toastOk('Punto cassa aggiunto.');
     }
 
     public function eliminaPunto(int $id): void
@@ -124,7 +128,7 @@ class ImpostazioniPage extends Component
 
         $punto->delete();
         $this->errore = '';
-        $this->dispatch('toast', message: 'Punto cassa eliminato.', type: 'ok');
+        $this->toastOk('Punto cassa eliminato.');
     }
 
     public function mappa(): void
@@ -140,14 +144,13 @@ class ImpostazioniPage extends Component
             'valido_da' => $this->mapValidoDa,
         ]);
         $this->errore = '';
-        session()->flash('status', 'Mappatura salvata.');
-        $this->dispatch('toast', message: 'Mappatura salvata.', type: 'ok');
+        $this->toastOk('Mappatura salvata.');
     }
 
     private function bloccaEliminazione(string $messaggio): void
     {
         $this->errore = $messaggio;
-        $this->dispatch('toast', message: $messaggio, type: 'danger');
+        $this->toastDanger($messaggio);
     }
 
     public function render()

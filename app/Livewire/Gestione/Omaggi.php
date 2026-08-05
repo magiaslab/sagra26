@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gestione;
 
+use App\Livewire\Concerns\WithToast;
 use App\Models\Comanda;
 use App\Models\Impostazione;
 use App\Models\Serata;
@@ -10,6 +11,8 @@ use Livewire\Component;
 
 class Omaggi extends Component
 {
+    use WithToast;
+
     public ?int $serataId = null;
 
     public function mount(): void
@@ -23,11 +26,20 @@ class Omaggi extends Component
     {
         $serata = $this->serataSelezionata();
         if (! $serata) {
+            $this->toastWarn('Seleziona una serata.');
+
             return null;
         }
 
         $omaggi = $this->queryOmaggi($serata->id);
+        if ($omaggi->isEmpty()) {
+            $this->toastWarn('Nessun omaggio da esportare.');
+
+            return null;
+        }
+
         $filename = 'omaggi-'.$serata->data->format('Y-m-d').'.csv';
+        $this->toastOk('Export omaggi avviato.');
 
         return response()->streamDownload(function () use ($serata, $omaggi) {
             $out = fopen('php://output', 'w');

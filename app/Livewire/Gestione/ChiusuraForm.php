@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gestione;
 
+use App\Livewire\Concerns\WithToast;
 use App\Models\Chiusura;
 use App\Models\Impostazione;
 use App\Models\PuntoCassa;
@@ -12,6 +13,8 @@ use Livewire\Component;
 
 class ChiusuraForm extends Component
 {
+    use WithToast;
+
     public ?int $serataId = null;
 
     public ?int $puntoCassaId = null;
@@ -192,10 +195,11 @@ class ChiusuraForm extends Component
                 'totale_z' => $this->totale_z,
                 'note' => $this->note,
             ]));
-            session()->flash('status', 'Chiusura salvata.');
+            $this->toastOk('Chiusura salvata.');
             $this->carica();
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
+            $this->toastDanger($e->getMessage());
         }
     }
 
@@ -206,10 +210,11 @@ class ChiusuraForm extends Component
             $serata = Serata::query()->findOrFail($this->serataId);
             $punto = PuntoCassa::query()->findOrFail($this->puntoCassaId);
             $service->riapriPerCorrezione($serata, $punto);
-            session()->flash('status', 'Chiusura sbloccata: puoi correggere i conteggi e salvare di nuovo.');
+            $this->toastOk('Chiusura sbloccata: puoi correggere i conteggi e salvare di nuovo.');
             $this->carica();
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
+            $this->toastDanger($e->getMessage());
         }
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Gestione;
 
+use App\Livewire\Concerns\WithToast;
 use App\Models\Impostazione;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -9,6 +10,8 @@ use Livewire\Component;
 
 class Pin extends Component
 {
+    use WithToast;
+
     public string $pin = '';
 
     public bool $recupero = false;
@@ -63,12 +66,15 @@ class Pin extends Component
         if (hash_equals((string) $atteso, $this->pin)) {
             RateLimiter::clear($key);
             session(['gestione_sbloccata' => true]);
+            $this->toastOk('Accesso gestione sbloccato.');
+            $this->flashStatus('Accesso gestione sbloccato.');
             $this->redirect(route('gestione.dashboard', absolute: false), navigate: true);
 
             return;
         }
 
         $this->errore = 'PIN non corretto.';
+        $this->toastDanger('PIN non corretto.');
         $this->pin = '';
     }
 
@@ -117,6 +123,8 @@ class Pin extends Component
         ]);
 
         session(['gestione_sbloccata' => true]);
+        $this->toastOk('PIN reimpostato. Accesso sbloccato.');
+        $this->flashStatus('PIN reimpostato. Accesso sbloccato.');
         $this->redirect(route('gestione.dashboard', absolute: false), navigate: true);
     }
 
