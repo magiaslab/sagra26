@@ -46,11 +46,11 @@ class RiepilogoLive extends Component
 
             $dati['per_postazione'] = $comande->groupBy('postazione_id')->map(function ($group) {
                 return [
-                    'nome' => $group->first()->postazione->nome,
+                    'nome' => $group->first()->postazione?->nome ?? '—',
                     'n' => $group->count(),
                     'totale' => round($group->sum(fn ($c) => $c->importoIncasso()), 2),
                 ];
-            })->values();
+            })->sortBy('nome')->values();
 
             $dati['per_piatto'] = ComandaRiga::query()
                 ->join('comande', 'comande.id', '=', 'comanda_righe.comanda_id')

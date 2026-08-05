@@ -289,11 +289,12 @@ class CassaController extends Controller
         }
 
         $comande = Comanda::query()
+            ->with(['postazione'])
             ->withCount('righe')
             ->where('serata_id', $serata->id)
             ->whereIn('stato', ['stampata', 'annullata'])
             ->orderByDesc('numero_progressivo')
-            ->limit(40)
+            ->limit(60)
             ->get()
             ->map(fn (Comanda $c) => [
                 'comanda_id' => $c->id,
@@ -306,6 +307,8 @@ class CassaController extends Controller
                 'stato' => $c->stato,
                 'motivo_annullo' => $c->motivo_annullo,
                 'n_righe' => $c->righe_count,
+                'postazione_id' => (int) $c->postazione_id,
+                'postazione' => $c->postazione?->nome,
                 'print_url' => route('cassa.stampa', $c, absolute: false),
             ]);
 
@@ -321,7 +324,7 @@ class CassaController extends Controller
         }
 
         $comanda = Comanda::query()
-            ->with(['righe.menuItem'])
+            ->with(['righe.menuItem', 'postazione'])
             ->where('numero_progressivo', $numero)
             ->where('serata_id', $serata->id)
             ->first();
@@ -348,6 +351,8 @@ class CassaController extends Controller
             'nominativo' => $comanda->nominativo,
             'pagamento_note' => $comanda->pagamento_note,
             'era_sospeso' => (bool) $comanda->era_sospeso,
+            'postazione_id' => (int) $comanda->postazione_id,
+            'postazione' => $comanda->postazione?->nome,
             'correzioni_count' => $comanda->correzioni()->count(),
             'print_url' => route('cassa.stampa', $comanda, absolute: false),
             'righe' => $comanda->righe->map(fn ($r) => [
@@ -396,7 +401,8 @@ class CassaController extends Controller
             'motivo' => 'required|string|min:2',
         ]);
 
-        $guard = $this->assertClaimAttivo($request, (int) $comanda->postazione_id);
+        // Annulla da qualsiasi postazione attiva (non solo quella che ha emesso la comanda).
+        $guard = $this->assertClaimAttivo($request, (int) $request->session()->get('postazione_id'));
         if ($guard !== null) {
             return $guard;
         }

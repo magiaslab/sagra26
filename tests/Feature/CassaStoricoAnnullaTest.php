@@ -40,8 +40,10 @@ it('lo storico elenca comande stampate e annullate della serata', function () {
         ->assertJsonPath('comande.0.numero', $b->numero_progressivo)
         ->assertJsonPath('comande.0.stato', 'annullata')
         ->assertJsonPath('comande.0.motivo_annullo', 'errore cassiere')
+        ->assertJsonPath('comande.0.postazione', $postazione->nome)
         ->assertJsonPath('comande.1.numero', $a->numero_progressivo)
         ->assertJsonPath('comande.1.stato', 'stampata')
+        ->assertJsonPath('comande.1.postazione', $postazione->nome)
         ->assertJsonPath('comande.1.print_url', route('cassa.stampa', $a, absolute: false));
 });
 
