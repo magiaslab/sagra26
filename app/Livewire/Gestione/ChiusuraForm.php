@@ -29,14 +29,24 @@ class ChiusuraForm extends Component
     /** @var array<string, int> */
     public array $pezzi = [];
 
+    /** @var array<string, int> Pezzi lasciati in cassa come fondo sera dopo */
+    public array $pezziFondo = [];
+
+    public bool $syncFondoDaPezzi = true;
+
     public ?array $riconciliazione = null;
 
     public ?string $errore = null;
 
-    public function mount(RiconciliazioneService $ric): void
+    public ?string $chiusaAtLabel = null;
+
+    public bool $chiusuraCompletata = false;
+
+    public function mount(): void
     {
         foreach (array_keys(Chiusura::TAGLI) as $campo) {
             $this->pezzi[$campo] = 0;
+            $this->pezziFondo[$campo] = 0;
         }
         $serata = Serata::corrente() ?? Serata::query()->orderByDesc('data')->first();
         $this->serataId = $serata?->id;
@@ -60,6 +70,14 @@ class ChiusuraForm extends Component
         $this->ricalcolaPreview();
     }
 
+    public function updatedPezziFondo(): void
+    {
+        if ($this->syncFondoDaPezzi) {
+            $this->fondo_trattenuto = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+        }
+        $this->ricalcolaPreview();
+    }
+
     public function updatedFondoIniziale(): void
     {
         $this->ricalcolaPreview();
@@ -67,6 +85,7 @@ class ChiusuraForm extends Component
 
     public function updatedFondoTrattenuto(): void
     {
+        $this->syncFondoDaPezzi = false;
         $this->ricalcolaPreview();
     }
 
@@ -80,8 +99,20 @@ class ChiusuraForm extends Component
         $this->ricalcolaPreview();
     }
 
+    public function applicaTotalePezziFondo(): void
+    {
+        $this->syncFondoDaPezzi = true;
+        $this->fondo_trattenuto = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+        $this->ricalcolaPreview();
+    }
+
     public function carica(): void
     {
+        $this->errore = null;
+        $this->chiusaAtLabel = null;
+        $this->chiusuraCompletata = false;
+        $this->syncFondoDaPezzi = true;
+
         if (! $this->serataId || ! $this->puntoCassaId) {
             return;
         }
@@ -99,10 +130,24 @@ class ChiusuraForm extends Component
             foreach (array_keys(Chiusura::TAGLI) as $campo) {
                 $this->pezzi[$campo] = (int) $chiusura->{$campo};
             }
+            $this->pezziFondo = $chiusura->pezziFondoNormalizzati();
+            $this->chiusuraCompletata = $chiusura->isCompletata();
+            $this->chiusaAtLabel = $chiusura->chiusa_at?->timezone(config('app.timezone'))->format('d/m/Y H:i');
+            if (array_sum($this->pezziFondo) > 0) {
+                $this->syncFondoDaPezzi = true;
+            }
         } else {
+            foreach (array_keys(Chiusura::TAGLI) as $campo) {
+                $this->pezzi[$campo] = 0;
+                $this->pezziFondo[$campo] = 0;
+            }
             $punto = PuntoCassa::query()->find($this->puntoCassaId);
             $sug = $punto ? app(RiconciliazioneService::class)->fondoInizialeSuggerito($punto) : null;
             $this->fondo_iniziale = $sug ?? 0;
+            $this->fondo_trattenuto = 0;
+            $this->totale_pos = 0;
+            $this->totale_z = 0;
+            $this->note = '';
         }
         $this->ricalcolaPreview();
     }
@@ -127,6 +172,7 @@ class ChiusuraForm extends Component
             $tmp,
         );
         $this->riconciliazione['contante_contato'] = $tmp->contante_contato;
+        $this->riconciliazione['fondo_pezzi_totale'] = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
     }
 
     public function salva(ChiusuraService $service): void
@@ -135,14 +181,32 @@ class ChiusuraForm extends Component
         $serata = Serata::query()->findOrFail($this->serataId);
         $punto = PuntoCassa::query()->findOrFail($this->puntoCassaId);
         try {
+            if ($this->syncFondoDaPezzi) {
+                $this->fondo_trattenuto = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+            }
             $service->salva($serata, $punto, array_merge($this->pezzi, [
                 'fondo_iniziale' => $this->fondo_iniziale,
                 'fondo_trattenuto' => $this->fondo_trattenuto,
+                'pezzi_fondo' => $this->pezziFondo,
                 'totale_pos' => $this->totale_pos,
                 'totale_z' => $this->totale_z,
                 'note' => $this->note,
             ]));
             session()->flash('status', 'Chiusura salvata.');
+            $this->carica();
+        } catch (\Throwable $e) {
+            $this->errore = $e->getMessage();
+        }
+    }
+
+    public function riapriPerCorreggere(ChiusuraService $service): void
+    {
+        $this->errore = null;
+        try {
+            $serata = Serata::query()->findOrFail($this->serataId);
+            $punto = PuntoCassa::query()->findOrFail($this->puntoCassaId);
+            $service->riapriPerCorrezione($serata, $punto);
+            session()->flash('status', 'Chiusura sbloccata: puoi correggere i conteggi e salvare di nuovo.');
             $this->carica();
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
@@ -161,11 +225,15 @@ class ChiusuraForm extends Component
 
     public function render()
     {
+        $fondoPezziTotale = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+
         return view('livewire.gestione.chiusura-form', [
             'serate' => Serata::query()->orderByDesc('data')->get(),
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'tagli' => Chiusura::TAGLI,
             'bloccata' => $this->serataBloccata(),
+            'fondoPezziTotale' => $fondoPezziTotale,
+            'fondoPezziDescrizione' => Chiusura::descrizionePezzi(Chiusura::normalizzaPezzi($this->pezziFondo)),
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
     }
 }

@@ -79,12 +79,36 @@ class RiconciliazioneService
 
     public function fondoInizialeSuggerito(PuntoCassa $puntoCassa): ?float
     {
-        $precedente = Chiusura::query()
+        $precedente = $this->chiusuraPrecedenteCompletata($puntoCassa);
+
+        return $precedente ? (float) $precedente->fondo_trattenuto : null;
+    }
+
+    /**
+     * @return array{importo: float, pezzi: array<string, int>, descrizione: string}|null
+     */
+    public function fondoPrecedenteDettaglio(PuntoCassa $puntoCassa): ?array
+    {
+        $precedente = $this->chiusuraPrecedenteCompletata($puntoCassa);
+        if (! $precedente) {
+            return null;
+        }
+
+        $pezzi = $precedente->pezziFondoNormalizzati();
+
+        return [
+            'importo' => (float) $precedente->fondo_trattenuto,
+            'pezzi' => $pezzi,
+            'descrizione' => Chiusura::descrizionePezzi($pezzi),
+        ];
+    }
+
+    private function chiusuraPrecedenteCompletata(PuntoCassa $puntoCassa): ?Chiusura
+    {
+        return Chiusura::query()
             ->where('punto_cassa_id', $puntoCassa->id)
             ->whereNotNull('chiusa_at')
             ->orderByDesc('chiusa_at')
             ->first();
-
-        return $precedente ? (float) $precedente->fondo_trattenuto : null;
     }
 }
