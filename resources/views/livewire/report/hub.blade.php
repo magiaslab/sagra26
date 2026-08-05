@@ -101,4 +101,12 @@
             @include('livewire.report.partials.confronto', ['dati' => $dati, 'serata' => $serata, 'impostazioni' => $impostazioni])
         @endif
     </div>
+
+    @if ($autoPrint)
+        <script>
+            window.addEventListener('load', function () {
+                setTimeout(function () { window.print(); }, 150);
+            });
+        </script>
+    @endif
 </div>

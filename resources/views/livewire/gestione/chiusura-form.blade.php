@@ -3,7 +3,15 @@
     <x-gestione.page-header title="Chiusura & riconciliazione" subtitle="Conta pezzi, fondo cassa e confronto a tre vie">
         <x-slot:actions>
             @if ($riconciliazione)
-                <a class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" href="{{ route('gestione.report', absolute: false) }}?tipo=consegna">Foglio consegna</a>
+                <a
+                    class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                    href="{{ route('gestione.report', [
+                        'tipo' => 'consegna',
+                        'serata_id' => $serataId,
+                        'punto_cassa_id' => $puntoCassaId,
+                        'print' => 1,
+                    ], absolute: false) }}"
+                >Stampa foglio consegna</a>
             @endif
         </x-slot:actions>
     </x-gestione.page-header>

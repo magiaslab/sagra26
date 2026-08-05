@@ -28,11 +28,37 @@ class ReportHub extends Component
 
     public bool $completo = true;
 
+    /** Se true, avvia window.print() al caricamento (es. da Chiusura → Foglio consegna). */
+    public bool $autoPrint = false;
+
+    private const TIPI = [
+        'cumulativo', 'cucina_1', 'cucina_2', 'griglia', 'bevande',
+        'statistiche', 'economico', 'consegna', 'confronto',
+    ];
+
     public function mount(): void
     {
-        $this->serataId = Serata::query()->orderByDesc('data')->value('id');
-        $this->puntoCassaId = PuntoCassa::query()->where('attivo', true)->value('id');
+        $tipo = request()->query('tipo');
+        if (is_string($tipo) && in_array($tipo, self::TIPI, true)) {
+            $this->tipo = $tipo;
+        }
+
+        $serataQuery = request()->query('serata_id') ?? request()->query('serataId');
+        if ($serataQuery !== null && $serataQuery !== '' && Serata::query()->whereKey((int) $serataQuery)->exists()) {
+            $this->serataId = (int) $serataQuery;
+        } else {
+            $this->serataId = Serata::query()->orderByDesc('data')->value('id');
+        }
+
+        $puntoQuery = request()->query('punto_cassa_id') ?? request()->query('puntoCassaId');
+        if ($puntoQuery !== null && $puntoQuery !== '' && PuntoCassa::query()->whereKey((int) $puntoQuery)->exists()) {
+            $this->puntoCassaId = (int) $puntoQuery;
+        } else {
+            $this->puntoCassaId = PuntoCassa::query()->where('attivo', true)->value('id');
+        }
+
         $this->serataConfrontoId = $this->serataPrecedenteId($this->serataId);
+        $this->autoPrint = request()->boolean('print');
     }
 
     public function updatedSerataId(?int $value): void
