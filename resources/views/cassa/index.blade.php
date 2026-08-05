@@ -130,52 +130,71 @@
             </div>
         </header>
 
-        <div class="flex h-12 items-center justify-between gap-2 border-b border-sagra-line bg-white px-3 xl:px-4">
-            <div class="hidden min-w-0 items-center gap-x-0.5 text-[0.72rem] font-medium text-sagra-muted lg:flex" aria-hidden="true">
-                <span class="inline-flex items-center gap-1 px-1.5 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd></span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>↑</kbd></span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>←</kbd><kbd>→</kbd></span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>+</kbd><kbd>-</kbd></span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>Canc</kbd></span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>F9</kbd></span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>F2</kbd></span>
-                <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1.5 py-0.5"><kbd>Esc</kbd></span>
-            </div>
-            <div class="ml-auto flex shrink-0 flex-nowrap items-center justify-end gap-2">
-                <span class="mr-1 whitespace-nowrap text-sm font-medium text-sagra-muted" x-text="righeOrdine.length + ' voci · ' + coperti + ' coperti'"></span>
+        <div class="border-b border-sagra-line bg-white px-3 py-2 xl:px-4">
+            <div class="flex flex-wrap items-center gap-2">
+                {{-- Scorciatoie: solo schermi larghi, non competono con i controlli --}}
+                <div class="mr-auto hidden min-w-0 items-center gap-x-0.5 text-[0.7rem] font-medium text-sagra-muted xl:flex" aria-hidden="true">
+                    <span class="inline-flex items-center gap-1 px-1 py-0.5"><kbd>↓</kbd><kbd>Invio</kbd></span>
+                    <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1 py-0.5"><kbd>↑</kbd></span>
+                    <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1 py-0.5"><kbd>←</kbd><kbd>→</kbd></span>
+                    <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1 py-0.5"><kbd>+</kbd><kbd>-</kbd></span>
+                    <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1 py-0.5"><kbd>F9</kbd></span>
+                    <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1 py-0.5"><kbd>F2</kbd></span>
+                    <span class="inline-flex items-center gap-1 border-l border-sagra-line px-1 py-0.5"><kbd>Esc</kbd></span>
+                </div>
+
+                <span class="whitespace-nowrap text-xs font-medium text-sagra-muted sm:text-sm" x-text="righeOrdine.length + ' voci · ' + coperti + ' cop.'"></span>
+
                 <span
-                    class="mr-1 whitespace-nowrap rounded-md px-2 py-1 text-sm font-semibold tabular-nums"
+                    class="max-w-[11rem] truncate rounded-md px-2 py-1 text-xs font-semibold tabular-nums sm:max-w-[14rem] sm:text-sm"
                     x-show="comandaId"
                     x-cloak
                     :class="deltaCorrezione > 0
                         ? 'bg-sagra-amber-soft text-sagra-amber'
                         : (deltaCorrezione < 0 ? 'bg-sky-50 text-sky-800 ring-1 ring-sky-200' : 'bg-sagra-softer text-sagra-muted')"
                     x-text="deltaCorrezioneMessaggio"
+                    :title="deltaCorrezioneMessaggio"
                 ></span>
-                <div class="w-28 min-h-9 xl:w-32" :class="comandaId ? 'invisible pointer-events-none' : 'visible'">
-                    <input class="block h-9 w-full rounded-md bg-white px-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="40" x-model="tavolo"
-                           placeholder="Tavolo" autocomplete="off"
-                           :tabindex="comandaId ? -1 : 0">
+
+                <input
+                    class="h-9 w-[5.5rem] shrink-0 rounded-md bg-white px-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra sm:w-28"
+                    type="text" maxlength="40" x-model="tavolo"
+                    placeholder="Tavolo" autocomplete="off"
+                    x-show="!comandaId"
+                    x-cloak
+                >
+
+                <input
+                    class="h-9 min-w-[7rem] max-w-[12rem] flex-1 rounded-md bg-white px-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra sm:min-w-[8rem]"
+                    type="text" maxlength="255" x-model="noteComanda"
+                    placeholder="Note" autocomplete="off"
+                >
+
+                <input
+                    class="h-9 min-w-[8rem] max-w-[14rem] flex-1 rounded-md bg-white px-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra"
+                    type="text" maxlength="255" x-model="motivo"
+                    placeholder="Motivo correzione" autocomplete="off"
+                    x-show="comandaId"
+                    x-cloak
+                >
+
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                    <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-sagra px-2.5 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50 sm:px-3" @click="apriPagamento()" :disabled="!serataAperta">
+                        Conferma<span class="hidden sm:inline">&nbsp;e stampa</span>
+                        <kbd class="ml-1.5 hidden border-white/40 bg-black/15 text-inherit sm:inline-block">F9</kbd>
+                    </button>
+                    <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-2.5 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer sm:px-3" @click="apriRichiamo()">
+                        Richiama <kbd class="ml-1 hidden sm:inline-block">F2</kbd>
+                    </button>
+                    <button type="button"
+                            class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-2.5 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer sm:px-3"
+                            x-show="comandaId && printUrlRichiamata"
+                            x-cloak
+                            @click="apriRistampaCaricata()">Ristampa</button>
+                    <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-2.5 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer sm:px-3" @click="resetComanda()">
+                        Annulla <kbd class="ml-1 hidden sm:inline-block">Esc</kbd>
+                    </button>
                 </div>
-                <div class="w-36 min-h-9 xl:w-44">
-                    <input class="block h-9 w-full rounded-md bg-white px-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="noteComanda"
-                           placeholder="Note" autocomplete="off">
-                </div>
-                <div class="w-40 min-h-9 xl:w-44" :class="comandaId ? 'visible' : 'invisible pointer-events-none'">
-                    <input class="block h-9 w-full rounded-md bg-white px-2.5 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="motivo"
-                           placeholder="Motivo correzione" autocomplete="off"
-                           :tabindex="comandaId ? 0 : -1" :aria-hidden="!comandaId">
-                </div>
-                <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-sagra px-3 text-sm font-semibold text-white hover:bg-sagra-dark disabled:opacity-50 xl:px-3.5" @click="apriPagamento()" :disabled="!serataAperta">
-                    Conferma e stampa <kbd class="ml-1.5 border-white/40 bg-black/15 text-inherit">F9</kbd>
-                </button>
-                <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriRichiamo()">Richiama <kbd class="ml-1">F2</kbd></button>
-                <button type="button"
-                        class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
-                        x-show="comandaId && printUrlRichiamata"
-                        x-cloak
-                        @click="apriRistampaCaricata()">Ristampa</button>
-                <button type="button" class="inline-flex h-9 items-center whitespace-nowrap rounded-md bg-white px-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="resetComanda()">Annulla <kbd class="ml-1">Esc</kbd></button>
             </div>
         </div>
     </div>
@@ -847,6 +866,9 @@ function cassaApp(cfg) {
             this.$watch('messaggio', (v) => { if (v) window.sagraToast?.(v, 'ok'); });
             this.$watch('modalAnteprima', (open) => {
                 if (open) this.$nextTick(() => this.fitAnteprima());
+            });
+            this.$watch('comandaId', () => {
+                this.$nextTick(() => this.syncTopPad());
             });
             this._onResizeCassa = () => {
                 this.syncTopPad();
