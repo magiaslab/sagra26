@@ -153,7 +153,7 @@ class ComandaService
             if ($esistente) {
                 $comanda->version = (int) $comanda->version + 1;
             }
-            // Metodo/importi definitivi dopo il ricalcolo totale (correzione = solo delta).
+            // Metodo/importi definitivi dopo il ricalcolo totale (correzione: delta o riassegnazione).
             $comanda->metodo_pagamento = $metodoPagamento;
             $comanda->importo_contante = null;
             $comanda->importo_pos = null;
@@ -219,8 +219,10 @@ class ComandaService
     }
 
     /**
-     * In correzione Contante/POS scelti dal cassiere riguardano solo la differenza
-     * rispetto al totale già pagato; lo split finale sulla comanda si aggiorna di conseguenza.
+     * In correzione Contante/POS scelti dal cassiere:
+     * - con differenza di totale → valgono solo per il delta (lo split si aggiorna);
+     * - senza differenza → riassegnano l’intero totale al metodo scelto
+     *   (metodo digitato male, POS non funziona, ecc.).
      *
      * @param  array{totale: float, contante: float, pos: float}  $precedente
      * @return array{metodo: string, importo_contante: ?float, importo_pos: ?float}
@@ -228,18 +230,27 @@ class ComandaService
     private function risolviPagamentoCorrezione(array $precedente, float $nuovoTotale, string $metodoDelta): array
     {
         $delta = round($nuovoTotale - $precedente['totale'], 2);
+
+        if (abs($delta) < 0.005) {
+            if (! in_array($metodoDelta, ['contante', 'pos'], true)) {
+                throw new RuntimeException('Per correggere il pagamento scegli Contante o POS.');
+            }
+
+            return $metodoDelta === 'contante'
+                ? $this->normalizzaMetodoImporti($nuovoTotale, 0.0)
+                : $this->normalizzaMetodoImporti(0.0, $nuovoTotale);
+        }
+
+        if (! in_array($metodoDelta, ['contante', 'pos'], true)) {
+            throw new RuntimeException('Per la differenza scegli Contante o POS.');
+        }
+
         $contante = round($precedente['contante'], 2);
         $pos = round($precedente['pos'], 2);
-
-        if (abs($delta) >= 0.005) {
-            if (! in_array($metodoDelta, ['contante', 'pos'], true)) {
-                throw new RuntimeException('Per la differenza scegli Contante o POS.');
-            }
-            if ($metodoDelta === 'contante') {
-                $contante = round($contante + $delta, 2);
-            } else {
-                $pos = round($pos + $delta, 2);
-            }
+        if ($metodoDelta === 'contante') {
+            $contante = round($contante + $delta, 2);
+        } else {
+            $pos = round($pos + $delta, 2);
         }
 
         return $this->normalizzaMetodoImporti($contante, $pos);

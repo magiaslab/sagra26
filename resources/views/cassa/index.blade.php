@@ -273,25 +273,29 @@
             <template x-if="comandaId">
                 <div class="mt-3">
                     <p class="text-base font-bold tabular-nums"
-                       :class="deltaCorrezione > 0 ? 'text-sagra-amber' : 'text-sky-800'"
+                       :class="deltaCorrezione > 0 ? 'text-sagra-amber' : (deltaCorrezione < 0 ? 'text-sky-800' : 'text-sagra-ink')"
                        x-text="deltaCorrezioneMessaggio"></p>
                     <p class="mt-1 text-sm text-sagra-muted"
                        x-text="deltaCorrezione > 0
                            ? 'Incassa solo la differenza (il resto è già pagato).'
-                           : 'Restituisci solo la differenza.'"></p>
+                           : (deltaCorrezione < 0
+                               ? 'Restituisci solo la differenza.'
+                               : 'Conferma o correggi il metodo di pagamento.')"></p>
+                    <p class="mt-1 text-xs text-sagra-muted" x-show="deltaCorrezione === 0 && metodoOriginale"
+                       x-text="'Ora risulta: ' + (metodoOriginale === 'pos' ? 'POS' : (metodoOriginale === 'misto' ? 'MISTO' : 'CONTANTE'))"></p>
                 </div>
             </template>
             <div class="mt-5 grid grid-cols-2 gap-3">
                 <button type="button" class="rounded-md bg-sagra px-3 py-4 text-base font-semibold text-white hover:bg-sagra-dark" @click="scegliMetodo('contante')">
                     <span class="block font-mono text-xs text-white/70">C</span>
                     <span x-text="comandaId
-                        ? (deltaCorrezione > 0 ? 'Incassa contante' : 'Restituisci contante')
+                        ? (deltaCorrezione > 0 ? 'Incassa contante' : (deltaCorrezione < 0 ? 'Restituisci contante' : 'Contante'))
                         : 'Contante'"></span>
                 </button>
                 <button type="button" class="rounded-md bg-white px-3 py-4 text-base font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="scegliMetodo('pos')">
                     <span class="block font-mono text-xs text-sagra-muted">P</span>
                     <span x-text="comandaId
-                        ? (deltaCorrezione > 0 ? 'Incassa POS' : 'Restituisci POS')
+                        ? (deltaCorrezione > 0 ? 'Incassa POS' : (deltaCorrezione < 0 ? 'Restituisci POS' : 'POS'))
                         : 'POS'"></span>
                 </button>
             </div>
@@ -686,9 +690,11 @@ function cassaApp(cfg) {
 
         get badgeMetodoAnteprima() {
             if (this.comandaId && this.deltaCorrezione === 0) {
-                if (this.metodo === 'pos') return 'POS (invariato)';
-                if (this.metodo === 'misto') return 'MISTO (invariato)';
-                return 'CONTANTE (invariato)';
+                const label = this.metodo === 'pos' ? 'POS' : (this.metodo === 'misto' ? 'MISTO' : 'CONTANTE');
+                if (this.metodoOriginale && this.metodo !== this.metodoOriginale) {
+                    return label + ' (corretto)';
+                }
+                return label;
             }
             if (this.comandaId && this.deltaCorrezione < 0) {
                 return this.metodo === 'pos' ? 'RESTO POS' : 'RESTO CONTANTE';
@@ -1129,17 +1135,7 @@ function cassaApp(cfg) {
                 }
             }
             this.errore = null;
-            // Correzione senza differenza: nessun incasso/resto, solo ristampa.
-            if (this.comandaId && this.deltaCorrezione === 0) {
-                this.metodo = this.metodoOriginale || 'contante';
-                this.modalPagamento = false;
-                this.modalAnteprima = true;
-                this.$nextTick(() => {
-                    this.fitAnteprima();
-                    requestAnimationFrame(() => this.fitAnteprima());
-                });
-                return;
-            }
+            // Sempre chiedere Contante/POS: anche con delta 0 si può correggere il metodo.
             this.metodo = null;
             this.mostraMisto = false;
             this.importoContanteMisto = 0;

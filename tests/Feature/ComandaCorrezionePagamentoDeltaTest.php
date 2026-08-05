@@ -87,14 +87,14 @@ it('in correzione con restituzione contante su comanda POS registra il resto neg
         ->and((float) $corretta->importo_pos)->toBe(6.0);
 });
 
-it('in correzione senza differenza mantiene il metodo di pagamento originale', function () {
+it('in correzione senza differenza permette di correggere il metodo di pagamento', function () {
     $puntoId = PuntoCassa::query()->first()->id;
     $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
     $postazione = Postazione::query()->first();
     $service = app(ComandaService::class);
     $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
 
-    // 2 acque = 4.00 POS; correzione a totale invariato
+    // 2 acque = 4.00 POS; correzione a totale invariato ma metodo sbagliato → contante
     $originale = $service->confermaEStampa(
         $serata,
         $postazione,
@@ -108,7 +108,42 @@ it('in correzione senza differenza mantiene il metodo di pagamento originale', f
         $postazione,
         [['menu_item_id' => $acqua->id, 'quantita' => 2]],
         0,
-        'contante', // ignorato se delta 0
+        'contante',
+        null,
+        null,
+        $originale,
+        'POS non funzionava',
+    );
+
+    expect((float) $corretta->totale)->toBe(4.0)
+        ->and($corretta->metodo_pagamento)->toBe('contante')
+        ->and($corretta->importo_contante)->toBeNull()
+        ->and($corretta->importo_pos)->toBeNull()
+        ->and($corretta->importoContanteEffettivo())->toBe(4.0)
+        ->and($corretta->importoPosEffettivo())->toBe(0.0);
+});
+
+it('in correzione senza differenza conferma lo stesso metodo se lasciato invariato', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->first();
+    $service = app(ComandaService::class);
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+
+    $originale = $service->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 2]],
+        0,
+        'pos',
+    );
+
+    $corretta = $service->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 2]],
+        0,
+        'pos',
         null,
         null,
         $originale,
@@ -117,8 +152,45 @@ it('in correzione senza differenza mantiene il metodo di pagamento originale', f
 
     expect((float) $corretta->totale)->toBe(4.0)
         ->and($corretta->metodo_pagamento)->toBe('pos')
+        ->and($corretta->importoContanteEffettivo())->toBe(0.0)
+        ->and($corretta->importoPosEffettivo())->toBe(4.0);
+});
+
+it('in correzione senza differenza riassegna un misto a un metodo puro', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->first();
+    $service = app(ComandaService::class);
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+
+    $originale = $service->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 2]],
+        0,
+        'misto',
+        1.5,
+        2.5,
+    );
+    expect($originale->metodo_pagamento)->toBe('misto');
+
+    $corretta = $service->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 2]],
+        0,
+        'pos',
+        null,
+        null,
+        $originale,
+        'tutto POS',
+    );
+
+    expect((float) $corretta->totale)->toBe(4.0)
+        ->and($corretta->metodo_pagamento)->toBe('pos')
         ->and($corretta->importo_contante)->toBeNull()
-        ->and($corretta->importo_pos)->toBeNull();
+        ->and($corretta->importo_pos)->toBeNull()
+        ->and($corretta->importoPosEffettivo())->toBe(4.0);
 });
 
 it('in correzione con restituzione sullo stesso metodo resta metodo puro', function () {
