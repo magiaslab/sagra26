@@ -185,6 +185,8 @@ it('la conferma HTTP risponde 409 in caso di conflitto di version', function () 
         1,
     );
 
+    $this->postJson(route('cassa.postazione'), ['postazione_id' => $postazione->id])->assertOk();
+
     $this->postJson(route('cassa.conferma'), [
         'postazione_id' => $postazione->id,
         'coperti' => 0,

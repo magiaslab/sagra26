@@ -24,8 +24,11 @@ it('la cassa espone in header l’importo dell’ultima comanda stampata', funct
         'contante',
     );
 
-    $html = $this->withSession(['postazione_id' => $postazione->id])
-        ->get(route('cassa'))
+    $this->postJson(route('cassa.postazione'), [
+        'postazione_id' => $postazione->id,
+    ])->assertOk();
+
+    $html = $this->get(route('cassa'))
         ->assertOk()
         ->getContent();
 
@@ -33,7 +36,8 @@ it('la cassa espone in header l’importo dell’ultima comanda stampata', funct
         ->toContain('Ultima')
         ->toContain('ultimaStampataTotale: 4')
         ->toContain('ultimaStampataNumero: '.$comanda->numero_progressivo)
-        ->toContain('bg-amber-300/30');
+        ->toContain('bg-amber-300/30')
+        ->toContain('richiedeSceltaPostazione: false');
 });
 
 it('il cambio postazione restituisce l’ultima stampata della postazione', function () {
@@ -50,11 +54,9 @@ it('il cambio postazione restituisce l’ultima stampata della postazione', func
         'pos',
     );
 
-    $this->withSession(['postazione_id' => $postazione->id])
-        ->postJson(route('cassa.postazione'), [
-            'postazione_id' => $postazione->id,
-            'force' => true,
-        ])
+    $this->postJson(route('cassa.postazione'), [
+        'postazione_id' => $postazione->id,
+    ])
         ->assertOk()
         ->assertJsonPath('ultima_stampata.numero', $comanda->numero_progressivo)
         ->assertJsonPath('ultima_stampata.totale', 2);

@@ -21,8 +21,23 @@ class CassaController extends Controller
     public function index(Request $request): View
     {
         $serata = Serata::corrente();
+        $claimToken = $this->postazioneClaimToken($request);
         $postazioni = Postazione::query()->orderBy('id')->get();
-        $postazioneId = (int) ($request->session()->get('postazione_id') ?? $postazioni->first()?->id);
+        $postazioneId = (int) ($request->session()->get('postazione_id') ?? 0);
+        $postazioneAttiva = $postazioneId > 0
+            ? $postazioni->firstWhere('id', $postazioneId)
+            : null;
+
+        // Riprendi solo se questa sessione possiede ancora il claim attivo.
+        $claimAttivo = $postazioneAttiva
+            && $postazioneAttiva->isClaimedBy($claimToken)
+            && $postazioneAttiva->hasActiveClaim();
+        if (! $claimAttivo) {
+            $postazioneId = 0;
+            $request->session()->forget('postazione_id');
+        } else {
+            $postazioneAttiva->touchClaim();
+        }
 
         $menu = MenuItem::query()
             ->with('categoria')
@@ -58,8 +73,9 @@ class CassaController extends Controller
 
         return view('cassa.index', [
             'serata' => $serata,
-            'postazioni' => $postazioni,
+            'postazioni' => $postazioni->map(fn (Postazione $p) => $p->statoClaimPer($claimToken))->values(),
             'postazioneId' => $postazioneId,
+            'richiedeSceltaPostazione' => $postazioneId === 0,
             'menu' => $menu,
             'stock' => $stock,
             'impostazioni' => $impostazioni,
@@ -80,6 +96,7 @@ class CassaController extends Controller
         $data = $request->validate([
             'postazione_id' => 'required|exists:postazioni,id',
             'force' => 'sometimes|boolean',
+            'pin' => 'nullable|string|max:40',
         ]);
 
         $postazione = Postazione::query()->findOrFail((int) $data['postazione_id']);
@@ -92,10 +109,33 @@ class CassaController extends Controller
             return response()->json([
                 'ok' => false,
                 'claim_conflitto' => true,
-                'error' => "Postazione già in uso (ultima attività: {$tempo} fa). Confermi di prenderne il controllo?",
+                'richiede_pin' => true,
+                'error' => "«{$postazione->nome}» è già in uso (ultima attività: {$tempo} fa). Per forzare serve il PIN gestione: l’altra postazione verrà sospesa.",
                 'postazione_id' => $postazione->id,
                 'postazione_nome' => $postazione->nome,
+                'postazioni' => $this->postazioniStato($claimToken),
             ], 409);
+        }
+
+        if ($force && $postazione->claimConflictFor($claimToken)) {
+            $pin = (string) ($data['pin'] ?? '');
+            $atteso = (string) Impostazione::corrente()->pin_gestione;
+            if ($pin === '' || ! hash_equals($atteso, $pin)) {
+                return response()->json([
+                    'ok' => false,
+                    'claim_conflitto' => true,
+                    'richiede_pin' => true,
+                    'error' => 'PIN non valido. Impossibile forzare la postazione.',
+                    'postazione_id' => $postazione->id,
+                    'postazione_nome' => $postazione->nome,
+                    'postazioni' => $this->postazioniStato($claimToken),
+                ], 422);
+            }
+        }
+
+        $prevId = (int) $request->session()->get('postazione_id');
+        if ($prevId > 0 && $prevId !== $postazione->id) {
+            Postazione::query()->find($prevId)?->releaseIfClaimedBy($claimToken);
         }
 
         $postazione->claim($claimToken);
@@ -106,21 +146,35 @@ class CassaController extends Controller
         return response()->json([
             'ok' => true,
             'mappata' => $mappata,
+            'postazione_id' => $postazione->id,
+            'postazione_nome' => $postazione->nome,
             'warning' => $mappata
                 ? null
                 : 'Questa postazione non è ancora collegata al cassetto — chiedi a chi gestisce le Impostazioni di completare il collegamento.',
             'ultima_stampata' => $this->ultimaStampataPayload($postazione->id),
+            'postazioni' => $this->postazioniStato($claimToken),
         ]);
     }
 
     public function stock(Request $request, StockService $stock): JsonResponse
     {
+        $claimToken = $this->postazioneClaimToken($request);
         $postazioneId = (int) $request->session()->get('postazione_id');
+        $claimPerso = false;
+
         if ($postazioneId > 0) {
             $postazione = Postazione::query()->find($postazioneId);
-            $claimToken = $request->session()->get('postazione_claim_token');
-            if ($postazione && is_string($claimToken) && $postazione->isClaimedBy($claimToken)) {
+            if (! $postazione) {
+                $claimPerso = true;
+                $request->session()->forget('postazione_id');
+                $postazioneId = 0;
+            } elseif ($postazione->isClaimedBy($claimToken) && $postazione->hasActiveClaim()) {
                 $postazione->touchClaim();
+            } else {
+                // Claim rubato, scaduto o non più nostro: sospendi questa cassa.
+                $claimPerso = true;
+                $request->session()->forget('postazione_id');
+                $postazioneId = 0;
             }
         }
 
@@ -130,6 +184,9 @@ class CassaController extends Controller
                 'stock' => [],
                 'coperti_totali' => 0,
                 'ultima_stampata' => null,
+                'claim_perso' => $claimPerso,
+                'claim_attivo' => false,
+                'postazioni' => $this->postazioniStato($claimToken),
             ]);
         }
 
@@ -139,6 +196,9 @@ class CassaController extends Controller
             'stock' => $stock->mappaResidui($serata->id),
             'coperti_totali' => Comanda::copertiTotaliSerata($serata->id),
             'ultima_stampata' => $this->ultimaStampataPayload($postazioneId),
+            'claim_perso' => $claimPerso,
+            'claim_attivo' => $postazioneId > 0 && ! $claimPerso,
+            'postazioni' => $this->postazioniStato($claimToken),
         ]);
     }
 
@@ -167,6 +227,11 @@ class CassaController extends Controller
         $serata = Serata::corrente();
         if (! $serata) {
             return response()->json(['error' => 'Nessuna serata aperta.'], 422);
+        }
+
+        $guard = $this->assertClaimAttivo($request, (int) $data['postazione_id']);
+        if ($guard !== null) {
+            return $guard;
         }
 
         if (in_array($data['metodo_pagamento'], ['omaggio', 'sospeso'], true)) {
@@ -331,6 +396,11 @@ class CassaController extends Controller
             'motivo' => 'required|string|min:2',
         ]);
 
+        $guard = $this->assertClaimAttivo($request, (int) $comanda->postazione_id);
+        if ($guard !== null) {
+            return $guard;
+        }
+
         try {
             $service->annulla($comanda, $data['motivo']);
 
@@ -357,6 +427,39 @@ class CassaController extends Controller
         $request->session()->put('postazione_claim_token', $token);
 
         return $token;
+    }
+
+    /** @return list<array<string, mixed>> */
+    private function postazioniStato(string $claimToken): array
+    {
+        return Postazione::query()
+            ->orderBy('id')
+            ->get()
+            ->map(fn (Postazione $p) => $p->statoClaimPer($claimToken))
+            ->values()
+            ->all();
+    }
+
+    private function assertClaimAttivo(Request $request, int $postazioneId): ?JsonResponse
+    {
+        $claimToken = $this->postazioneClaimToken($request);
+        $sessionePostazione = (int) $request->session()->get('postazione_id');
+        $postazione = Postazione::query()->find($postazioneId);
+
+        if (! $postazione
+            || $sessionePostazione !== $postazioneId
+            || ! $postazione->isClaimedBy($claimToken)
+            || ! $postazione->hasActiveClaim()) {
+            return response()->json([
+                'error' => 'Postazione non attiva su questo computer. Scegli di nuovo la cassa.',
+                'claim_perso' => true,
+                'postazioni' => $this->postazioniStato($claimToken),
+            ], 409);
+        }
+
+        $postazione->touchClaim();
+
+        return null;
     }
 
     /**

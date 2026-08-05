@@ -86,6 +86,8 @@ it('espone i coperti totali di serata in cassa e li aggiorna dopo conferma e ann
         ->assertOk()
         ->assertJsonPath('coperti_totali', 4);
 
+    $this->postJson(route('cassa.postazione'), ['postazione_id' => $postazione->id])->assertOk();
+
     $this->postJson(route('cassa.annulla', $comanda), ['motivo' => 'errore test'])
         ->assertOk()
         ->assertJsonPath('coperti_totali', 0);

@@ -76,15 +76,16 @@ sudo systemctl start cassa
 2. Controlla di essere sulla **stessa rete** del server.
 3. Avvia la cassa con il collegamento sul Desktop (di solito **Cassa.bat** o icona Chrome kiosk).
 4. Si apre lo schermo intero della cassa.
-5. In alto a sinistra, scegli la **Postazione** corretta (es. *Cassa A* o *Cassa B*).
+5. Compare un **popup obbligatorio**: scegli la postazione **libera** (es. *Cassa A* o *Cassa B*) e tocca **Entra**.
+6. In alto a sinistra vedi il nome della postazione attiva. Per cambiarla usa **Cambia** (non si può più switchare liberamente).
 
-### 2.3 Se compare «Postazione già in uso»
+### 2.3 Se una postazione è «Occupata»
 
-Significa che quella cassa risulta ancora aperta su un altro PC (o è rimasta “appesa”).
+Significa che quella cassa è già attiva su un altro PC.
 
-1. Leggi il messaggio.
-2. Se sei sicuro di dover prendere tu quella cassa → **Prendi comunque il controllo**.
-3. Se hai sbagliato postazione → **Annulla** e scegline un’altra.
+1. Nel popup puoi entrare solo su una cassa **libera**.
+2. Se proprio devi prendere quella occupata → **Forza con PIN** → inserisci il **PIN gestione**.
+3. L’altro computer viene **sospeso** con un avviso bloccante: deve scegliere un’altra postazione libera oppure uscire dalla cassa.
 
 ### 2.4 Spegnere a fine giornata (dopo la chiusura)
 

@@ -110,16 +110,17 @@ it('conferma omaggio rifiuta pin errato', function () {
     $postazione = Postazione::query()->first();
     $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
 
-    $this->withSession(['postazione_id' => $postazione->id])
-        ->postJson(route('cassa.conferma'), [
-            'postazione_id' => $postazione->id,
-            'coperti' => 0,
-            'metodo_pagamento' => 'omaggio',
-            'pin_autorizzazione' => '0000',
-            'autorizzato_da' => 'Mario',
-            'nominativo' => 'Ospite',
-            'righe' => [['menu_item_id' => $acqua->id, 'quantita' => 1]],
-        ])
+    $this->postJson(route('cassa.postazione'), ['postazione_id' => $postazione->id])->assertOk();
+
+    $this->postJson(route('cassa.conferma'), [
+        'postazione_id' => $postazione->id,
+        'coperti' => 0,
+        'metodo_pagamento' => 'omaggio',
+        'pin_autorizzazione' => '0000',
+        'autorizzato_da' => 'Mario',
+        'nominativo' => 'Ospite',
+        'righe' => [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+    ])
         ->assertStatus(422)
         ->assertJsonFragment(['error' => 'PIN non valido.']);
 });
@@ -131,17 +132,18 @@ it('conferma omaggio con pin corretto crea la comanda', function () {
     $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
     $pin = Impostazione::corrente()->pin_gestione;
 
-    $this->withSession(['postazione_id' => $postazione->id])
-        ->postJson(route('cassa.conferma'), [
-            'postazione_id' => $postazione->id,
-            'coperti' => 0,
-            'metodo_pagamento' => 'omaggio',
-            'pin_autorizzazione' => $pin,
-            'autorizzato_da' => 'Mario',
-            'nominativo' => 'Ospite',
-            'pagamento_note' => 'prova',
-            'righe' => [['menu_item_id' => $acqua->id, 'quantita' => 1]],
-        ])
+    $this->postJson(route('cassa.postazione'), ['postazione_id' => $postazione->id])->assertOk();
+
+    $this->postJson(route('cassa.conferma'), [
+        'postazione_id' => $postazione->id,
+        'coperti' => 0,
+        'metodo_pagamento' => 'omaggio',
+        'pin_autorizzazione' => $pin,
+        'autorizzato_da' => 'Mario',
+        'nominativo' => 'Ospite',
+        'pagamento_note' => 'prova',
+        'righe' => [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+    ])
         ->assertOk()
         ->assertJsonPath('ok', true);
 

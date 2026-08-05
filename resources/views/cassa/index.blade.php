@@ -7,7 +7,7 @@
 @php
     $menuJson = $menu->values()->toJson(JSON_UNESCAPED_UNICODE);
     $stockJson = json_encode((object) $stock, JSON_UNESCAPED_UNICODE);
-    $postazioniJson = $postazioni->map(fn ($p) => ['id' => $p->id, 'nome' => $p->nome])->values()->toJson(JSON_UNESCAPED_UNICODE);
+    $postazioniJson = $postazioni->values()->toJson(JSON_UNESCAPED_UNICODE);
 @endphp
 
 <div
@@ -17,6 +17,7 @@
         stock: {{ $stockJson }},
         postazioni: {{ $postazioniJson }},
         postazioneId: {{ (int) $postazioneId }},
+        richiedeSceltaPostazione: {{ !empty($richiedeSceltaPostazione) ? 'true' : 'false' }},
         serataAperta: {{ $serata ? 'true' : 'false' }},
         prossimoNumero: {{ (int) $prossimoNumero }},
         prossimoNumeroDiSerata: {{ (int) $prossimoNumeroDiSerata }},
@@ -56,18 +57,16 @@
                 {{-- Sinistra --}}
                 <div class="flex min-w-0 shrink-0 items-center gap-1.5 xl:gap-2">
                     <div class="flex h-10 items-center gap-1.5 rounded-md bg-white/10 px-2 ring-1 ring-inset ring-white/15">
-                        <label class="sr-only" for="cassa-postazione">Postazione</label>
-                        <select
-                            id="cassa-postazione"
-                            x-model.number="postazioneId"
-                            @change="salvaPostazione()"
-                            aria-label="Seleziona postazione cassa"
-                            class="h-8 max-w-[7.5rem] cursor-pointer border-0 bg-transparent p-0 text-sm font-semibold text-white focus:outline-none focus:ring-0 xl:max-w-[9rem]"
-                        >
-                            <template x-for="p in postazioni" :key="p.id">
-                                <option :value="p.id" x-text="p.nome" class="text-black"></option>
-                            </template>
-                        </select>
+                        <span class="max-w-[7.5rem] truncate text-sm font-semibold xl:max-w-[9rem]"
+                              x-text="postazioneNomeCorrente || '—'"
+                              :title="postazioneNomeCorrente || 'Nessuna postazione'"></span>
+                        <button type="button"
+                                class="rounded bg-white/15 px-1.5 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wide text-white/90 ring-1 ring-inset ring-white/25 hover:bg-white/25"
+                                @click="apriSceltaPostazione(false)"
+                                x-show="postazionePronta && !claimPerso"
+                                x-cloak>
+                            Cambia
+                        </button>
                     </div>
 
                     <div class="flex h-10 min-w-0 items-center gap-1.5 rounded-md bg-white/10 px-2 ring-1 ring-inset ring-white/15 xl:px-2.5">
@@ -265,13 +264,86 @@
         </div>
     </div>
 
-    <div class="fixed inset-0 z-[110] flex items-center justify-center bg-black/45" x-show="modalClaim" x-cloak>
-        <div class="w-[min(440px,92vw)] rounded-lg bg-white p-6 shadow-xl ring-1 ring-sagra-line" @click.stop>
-            <h2 class="m-0 text-lg font-semibold text-sagra-ink">Postazione già in uso</h2>
+    {{-- Scelta postazione all’avvio / cambio (obbligatoria) --}}
+    <div class="fixed inset-0 z-[120] flex items-center justify-center bg-black/55 p-3" x-show="modalSceltaPostazione" x-cloak>
+        <div class="w-[min(440px,96vw)] rounded-lg bg-white p-6 shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <h2 class="m-0 text-lg font-semibold text-sagra-ink" x-text="sceltaObbligatoria ? 'Scegli la postazione cassa' : 'Cambia postazione'"></h2>
+            <p class="mt-2 text-sm text-sagra-muted">
+                Puoi selezionare solo una cassa <span class="font-semibold text-sagra-ink">libera</span>.
+                Per prendere una cassa già occupata serve il <span class="font-semibold text-sagra-ink">PIN gestione</span>.
+            </p>
+            <ul class="mt-4 divide-y divide-sagra-line overflow-hidden rounded-md ring-1 ring-sagra-line">
+                <template x-for="p in postazioni" :key="'scelta-' + p.id">
+                    <li class="flex items-center gap-3 px-3 py-3"
+                        :class="p.occupata && !p.mia ? 'bg-sagra-softer/60' : 'bg-white'">
+                        <div class="min-w-0 flex-1">
+                            <div class="font-semibold text-sagra-ink" x-text="p.nome"></div>
+                            <div class="text-xs"
+                                 :class="p.occupata && !p.mia ? 'text-sagra-warn' : 'text-emerald-700'"
+                                 x-text="p.mia ? 'Questa postazione (attiva qui)' : (p.occupata ? ('Occupata · ultima attività ' + (p.claim_label || '') + ' fa') : 'Libera')"></div>
+                        </div>
+                        <template x-if="!p.occupata || p.mia">
+                            <button type="button"
+                                    class="shrink-0 rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark"
+                                    @click="scegliPostazione(p.id, false)"
+                                    x-text="p.mia ? 'Resta qui' : 'Entra'"></button>
+                        </template>
+                        <template x-if="p.occupata && !p.mia">
+                            <button type="button"
+                                    class="shrink-0 rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-warn ring-1 ring-inset ring-sagra-warn/40 hover:bg-sagra-warn-soft"
+                                    @click="apriForzaClaim(p)">Forza con PIN</button>
+                        </template>
+                    </li>
+                </template>
+            </ul>
+            <div class="mt-4 flex flex-wrap justify-between gap-2" x-show="!sceltaObbligatoria">
+                <a class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                   :href="urls.home">Esci dalla cassa</a>
+                <button type="button"
+                        class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                        @click="chiudiSceltaPostazione()">Annulla</button>
+            </div>
+            <div class="mt-4" x-show="sceltaObbligatoria">
+                <a class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                   :href="urls.home">Esci</a>
+            </div>
+        </div>
+    </div>
+
+    {{-- Forza claim con PIN --}}
+    <div class="fixed inset-0 z-[130] flex items-center justify-center bg-black/55 p-3" x-show="modalClaim" x-cloak>
+        <div class="w-[min(420px,96vw)] rounded-lg bg-white p-6 shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <h2 class="m-0 text-lg font-semibold text-sagra-ink">Forza postazione</h2>
             <p class="mt-2 text-sm text-sagra-ink" x-text="claimMessaggio"></p>
-            <div class="mt-5 flex flex-wrap justify-end gap-2">
-                <button type="button" class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="annullaClaim()">Annulla</button>
-                <button type="button" class="inline-flex items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" @click="forzaClaim()">Prendi comunque il controllo</button>
+            <p class="mt-2 text-xs text-sagra-muted">L’altro computer verrà sospeso con un avviso bloccante finché non sceglie un’altra cassa o esce.</p>
+            <div class="mt-4">
+                <label class="mb-1 block text-xs font-medium text-sagra-muted">PIN gestione</label>
+                <input class="block w-full rounded-md px-3 py-2.5 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra"
+                       type="password" inputmode="numeric" autocomplete="off" maxlength="40"
+                       x-model="claimPin" x-ref="claimPinInput"
+                       @keydown.enter.prevent="forzaClaim()">
+            </div>
+            <div class="mt-5 grid grid-cols-2 gap-2">
+                <button type="button" class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="annullaClaim()">Annulla</button>
+                <button type="button" class="rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark" @click="forzaClaim()">Forza ingresso</button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Postazione sospesa (claim perso): invalicabile --}}
+    <div class="fixed inset-0 z-[140] flex items-center justify-center bg-black/70 p-3" x-show="claimPerso" x-cloak>
+        <div class="w-[min(440px,96vw)] rounded-lg bg-white p-6 shadow-xl ring-1 ring-sagra-danger/40" @click.stop>
+            <h2 class="m-0 text-lg font-semibold text-sagra-danger">Postazione sospesa</h2>
+            <p class="mt-2 text-sm text-sagra-ink">
+                Questa cassa è stata presa da un altro computer (o il controllo è scaduto).
+                Non puoi continuare qui finché non scegli una postazione libera oppure esci.
+            </p>
+            <div class="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <a class="inline-flex items-center justify-center rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                   :href="urls.home">Esci dalla cassa</a>
+                <button type="button"
+                        class="inline-flex items-center justify-center rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark"
+                        @click="apriSceltaPostazione(true)">Scegli un’altra postazione</button>
             </div>
         </div>
     </div>
@@ -647,8 +719,8 @@ function cassaApp(cfg) {
         postazioni: cfg.postazioni || [],
         qty: {},
         activeId: cfg.menu[0]?.id ?? null,
-        postazioneId: cfg.postazioneId,
-        postazioneIdPrev: cfg.postazioneId,
+        postazioneId: cfg.postazioneId || 0,
+        postazioneIdPrev: cfg.postazioneId || 0,
         serataAperta: cfg.serataAperta,
         prossimoNumero: cfg.prossimoNumero || 1,
         prossimoNumeroDiSerata: cfg.prossimoNumeroDiSerata || 1,
@@ -665,8 +737,13 @@ function cassaApp(cfg) {
         modalAnteprima: false,
         modalRichiamo: false,
         modalRistampa: false,
+        modalSceltaPostazione: !!cfg.richiedeSceltaPostazione || !(cfg.postazioneId > 0),
+        sceltaObbligatoria: !!cfg.richiedeSceltaPostazione || !(cfg.postazioneId > 0),
         modalClaim: false,
         claimMessaggio: '',
+        claimPin: '',
+        claimTargetId: null,
+        claimPerso: false,
         a4Scale: 1,
         topPad: 120,
         metodo: null,
@@ -1010,7 +1087,6 @@ function cassaApp(cfg) {
             this.$nextTick(() => {
                 this.syncTopPad();
                 this.scrollActive();
-                this.salvaPostazione(false);
             });
             this.$watch('errore', (v) => { if (v) window.sagraToast?.(v, 'danger'); });
             this.$watch('messaggio', (v) => { if (v) window.sagraToast?.(v, 'ok'); });
@@ -1410,6 +1486,12 @@ function cassaApp(cfg) {
                     body: JSON.stringify(payload),
                 });
                 const data = await res.json();
+                if (data.claim_perso) {
+                    this.applicaPostazioni(data.postazioni);
+                    this.sospendiPostazione(data.error || 'Postazione sospesa.');
+                    this.chiudiModal();
+                    return;
+                }
                 if (res.status === 409 || data.conflitto) {
                     this.errore = data.error || 'Qualcuno ha già corretto questa comanda nel frattempo';
                     const num = this.numeroRichiamato;
@@ -1609,7 +1691,66 @@ function cassaApp(cfg) {
             }
         },
 
-        async salvaPostazione(force = false) {
+        get postazionePronta() {
+            return this.postazioneId > 0 && !this.claimPerso && !this.sceltaObbligatoria;
+        },
+
+        get postazioneNomeCorrente() {
+            const p = (this.postazioni || []).find((x) => x.id === this.postazioneId);
+            return p?.nome || '';
+        },
+
+        applicaPostazioni(list) {
+            if (Array.isArray(list) && list.length) {
+                this.postazioni = list;
+            }
+        },
+
+        sospendiPostazione(messaggio) {
+            this.claimPerso = true;
+            this.postazioneId = 0;
+            this.postazioneIdPrev = 0;
+            this.sceltaObbligatoria = true;
+            this.modalSceltaPostazione = false;
+            this.modalClaim = false;
+            this.modalPagamento = false;
+            this.modalAnteprima = false;
+            this.modalRichiamo = false;
+            this.modalRistampa = false;
+            if (messaggio) {
+                this.errore = messaggio;
+            }
+        },
+
+        apriSceltaPostazione(obbligatoria = false) {
+            this.sceltaObbligatoria = !!obbligatoria || this.claimPerso || !(this.postazioneId > 0);
+            this.modalSceltaPostazione = true;
+            this.modalClaim = false;
+            this.claimPin = '';
+            this.claimTargetId = null;
+        },
+
+        chiudiSceltaPostazione() {
+            if (this.sceltaObbligatoria || this.claimPerso) {
+                return;
+            }
+            this.modalSceltaPostazione = false;
+        },
+
+        apriForzaClaim(p) {
+            this.claimTargetId = p.id;
+            this.claimMessaggio = p.nome
+                + ' è già in uso'
+                + (p.claim_label ? (' (ultima attività: ' + p.claim_label + ' fa)') : '')
+                + '. Inserisci il PIN gestione per sospendere l’altra postazione e entrare qui.';
+            this.claimPin = '';
+            this.modalClaim = true;
+            this.$nextTick(() => this.$refs.claimPinInput?.focus());
+        },
+
+        async scegliPostazione(id, force = false, pin = '') {
+            const targetId = id || this.claimTargetId;
+            if (!targetId) return;
             try {
                 const res = await fetch(this.urls.postazione, {
                     method: 'POST',
@@ -1619,45 +1760,80 @@ function cassaApp(cfg) {
                         'Accept': 'application/json',
                     },
                     body: JSON.stringify({
-                        postazione_id: this.postazioneId,
+                        postazione_id: targetId,
                         force: !!force,
+                        pin: pin || this.claimPin || '',
                     }),
                 });
                 const data = await res.json().catch(() => ({}));
-                if (res.status === 409 || data.claim_conflitto) {
+                this.applicaPostazioni(data.postazioni);
+
+                if (res.status === 409 || (data.claim_conflitto && !force)) {
+                    const p = (this.postazioni || []).find((x) => x.id === targetId) || { id: targetId, nome: data.postazione_nome };
                     this.claimMessaggio = data.error
-                        || 'Postazione già in uso. Confermi di prenderne il controllo?';
+                        || 'Postazione già in uso. Serve il PIN gestione per forzare.';
+                    this.claimTargetId = targetId;
                     this.modalClaim = true;
+                    this.claimPin = '';
+                    this.$nextTick(() => this.$refs.claimPinInput?.focus());
                     return;
                 }
                 if (!res.ok) {
                     this.errore = data.error || 'Impossibile selezionare la postazione';
-                    this.postazioneId = this.postazioneIdPrev;
+                    if (data.richiede_pin) {
+                        this.claimMessaggio = data.error || this.claimMessaggio;
+                        this.modalClaim = true;
+                        this.claimPin = '';
+                        this.$nextTick(() => this.$refs.claimPinInput?.focus());
+                    }
                     return;
                 }
+
+                this.postazioneId = data.postazione_id || targetId;
                 this.postazioneIdPrev = this.postazioneId;
+                this.claimPerso = false;
+                this.sceltaObbligatoria = false;
+                this.modalSceltaPostazione = false;
                 this.modalClaim = false;
                 this.claimMessaggio = '';
+                this.claimPin = '';
+                this.claimTargetId = null;
                 if (Object.prototype.hasOwnProperty.call(data, 'ultima_stampata')) {
                     this.applicaUltimaStampata(data.ultima_stampata);
                 }
                 if (data.warning) {
                     this.errore = data.warning;
+                } else {
+                    this.messaggio = 'Postazione attiva: ' + (data.postazione_nome || this.postazioneNomeCorrente);
                 }
+                this.$nextTick(() => this.syncTopPad());
             } catch (e) {
                 this.errore = e.message || 'Impossibile selezionare la postazione';
-                this.postazioneId = this.postazioneIdPrev;
             }
         },
 
+        async salvaPostazione(force = false) {
+            // Compat: non usato più dal select; mantiene eventuale chiamata esterna.
+            return this.scegliPostazione(this.postazioneId, force, this.claimPin);
+        },
+
         forzaClaim() {
-            this.salvaPostazione(true);
+            if (!this.claimPin) {
+                this.errore = 'Inserisci il PIN gestione.';
+                this.$nextTick(() => this.$refs.claimPinInput?.focus());
+                return;
+            }
+            this.scegliPostazione(this.claimTargetId || this.postazioneId, true, this.claimPin);
         },
 
         annullaClaim() {
-            this.postazioneId = this.postazioneIdPrev;
             this.modalClaim = false;
             this.claimMessaggio = '';
+            this.claimPin = '';
+            this.claimTargetId = null;
+            if (this.sceltaObbligatoria || this.claimPerso) {
+                this.modalSceltaPostazione = true;
+            }
         },
 
         async pollStock() {
@@ -1669,6 +1845,10 @@ function cassaApp(cfg) {
                 if (Object.prototype.hasOwnProperty.call(data, 'ultima_stampata')) {
                     this.applicaUltimaStampata(data.ultima_stampata);
                 }
+                this.applicaPostazioni(data.postazioni);
+                if (data.claim_perso) {
+                    this.sospendiPostazione('Postazione sospesa: presa da un altro computer.');
+                }
             } catch (_) {}
         },
 
@@ -1676,8 +1856,21 @@ function cassaApp(cfg) {
             const tag = (e.target.tagName || '').toLowerCase();
             const typing = tag === 'input' || tag === 'textarea' || tag === 'select';
 
+            if (this.claimPerso) {
+                return;
+            }
             if (this.modalClaim) {
                 if (e.key === 'Escape') { e.preventDefault(); this.annullaClaim(); }
+                return;
+            }
+            if (this.modalSceltaPostazione) {
+                if (e.key === 'Escape' && !this.sceltaObbligatoria) {
+                    e.preventDefault();
+                    this.chiudiSceltaPostazione();
+                }
+                return;
+            }
+            if (!this.postazionePronta) {
                 return;
             }
             if (this.modalPagamento) {
