@@ -26,6 +26,35 @@ it('nasconde header UI in stampa e usa portrait per consegna', function () {
         ->toContain('report-sheet');
 });
 
+it('apre il foglio consegna da query string e prepara la stampa automatica', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+
+    $this->withSession(['gestione_sbloccata' => true])
+        ->get(route('gestione.report', [
+            'tipo' => 'consegna',
+            'serata_id' => $serata->id,
+            'punto_cassa_id' => $puntoId,
+            'print' => 1,
+        ]))
+        ->assertOk()
+        ->assertSee('Consegna incassi', false)
+        ->assertSee('window.print()', false);
+
+    Livewire::withQueryParams([
+        'tipo' => 'consegna',
+        'serata_id' => $serata->id,
+        'punto_cassa_id' => $puntoId,
+        'print' => 1,
+    ])
+        ->test(ReportHub::class)
+        ->assertSet('tipo', 'consegna')
+        ->assertSet('serataId', $serata->id)
+        ->assertSet('puntoCassaId', $puntoId)
+        ->assertSet('autoPrint', true)
+        ->assertSeeHtml('window.print()');
+});
+
 it('usa A4 landscape per report a tabella larga e portrait per statistiche', function () {
     $puntoId = PuntoCassa::query()->first()->id;
     $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);

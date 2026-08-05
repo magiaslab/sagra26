@@ -33,6 +33,9 @@ class Serate extends Component
     /** @var list<string> Nomi punti cassa senza chiusura completata (chiusa_at). */
     public array $puntiCassaMancanti = [];
 
+    /** @var array<int, string> Descrizione pezzi fondo dalla chiusura precedente */
+    public array $fondiDescrizione = [];
+
     public function mount(RiconciliazioneService $ric): void
     {
         $this->data = now()->toDateString();
@@ -41,8 +44,11 @@ class Serate extends Component
             $this->rifornimenti[$item->id] = '';
         }
         foreach (PuntoCassa::query()->where('attivo', true)->get() as $punto) {
-            $suggerito = $ric->fondoInizialeSuggerito($punto);
-            $this->fondiIniziali[$punto->id] = $suggerito !== null ? (string) $suggerito : '';
+            $dettaglio = $ric->fondoPrecedenteDettaglio($punto);
+            $this->fondiIniziali[$punto->id] = $dettaglio !== null ? (string) $dettaglio['importo'] : '';
+            $this->fondiDescrizione[$punto->id] = $dettaglio !== null
+                ? $dettaglio['descrizione']
+                : '';
         }
     }
 
@@ -194,6 +200,7 @@ class Serate extends Component
             'storico' => Serata::query()->orderByDesc('data')->limit(20)->get(),
             'limitati' => MenuItem::query()->whereNotNull('stock_default')->where('attivo', true)->orderBy('ordinamento')->get(),
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
+            'fondiDescrizione' => $this->fondiDescrizione,
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
     }
 }

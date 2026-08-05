@@ -3,16 +3,15 @@
 namespace App\Services;
 
 use App\Models\Chiusura;
-use App\Models\Impostazione;
 use App\Models\PuntoCassa;
 use App\Models\Serata;
-use Illuminate\Support\Facades\Process;
 use RuntimeException;
 
 class ChiusuraService
 {
     public function __construct(
         private readonly RiconciliazioneService $riconciliazione,
+        private readonly SerataService $serate,
     ) {}
 
     /**
@@ -23,7 +22,7 @@ class ChiusuraService
         // Protezione foglio consegna: dati chiusura modificabili solo a serata aperta.
         if (! $serata->isAperta()) {
             throw new RuntimeException(
-                'Serata chiusa: il foglio consegna contanti è bloccato. Riapri la serata da Gestione → Serate per correggere.'
+                'Serata chiusa: il foglio consegna contanti è bloccato. Usa «Riapri per correggere» oppure riapri la serata da Gestione → Serate.'
             );
         }
 
@@ -36,8 +35,21 @@ class ChiusuraService
             $chiusura->{$campo} = (int) ($dati[$campo] ?? 0);
         }
 
+        $pezziFondo = Chiusura::normalizzaPezzi(
+            is_array($dati['pezzi_fondo'] ?? null) ? $dati['pezzi_fondo'] : []
+        );
+        $totaleFondoPezzi = Chiusura::totaleDaPezzi($pezziFondo);
+
         $chiusura->fondo_iniziale = (float) ($dati['fondo_iniziale'] ?? $chiusura->fondo_iniziale ?? 0);
-        $chiusura->fondo_trattenuto = (float) ($dati['fondo_trattenuto'] ?? 0);
+        $chiusura->pezzi_fondo = $pezziFondo;
+
+        // Se ci sono pezzi fondo, il trattenuto segue il conteggio (fonte di verità).
+        if ($totaleFondoPezzi > 0.005 || array_sum($pezziFondo) > 0) {
+            $chiusura->fondo_trattenuto = $totaleFondoPezzi;
+        } else {
+            $chiusura->fondo_trattenuto = (float) ($dati['fondo_trattenuto'] ?? 0);
+        }
+
         $chiusura->totale_pos = (float) ($dati['totale_pos'] ?? 0);
         $chiusura->totale_z = (float) ($dati['totale_z'] ?? 0);
         $chiusura->note = $dati['note'] ?? null;
@@ -50,6 +62,35 @@ class ChiusuraService
         $chiusura->save();
 
         return $chiusura;
+    }
+
+    /**
+     * Riapre serata (se chiusa) e sblocca la chiusura del punto per correggere i conteggi.
+     */
+    public function riapriPerCorrezione(Serata $serata, PuntoCassa $puntoCassa): Chiusura
+    {
+        if (! $serata->isAperta()) {
+            $this->serate->riapri($serata->fresh());
+            $serata->refresh();
+        }
+
+        $chiusura = Chiusura::query()->firstOrCreate(
+            [
+                'serata_id' => $serata->id,
+                'punto_cassa_id' => $puntoCassa->id,
+            ],
+            [
+                'fondo_iniziale' => 0,
+                'fondo_trattenuto' => 0,
+            ]
+        );
+
+        if ($chiusura->chiusa_at !== null) {
+            $chiusura->chiusa_at = null;
+            $chiusura->save();
+        }
+
+        return $chiusura->fresh();
     }
 
     public function riconciliazione(Serata $serata, PuntoCassa $puntoCassa): array

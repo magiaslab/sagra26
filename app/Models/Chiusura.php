@@ -17,6 +17,7 @@ class Chiusura extends Model
         'n_050', 'n_020', 'n_010', 'n_005', 'n_002', 'n_001',
         'contante_contato',
         'fondo_trattenuto',
+        'pezzi_fondo',
         'contante_consegnato',
         'totale_pos',
         'totale_z',
@@ -34,6 +35,7 @@ class Chiusura extends Model
             'totale_pos' => 'decimal:2',
             'totale_z' => 'decimal:2',
             'chiusa_at' => 'datetime',
+            'pezzi_fondo' => 'array',
         ];
     }
 
@@ -65,16 +67,87 @@ class Chiusura extends Model
 
     public function calcolaContanteContato(): float
     {
-        $totale = 0.0;
-        foreach (self::TAGLI as $campo => $valore) {
-            $totale += ((int) $this->{$campo}) * $valore;
-        }
-
-        return round($totale, 2);
+        return self::totaleDaPezzi($this->pezziCassetto());
     }
 
     public function incassoContanteReale(): float
     {
         return round((float) $this->contante_contato - (float) $this->fondo_iniziale, 2);
+    }
+
+    public function isCompletata(): bool
+    {
+        return $this->chiusa_at !== null;
+    }
+
+    /** @return array<string, int> */
+    public function pezziCassetto(): array
+    {
+        $out = [];
+        foreach (array_keys(self::TAGLI) as $campo) {
+            $out[$campo] = (int) $this->{$campo};
+        }
+
+        return $out;
+    }
+
+    /** @return array<string, int> */
+    public function pezziFondoNormalizzati(): array
+    {
+        return self::normalizzaPezzi($this->pezzi_fondo ?? []);
+    }
+
+    public function calcolaFondoDaPezzi(): float
+    {
+        return self::totaleDaPezzi($this->pezziFondoNormalizzati());
+    }
+
+    /**
+     * @param  array<string, int|string|null>  $pezzi
+     * @return array<string, int>
+     */
+    public static function normalizzaPezzi(array $pezzi): array
+    {
+        $out = [];
+        foreach (array_keys(self::TAGLI) as $campo) {
+            $out[$campo] = max(0, (int) ($pezzi[$campo] ?? 0));
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array<string, int>  $pezzi
+     */
+    public static function totaleDaPezzi(array $pezzi): float
+    {
+        $totale = 0.0;
+        foreach (self::TAGLI as $campo => $valore) {
+            $totale += ((int) ($pezzi[$campo] ?? 0)) * $valore;
+        }
+
+        return round($totale, 2);
+    }
+
+    /**
+     * @param  array<string, int>  $pezzi
+     */
+    public static function descrizionePezzi(array $pezzi): string
+    {
+        $parti = [];
+        foreach (self::TAGLI as $campo => $valore) {
+            $n = (int) ($pezzi[$campo] ?? 0);
+            if ($n <= 0) {
+                continue;
+            }
+            $label = number_format($valore, $valore < 1 ? 2 : 0, ',', '.');
+            $parti[] = $n.'×'.$label.' €';
+        }
+
+        if ($parti === []) {
+            return 'nessun pezzo';
+        }
+
+        return implode(' · ', $parti);
     }
 }

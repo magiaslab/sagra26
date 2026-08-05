@@ -96,10 +96,16 @@
             @endforeach
 
             <h3 class="mb-2 mt-4 text-base font-semibold text-sagra-ink">Fondo iniziale per punto cassa</h3>
+            <p class="mb-3 text-sm text-sagra-muted">Suggerito dal fondo trattenuto (conteggio pezzi) della chiusura precedente.</p>
             @foreach ($punti as $punto)
-                <div class="mb-3 flex flex-wrap items-center gap-2">
-                    <label class="min-w-[220px] text-sm font-medium text-sagra-ink">{{ $punto->nome }}</label>
-                    <input class="block max-w-[140px] rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" wire:model="fondiIniziali.{{ $punto->id }}" placeholder="obbligatorio">
+                <div class="mb-3">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <label class="min-w-[220px] text-sm font-medium text-sagra-ink">{{ $punto->nome }}</label>
+                        <input class="block max-w-[140px] rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" wire:model="fondiIniziali.{{ $punto->id }}" placeholder="obbligatorio">
+                    </div>
+                    @if (! empty($fondiDescrizione[$punto->id] ?? null) && ($fondiDescrizione[$punto->id] ?? '') !== 'nessun pezzo')
+                        <p class="mb-0 mt-1 pl-0 text-xs text-sagra-muted sm:pl-[228px]">Pezzi lasciati: {{ $fondiDescrizione[$punto->id] }}</p>
+                    @endif
                 </div>
             @endforeach
 
@@ -111,8 +117,8 @@
         <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Storico</h2>
         <p class="mb-3 text-sm text-sagra-muted">
             Con serata chiusa puoi comunque ristampare i report.
-            Per correggere comande o conteggi cassa usa <strong>Riapri</strong>.
-            Il foglio consegna contanti è modificabile solo a serata aperta.
+            Per correggere comande usa <strong>Riapri</strong> qui; per i conteggi cassa puoi anche usare
+            <a class="font-semibold underline" href="{{ route('gestione.chiusura', absolute: false) }}">Chiusura → Riapri per correggere</a>.
         </p>
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-sagra-line text-sm">

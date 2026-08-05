@@ -323,16 +323,16 @@ Non serve chiudere e riaprire la serata.
 
 1. **Gestione** → **Chiusura**.
 2. Scegli la **serata** e il **punto cassa** (cassetto).
-3. Compila:
-   - **Fondo iniziale** (quello messo all’apertura)
-   - conteggio pezzi (banconote e monete)
-   - **Fondo trattenuto** (se ne lasciate in cassa)
-   - **Totale POS** (dal terminale)
-   - **Totale Z** (se usato)
-   - **Note** (facoltative)
-4. Tocca **Salva chiusura**.
-5. Controlla il riquadro di **riconciliazione** (atteso vs contato).
-6. Ripeti per **tutti** i punti cassa.
+3. **Conta pezzi cassetto** — tutto il contante a fine serata.
+4. **Fondo cassa sera dopo** — conta i pezzi che **lasci in cassa** (es. tutte le monete).  
+   Il totale diventa il **fondo trattenuto** e sarà suggerito all’apertura della sera successiva.
+5. Compila **Totale POS**, **Totale Z** e eventuali **Note**.
+6. Tocca **Salva chiusura**.
+7. Controlla il riquadro di **riconciliazione** (atteso vs contato).
+8. Ripeti per **tutti** i punti cassa.
+
+> Se dopo il salvataggio noti un errore nei pezzi: finché la serata è aperta puoi correggere e **Salva correzione chiusura**.  
+> Se la serata è già chiusa: in Chiusura usa **Riapri per correggere conteggi**.
 
 ### 11.2 Chiudere la serata
 
@@ -342,9 +342,15 @@ Non serve chiudere e riaprire la serata.
    - puoi andare a completare la chiusura, **oppure**
    - **Chiudi comunque** (solo se siete consapevoli che i totali resteranno incompleti).
 
-### 11.3 Riaprire una serata chiusa (solo se serve)
+### 11.3 Riaprire per correggere
 
-Serve per correzioni dopo la chiusura.
+**Solo conteggi cassa**
+
+1. **Gestione** → **Chiusura**.
+2. Tocca **Riapri per correggere conteggi** (riapre anche la serata se era chiusa).
+3. Correggi pezzi / fondo / POS / Z e salva di nuovo.
+
+**Serata intera (comande, stock, ecc.)**
 
 1. In **Serate**, nello storico, tocca **Riapri**.
 2. Funziona solo se **non** c’è già un’altra serata aperta.
