@@ -21,6 +21,8 @@
         prossimoNumero: {{ (int) $prossimoNumero }},
         prossimoNumeroDiSerata: {{ (int) $prossimoNumeroDiSerata }},
         copertiTotali: {{ (int) $copertiTotali }},
+        ultimaStampataTotale: {{ $ultimaStampata ? (float) $ultimaStampata->totale : 'null' }},
+        ultimaStampataNumero: {{ $ultimaStampata ? (int) $ultimaStampata->numero_progressivo : 'null' }},
         brand: @js(($impostazioni->intestazione_nome ?? 'Sagra').' '.($impostazioni->intestazione_anno ?? '')),
         sottotitolo: @js($impostazioni->intestazione_sottotitolo ?? ''),
         comunicazioneComanda: @js($impostazioni->comunicazione_comanda ?? ''),
@@ -106,6 +108,19 @@
                     </nav>
 
                     <div class="flex items-stretch gap-1.5">
+                        <div
+                            class="flex h-10 min-w-[5.75rem] flex-col justify-center rounded-md bg-amber-300/30 px-2 text-right ring-1 ring-inset ring-amber-100/45 xl:min-w-[6.75rem] xl:px-2.5"
+                            title="Importo dell’ultima comanda stampata su questa cassa"
+                        >
+                            <span class="text-[0.6rem] font-semibold uppercase leading-none tracking-wider text-amber-50/90">
+                                Ultima
+                                <span class="font-mono normal-case tracking-normal opacity-80" x-show="ultimaStampataNumero" x-text="'#' + ultimaStampataNumero"></span>
+                            </span>
+                            <span
+                                class="text-lg font-bold tabular-nums leading-none text-amber-50 xl:text-xl"
+                                x-text="ultimaStampataTotale != null ? formatEuro(ultimaStampataTotale) : '—'"
+                            ></span>
+                        </div>
                         <div class="flex h-10 min-w-[3.25rem] flex-col justify-center rounded-md bg-white/10 px-2 text-center ring-1 ring-inset ring-white/15 xl:min-w-[4rem]">
                             <span class="text-[0.6rem] font-semibold uppercase leading-none tracking-wider text-white/55">Coperti</span>
                             <span class="text-lg font-bold tabular-nums leading-none" x-text="coperti"></span>
@@ -638,6 +653,8 @@ function cassaApp(cfg) {
         prossimoNumero: cfg.prossimoNumero || 1,
         prossimoNumeroDiSerata: cfg.prossimoNumeroDiSerata || 1,
         copertiTotali: cfg.copertiTotali || 0,
+        ultimaStampataTotale: cfg.ultimaStampataTotale ?? null,
+        ultimaStampataNumero: cfg.ultimaStampataNumero ?? null,
         brand: cfg.brand,
         sottotitolo: cfg.sottotitolo || '',
         comunicazioneComanda: cfg.comunicazioneComanda || '',
@@ -966,7 +983,29 @@ function cassaApp(cfg) {
             return this.menu.map(i => i.id);
         },
 
+        applicaUltimaStampata(payload) {
+            if (!payload || typeof payload.totale !== 'number') {
+                if (payload === null) {
+                    this.ultimaStampataTotale = null;
+                    this.ultimaStampataNumero = null;
+                }
+                return;
+            }
+            this.ultimaStampataTotale = payload.totale;
+            this.ultimaStampataNumero = payload.numero ?? null;
+        },
+
         init() {
+            try {
+                const raw = sessionStorage.getItem('cassa_ultima_stampata');
+                if (raw && this.ultimaStampataTotale == null) {
+                    const saved = JSON.parse(raw);
+                    if (saved && saved.postazioneId === this.postazioneId && typeof saved.totale === 'number') {
+                        this.ultimaStampataTotale = saved.totale;
+                        this.ultimaStampataNumero = saved.numero ?? null;
+                    }
+                }
+            } catch (_) {}
             this.pollTimer = setInterval(() => this.pollStock(), 5000);
             this.$nextTick(() => {
                 this.syncTopPad();
@@ -1388,6 +1427,16 @@ function cassaApp(cfg) {
                 if (typeof data.coperti_totali === 'number') this.copertiTotali = data.coperti_totali;
                 if (data.numero) this.prossimoNumero = data.numero + 1;
                 if (!this.comandaId) this.prossimoNumeroDiSerata += 1;
+                // Memorizza subito l’importo (utile anche se il redirect stampa è lento).
+                this.ultimaStampataTotale = this.totale;
+                this.ultimaStampataNumero = data.numero ?? this.numeroDisplay;
+                try {
+                    sessionStorage.setItem('cassa_ultima_stampata', JSON.stringify({
+                        totale: this.ultimaStampataTotale,
+                        numero: this.ultimaStampataNumero,
+                        postazioneId: this.postazioneId,
+                    }));
+                } catch (_) {}
                 this.chiudiModal();
                 // Stessa finestra: non usare window.open/_blank, altrimenti
                 // Chrome --app/--kiosk-printing perde la modalità kiosk.
@@ -1589,6 +1638,9 @@ function cassaApp(cfg) {
                 this.postazioneIdPrev = this.postazioneId;
                 this.modalClaim = false;
                 this.claimMessaggio = '';
+                if (Object.prototype.hasOwnProperty.call(data, 'ultima_stampata')) {
+                    this.applicaUltimaStampata(data.ultima_stampata);
+                }
                 if (data.warning) {
                     this.errore = data.warning;
                 }
@@ -1614,6 +1666,9 @@ function cassaApp(cfg) {
                 const data = await res.json();
                 if (data.stock) this.stock = data.stock;
                 if (typeof data.coperti_totali === 'number') this.copertiTotali = data.coperti_totali;
+                if (Object.prototype.hasOwnProperty.call(data, 'ultima_stampata')) {
+                    this.applicaUltimaStampata(data.ultima_stampata);
+                }
             } catch (_) {}
         },
 

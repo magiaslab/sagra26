@@ -54,6 +54,8 @@ class CassaController extends Controller
         $prossimoNumeroDiSerata = Comanda::prossimoNumeroDiSerata($serata?->id);
         $copertiTotali = Comanda::copertiTotaliSerata($serata?->id);
 
+        $ultimaPayload = $this->ultimaStampataPayload($postazioneId);
+
         return view('cassa.index', [
             'serata' => $serata,
             'postazioni' => $postazioni,
@@ -64,6 +66,12 @@ class CassaController extends Controller
             'prossimoNumero' => $prossimoNumero,
             'prossimoNumeroDiSerata' => $prossimoNumeroDiSerata,
             'copertiTotali' => $copertiTotali,
+            'ultimaStampata' => $ultimaPayload
+                ? (object) [
+                    'numero_progressivo' => $ultimaPayload['numero'],
+                    'totale' => $ultimaPayload['totale'],
+                ]
+                : null,
         ]);
     }
 
@@ -101,6 +109,7 @@ class CassaController extends Controller
             'warning' => $mappata
                 ? null
                 : 'Questa postazione non è ancora collegata al cassetto — chiedi a chi gestisce le Impostazioni di completare il collegamento.',
+            'ultima_stampata' => $this->ultimaStampataPayload($postazione->id),
         ]);
     }
 
@@ -117,7 +126,11 @@ class CassaController extends Controller
 
         $serata = Serata::corrente();
         if (! $serata) {
-            return response()->json(['stock' => [], 'coperti_totali' => 0]);
+            return response()->json([
+                'stock' => [],
+                'coperti_totali' => 0,
+                'ultima_stampata' => null,
+            ]);
         }
 
         $stock->assicuraStockLimitati($serata->id);
@@ -125,6 +138,7 @@ class CassaController extends Controller
         return response()->json([
             'stock' => $stock->mappaResidui($serata->id),
             'coperti_totali' => Comanda::copertiTotaliSerata($serata->id),
+            'ultima_stampata' => $this->ultimaStampataPayload($postazioneId),
         ]);
     }
 
@@ -343,5 +357,32 @@ class CassaController extends Controller
         $request->session()->put('postazione_claim_token', $token);
 
         return $token;
+    }
+
+    /**
+     * @return array{numero: int, totale: float}|null
+     */
+    private function ultimaStampataPayload(int $postazioneId): ?array
+    {
+        $serata = Serata::corrente();
+        if (! $serata || $postazioneId <= 0) {
+            return null;
+        }
+
+        $comanda = Comanda::query()
+            ->where('serata_id', $serata->id)
+            ->where('postazione_id', $postazioneId)
+            ->where('stato', 'stampata')
+            ->orderByDesc('id')
+            ->first(['numero_progressivo', 'totale']);
+
+        if (! $comanda) {
+            return null;
+        }
+
+        return [
+            'numero' => (int) $comanda->numero_progressivo,
+            'totale' => (float) $comanda->totale,
+        ];
     }
 }
