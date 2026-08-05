@@ -59,6 +59,8 @@ it('annulla richiede motivo di almeno 2 caratteri e rende la comanda non richiam
         'contante',
     );
 
+    $this->postJson(route('cassa.postazione'), ['postazione_id' => $postazione->id])->assertOk();
+
     $this->postJson(route('cassa.annulla', $comanda), ['motivo' => 'x'])
         ->assertStatus(422);
 

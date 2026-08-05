@@ -114,6 +114,8 @@ it('annulla su comanda di serata precedente/chiusa fallisce e lascia la comanda 
     expect(fn () => $comandaService->annulla($comandaVecchia->fresh(), 'troppo tardi'))
         ->toThrow(RuntimeException::class, 'Comanda non appartiene alla serata corrente');
 
+    $this->postJson(route('cassa.postazione'), ['postazione_id' => $postazione->id])->assertOk();
+
     $this->postJson(route('cassa.annulla', $comandaVecchia), ['motivo' => 'troppo tardi'])
         ->assertStatus(422)
         ->assertJsonPath('error', 'Comanda non appartiene alla serata corrente, impossibile annullarla.');

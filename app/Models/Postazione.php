@@ -77,6 +77,21 @@ class Postazione extends Model
         ])->save();
     }
 
+    public function release(): void
+    {
+        $this->forceFill([
+            'claimed_session_id' => null,
+            'claimed_at' => null,
+        ])->save();
+    }
+
+    public function releaseIfClaimedBy(string $sessionId): void
+    {
+        if ($this->isClaimedBy($sessionId)) {
+            $this->release();
+        }
+    }
+
     public function touchClaim(?CarbonInterface $at = null): void
     {
         if ($this->claimed_session_id === null) {
@@ -86,6 +101,22 @@ class Postazione extends Model
         $this->forceFill([
             'claimed_at' => $at ?? now(),
         ])->save();
+    }
+
+    /** Stato claim per UI (popup scelta postazione). */
+    public function statoClaimPer(string $sessionId, ?CarbonInterface $now = null): array
+    {
+        $mia = $this->isClaimedBy($sessionId) && $this->hasActiveClaim($now);
+        $occupata = $this->claimConflictFor($sessionId, $now);
+
+        return [
+            'id' => $this->id,
+            'nome' => $this->nome,
+            'mia' => $mia,
+            'occupata' => $occupata,
+            'libera' => ! $occupata,
+            'claim_label' => $occupata ? $this->claimAgeLabel($now) : null,
+        ];
     }
 
     public function claimAgeLabel(?CarbonInterface $now = null): string
