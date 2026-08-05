@@ -1,9 +1,14 @@
 /* ===== PRINT COMANDA / FACSIMILE =====
    A4 landscape. I tre terzi (tagli tipografia) occupano tutto il foglio 297×210
    senza padding sul container: le linee tratteggiate restano a 99 / 198 mm.
-   Il margine ≥4mm (stampante) sta solo sul contenuto dentro ogni terzo. */
+   Il margine ≥4mm (stampante) sta solo sul contenuto dentro ogni terzo.
+
+   Notebook reali (Chrome Windows): spesso aggiungono margini minimi e se il
+   foglio è alto esattamente 210mm finisce su 2 pagine. In @media print il
+   foglio è fixed a 100%×100% della page-box → sempre 1 pagina; i terzi restano
+   uguali (1fr 1fr 1fr). */
 @page {
-  size: A4 landscape;
+  size: 297mm 210mm;
   margin: 0;
 }
 
@@ -42,16 +47,27 @@
     margin: 0 !important;
     padding: 0 !important;
     background: #fff !important;
-    width: 297mm !important;
-    height: 210mm !important;
-    max-height: 210mm !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
     overflow: hidden !important;
   }
+
+  body > *:not(.print-sheet):not(.facsimile-sheet) {
+    display: none !important;
+  }
+
   .no-print { display: none !important; }
   .print-only { display: block !important; }
 
   .print-sheet,
   .facsimile-sheet {
+    position: fixed !important;
+    left: 0 !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     box-shadow: none !important;
     margin: 0 !important;
     border: none !important;
@@ -64,14 +80,14 @@
     break-after: avoid !important;
     break-before: avoid !important;
     box-sizing: border-box !important;
-    width: 297mm !important;
-    height: 210mm !important;
-    max-width: 297mm !important;
-    max-height: 210mm !important;
+    width: 100% !important;
+    height: 100% !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
   }
 
   .print-sheet {
-    /* Nessun padding: i terzi devono coincidere con i tagli (99 / 198 mm). */
+    /* Nessun padding: i terzi devono coincidere con i tagli (⅓ / ⅔ del foglio). */
     padding: 0 !important;
   }
 
@@ -95,6 +111,13 @@
 
   .facsimile-sheet {
     padding: 4mm !important;
+  }
+
+  /* Evita che figli “lunghi” spingano una seconda pagina */
+  .print-sheet *,
+  .facsimile-sheet * {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 

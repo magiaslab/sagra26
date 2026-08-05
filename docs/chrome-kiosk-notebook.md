@@ -160,9 +160,10 @@ Controlla il path di `chrome.exe` (Program Files vs Program Files x86) e aggiorn
 - Prova ping: `ping IP`
 
 ### Stampa su due pagine / bordi strani
-- Foglio A4 landscape
-- Margini ridotti
-- Sul server: CSS stampa aggiornato (`git pull` + eventuale `npm run build` se previsto)
+- Foglio A4 **orizzontale** (landscape)
+- In Chrome: margini **Nessuno** (o Minimi), scala **100%** / predefinita (non “adatta al foglio”)
+- L’app forza già 1 pagina nel CSS (`position: fixed` sul foglio)
+- Sul server: `git pull` e riavvio servizio; CSS in `public/css/print.css` (niente npm per questo)
 
 ### Due notebook, stessa postazione “già in uso”
 È il claim soft della postazione: conferma “Prendi comunque il controllo” oppure usa postazioni diverse (A/B).

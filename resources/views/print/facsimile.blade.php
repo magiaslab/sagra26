@@ -15,7 +15,7 @@
 </div>
 @endunless
 
-<div class="facsimile-sheet">
+<div class="facsimile-sheet" data-print-root>
     @foreach ([1, 2] as $half)
         <section class="facsimile-half">
             <header class="facsimile-head">
@@ -60,10 +60,27 @@ window.__autoPrint = @json((bool) $autoPrint);
 
 let giaStampato = false;
 
+function preparaStampaUnaPagina() {
+    document.documentElement.classList.add('is-printing');
+    document.body.classList.add('is-printing');
+    const sheet = document.querySelector('[data-print-root]');
+    if (!sheet) return;
+    sheet.style.position = 'fixed';
+    sheet.style.left = '0';
+    sheet.style.top = '0';
+    sheet.style.right = '0';
+    sheet.style.bottom = '0';
+    sheet.style.width = '100%';
+    sheet.style.height = '100%';
+    sheet.style.margin = '0';
+    sheet.style.overflow = 'hidden';
+}
+
 function avviaStampaAutomatica() {
     if (giaStampato) return;
     giaStampato = true;
-    window.print();
+    preparaStampaUnaPagina();
+    requestAnimationFrame(() => window.print());
 }
 
 window.addEventListener('pageshow', (event) => {
@@ -75,6 +92,8 @@ window.addEventListener('pageshow', (event) => {
         avviaStampaAutomatica();
     }
 });
+
+window.addEventListener('beforeprint', preparaStampaUnaPagina);
 
 window.addEventListener('afterprint', () => {
     window.location.replace('/gestione/menu');
