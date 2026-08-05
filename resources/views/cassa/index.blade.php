@@ -281,8 +281,17 @@
                            : (deltaCorrezione < 0
                                ? 'Restituisci solo la differenza.'
                                : 'Conferma o correggi il metodo di pagamento.')"></p>
-                    <p class="mt-1 text-xs text-sagra-muted" x-show="deltaCorrezione === 0 && metodoOriginale"
-                       x-text="'Ora risulta: ' + (metodoOriginale === 'pos' ? 'POS' : (metodoOriginale === 'misto' ? 'MISTO' : 'CONTANTE'))"></p>
+                    <div class="mt-3 rounded-md px-3 py-2.5 ring-1"
+                         x-show="deltaCorrezione === 0 && metodoOriginale"
+                         :class="metodoOriginale === 'pos'
+                             ? 'bg-sky-50 text-sky-950 ring-sky-200'
+                             : (metodoOriginale === 'misto'
+                                 ? 'bg-amber-50 text-amber-950 ring-amber-200'
+                                 : 'bg-emerald-50 text-emerald-950 ring-emerald-200')">
+                        <p class="text-[0.65rem] font-semibold uppercase tracking-wider opacity-70">Metodo attuale</p>
+                        <p class="mt-0.5 text-xl font-bold tracking-wide"
+                           x-text="metodoOriginale === 'pos' ? 'POS' : (metodoOriginale === 'misto' ? 'MISTO' : 'CONTANTE')"></p>
+                    </div>
                 </div>
             </template>
             <div class="mt-5 grid grid-cols-2 gap-3">

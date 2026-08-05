@@ -5,7 +5,7 @@ it('in correzione la cassa chiede sempre contante o pos anche senza differenza',
 
     expect($html)
         ->toContain('Conferma o correggi il metodo di pagamento.')
-        ->toContain('Ora risulta:')
+        ->toContain('Metodo attuale')
         ->not->toContain('Correzione senza differenza: nessun incasso/resto, solo ristampa.')
         ->toContain('(corretto)');
 });
