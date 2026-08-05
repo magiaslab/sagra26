@@ -44,13 +44,29 @@ class ComandaService
         ?int $versionAttesa = null,
         ?string $tavolo = null,
         ?string $note = null,
+        ?string $autorizzatoDa = null,
+        ?string $nominativo = null,
+        ?string $pagamentoNote = null,
     ): Comanda {
         if (! $serata->isAperta()) {
             throw new RuntimeException('Nessuna serata aperta.');
         }
 
-        if (! in_array($metodoPagamento, ['contante', 'pos', 'misto'], true)) {
+        if (! in_array($metodoPagamento, ['contante', 'pos', 'misto', 'omaggio', 'sospeso'], true)) {
             throw new RuntimeException('Metodo di pagamento non valido.');
+        }
+
+        if (in_array($metodoPagamento, ['omaggio', 'sospeso'], true)) {
+            if ($autorizzatoDa === null || trim($autorizzatoDa) === '') {
+                throw new RuntimeException('Indica chi ha autorizzato.');
+            }
+            if ($nominativo === null || trim($nominativo) === '') {
+                throw new RuntimeException(
+                    $metodoPagamento === 'omaggio'
+                        ? 'Indica il nome ospite.'
+                        : 'Indica il nominativo del sospeso.'
+                );
+            }
         }
 
         $puntoCassa = $postazione->puntoCassaAttivo($serata->data->toDateString());
@@ -82,6 +98,9 @@ class ComandaService
             $versionAttesa,
             $tavolo,
             $note,
+            $autorizzatoDa,
+            $nominativo,
+            $pagamentoNote,
         ) {
             if ($esistente) {
                 $comanda = Comanda::query()->with('righe.menuItem')->lockForUpdate()->findOrFail($esistente->id);
@@ -101,11 +120,13 @@ class ComandaService
                 }
 
                 // Snapshot pagamento prima della correzione: Contante/POS scelti
-                // dal cassiere valgono solo per la differenza, non per tutto il totale.
+                // dal cassiere valgono solo per la differenza, non per tutto il totale
+                // (salvo omaggio/sospeso → riassegnazione intera).
                 $pagamentoPrecedente = [
                     'totale' => (float) $comanda->totale,
                     'contante' => $comanda->importoContanteEffettivo(),
                     'pos' => $comanda->importoPosEffettivo(),
+                    'metodo' => (string) $comanda->metodo_pagamento,
                 ];
 
                 // Prezzi già pagati: in correzione non si ricalcolano dal menù attuale
@@ -191,26 +212,30 @@ class ComandaService
                     $pagamentoPrecedente,
                     $totale,
                     $metodoPagamento,
+                    $importoContante,
+                    $importoPos,
                 );
                 $comanda->metodo_pagamento = $pagamento['metodo'];
                 $comanda->importo_contante = $pagamento['importo_contante'];
                 $comanda->importo_pos = $pagamento['importo_pos'];
             } elseif ($metodoPagamento === 'misto') {
-                $c = round((float) $importoContante, 2);
-                $p = round((float) $importoPos, 2);
-                if ($c < 0 || $p < 0 || abs(($c + $p) - $totale) > 0.01) {
-                    throw new RuntimeException(
-                        'Pagamento misto: contante + POS devono eguagliare il totale ('.$totale.' €).'
-                    );
-                }
-                $comanda->metodo_pagamento = 'misto';
-                $comanda->importo_contante = $c;
-                $comanda->importo_pos = $p;
+                $pagamento = $this->pagamentoMisto($totale, $importoContante, $importoPos);
+                $comanda->metodo_pagamento = $pagamento['metodo'];
+                $comanda->importo_contante = $pagamento['importo_contante'];
+                $comanda->importo_pos = $pagamento['importo_pos'];
             } else {
                 $comanda->metodo_pagamento = $metodoPagamento;
                 $comanda->importo_contante = null;
                 $comanda->importo_pos = null;
             }
+
+            $this->applicaMetadatiPagamentoSpeciale(
+                $comanda,
+                $pagamentoPrecedente['metodo'] ?? null,
+                $autorizzatoDa,
+                $nominativo,
+                $pagamentoNote,
+            );
 
             $comanda->save();
 
@@ -219,41 +244,115 @@ class ComandaService
     }
 
     /**
-     * In correzione Contante/POS scelti dal cassiere:
-     * - con differenza di totale → valgono solo per il delta (lo split si aggiorna);
-     * - senza differenza → riassegnano l’intero totale al metodo scelto
-     *   (metodo digitato male, POS non funziona, ecc.).
-     *
-     * @param  array{totale: float, contante: float, pos: float}  $precedente
+     * @param  array{totale: float, contante: float, pos: float, metodo?: string}  $precedente
      * @return array{metodo: string, importo_contante: ?float, importo_pos: ?float}
      */
-    private function risolviPagamentoCorrezione(array $precedente, float $nuovoTotale, string $metodoDelta): array
-    {
+    private function risolviPagamentoCorrezione(
+        array $precedente,
+        float $nuovoTotale,
+        string $metodoScelto,
+        ?float $importoContante = null,
+        ?float $importoPos = null,
+    ): array {
+        $metodoPrec = $precedente['metodo'] ?? null;
+        $daNonIncassato = in_array($metodoPrec, ['sospeso', 'omaggio'], true);
+
+        // Omaggio / sospeso: riassegnano sempre l'intero totale (niente delta parziale).
+        if (in_array($metodoScelto, ['omaggio', 'sospeso'], true)) {
+            return [
+                'metodo' => $metodoScelto,
+                'importo_contante' => null,
+                'importo_pos' => null,
+            ];
+        }
+
+        // Chiusura sospeso o conversione da omaggio: si paga (o restituisce) tutto il nuovo totale.
+        if ($daNonIncassato) {
+            if ($metodoScelto === 'misto') {
+                return $this->pagamentoMisto($nuovoTotale, $importoContante, $importoPos);
+            }
+            if ($metodoScelto === 'contante') {
+                return $this->normalizzaMetodoImporti($nuovoTotale, 0.0);
+            }
+            if ($metodoScelto === 'pos') {
+                return $this->normalizzaMetodoImporti(0.0, $nuovoTotale);
+            }
+            throw new RuntimeException('Scegli Contante, POS, Misto o Omaggio.');
+        }
+
         $delta = round($nuovoTotale - $precedente['totale'], 2);
 
         if (abs($delta) < 0.005) {
-            if (! in_array($metodoDelta, ['contante', 'pos'], true)) {
-                throw new RuntimeException('Per correggere il pagamento scegli Contante o POS.');
+            if (! in_array($metodoScelto, ['contante', 'pos'], true)) {
+                throw new RuntimeException('Per correggere il pagamento scegli Contante, POS, Omaggio o Sospeso.');
             }
 
-            return $metodoDelta === 'contante'
+            return $metodoScelto === 'contante'
                 ? $this->normalizzaMetodoImporti($nuovoTotale, 0.0)
                 : $this->normalizzaMetodoImporti(0.0, $nuovoTotale);
         }
 
-        if (! in_array($metodoDelta, ['contante', 'pos'], true)) {
-            throw new RuntimeException('Per la differenza scegli Contante o POS.');
+        if (! in_array($metodoScelto, ['contante', 'pos'], true)) {
+            throw new RuntimeException('Per la differenza scegli Contante o POS (oppure Omaggio/Sospeso per riassegnare tutto).');
         }
 
         $contante = round($precedente['contante'], 2);
         $pos = round($precedente['pos'], 2);
-        if ($metodoDelta === 'contante') {
+        if ($metodoScelto === 'contante') {
             $contante = round($contante + $delta, 2);
         } else {
             $pos = round($pos + $delta, 2);
         }
 
         return $this->normalizzaMetodoImporti($contante, $pos);
+    }
+
+    /**
+     * @return array{metodo: string, importo_contante: float, importo_pos: float}
+     */
+    private function pagamentoMisto(float $totale, ?float $importoContante, ?float $importoPos): array
+    {
+        $c = round((float) $importoContante, 2);
+        $p = round((float) $importoPos, 2);
+        if ($c < 0 || $p < 0 || abs(($c + $p) - $totale) > 0.01) {
+            throw new RuntimeException(
+                'Pagamento misto: contante + POS devono eguagliare il totale ('.$totale.' €).'
+            );
+        }
+
+        return [
+            'metodo' => 'misto',
+            'importo_contante' => $c,
+            'importo_pos' => $p,
+        ];
+    }
+
+    private function applicaMetadatiPagamentoSpeciale(
+        Comanda $comanda,
+        ?string $metodoPrecedente,
+        ?string $autorizzatoDa,
+        ?string $nominativo,
+        ?string $pagamentoNote,
+    ): void {
+        $metodo = (string) $comanda->metodo_pagamento;
+
+        if (in_array($metodo, ['omaggio', 'sospeso'], true)) {
+            $comanda->autorizzato_da = mb_substr(trim((string) $autorizzatoDa), 0, 80);
+            $comanda->nominativo = mb_substr(trim((string) $nominativo), 0, 80);
+            $comanda->pagamento_note = ($pagamentoNote !== null && trim($pagamentoNote) !== '')
+                ? mb_substr(trim($pagamentoNote), 0, 255)
+                : null;
+        }
+
+        if ($metodo === 'sospeso') {
+            $comanda->era_sospeso = true;
+            $comanda->sospeso_chiuso_at = null;
+        }
+
+        if ($metodoPrecedente === 'sospeso' && $metodo !== 'sospeso') {
+            $comanda->era_sospeso = true;
+            $comanda->sospeso_chiuso_at = now();
+        }
     }
 
     /**

@@ -262,7 +262,7 @@
     </div>
 
     <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalPagamento" x-cloak @keydown.escape.window="chiudiModal()">
-        <div class="w-[min(420px,92vw)] rounded-lg bg-white p-6 text-center shadow-xl ring-1 ring-sagra-line" @click.stop>
+        <div class="max-h-[92vh] w-[min(440px,92vw)] overflow-y-auto rounded-lg bg-white p-6 text-center shadow-xl ring-1 ring-sagra-line" @click.stop>
             <h2 class="text-lg font-semibold text-sagra-ink">
                 Comanda <span x-text="numeroDiSerataDisplay"></span> di stasera
                 <span class="block text-sm font-medium text-sagra-muted">rif. #<span x-text="numeroDisplay"></span> · <span x-text="formatEuro(totale)"></span></span>
@@ -273,55 +273,85 @@
             <template x-if="comandaId">
                 <div class="mt-3">
                     <p class="text-base font-bold tabular-nums"
-                       :class="deltaCorrezione > 0 ? 'text-sagra-amber' : (deltaCorrezione < 0 ? 'text-sky-800' : 'text-sagra-ink')"
+                       :class="metodoOriginale === 'sospeso' ? 'text-sagra-amber' : (deltaCorrezione > 0 ? 'text-sagra-amber' : (deltaCorrezione < 0 ? 'text-sky-800' : 'text-sagra-ink'))"
                        x-text="deltaCorrezioneMessaggio"></p>
                     <p class="mt-1 text-sm text-sagra-muted"
-                       x-text="deltaCorrezione > 0
-                           ? 'Incassa solo la differenza (il resto è già pagato).'
-                           : (deltaCorrezione < 0
-                               ? 'Restituisci solo la differenza.'
-                               : 'Conferma o correggi il metodo di pagamento.')"></p>
+                       x-text="metodoOriginale === 'sospeso'
+                           ? 'Saldare il sospeso oppure lasciare sospeso / omaggio.'
+                           : (deltaCorrezione > 0
+                               ? 'Incassa solo la differenza (il resto è già pagato).'
+                               : (deltaCorrezione < 0
+                                   ? 'Restituisci solo la differenza.'
+                                   : 'Conferma o correggi il metodo di pagamento.'))"></p>
                     <div class="mt-3 rounded-md px-3 py-2.5 ring-1"
-                         x-show="deltaCorrezione === 0 && metodoOriginale"
-                         :class="metodoOriginale === 'pos'
-                             ? 'bg-sky-50 text-sky-950 ring-sky-200'
-                             : (metodoOriginale === 'misto'
-                                 ? 'bg-amber-50 text-amber-950 ring-amber-200'
-                                 : 'bg-emerald-50 text-emerald-950 ring-emerald-200')">
+                         x-show="metodoOriginale"
+                         :class="labelMetodoClass(metodoOriginale)">
                         <p class="text-[0.65rem] font-semibold uppercase tracking-wider opacity-70">Metodo attuale</p>
-                        <p class="mt-0.5 text-xl font-bold tracking-wide"
-                           x-text="metodoOriginale === 'pos' ? 'POS' : (metodoOriginale === 'misto' ? 'MISTO' : 'CONTANTE')"></p>
+                        <p class="mt-0.5 text-xl font-bold tracking-wide" x-text="labelMetodo(metodoOriginale)"></p>
+                        <p class="mt-1 text-xs opacity-80" x-show="nominativoOriginale" x-text="'Nominativo: ' + nominativoOriginale"></p>
                     </div>
                 </div>
             </template>
-            <div class="mt-5 grid grid-cols-2 gap-3">
-                <button type="button" class="rounded-md bg-sagra px-3 py-4 text-base font-semibold text-white hover:bg-sagra-dark" @click="scegliMetodo('contante')">
-                    <span class="block font-mono text-xs text-white/70">C</span>
-                    <span x-text="comandaId
-                        ? (deltaCorrezione > 0 ? 'Incassa contante' : (deltaCorrezione < 0 ? 'Restituisci contante' : 'Contante'))
-                        : 'Contante'"></span>
-                </button>
-                <button type="button" class="rounded-md bg-white px-3 py-4 text-base font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="scegliMetodo('pos')">
-                    <span class="block font-mono text-xs text-sagra-muted">P</span>
-                    <span x-text="comandaId
-                        ? (deltaCorrezione > 0 ? 'Incassa POS' : (deltaCorrezione < 0 ? 'Restituisci POS' : 'POS'))
-                        : 'POS'"></span>
-                </button>
+
+            <div x-show="!mostraAuthSpeciale" x-cloak>
+                <div class="mt-5 grid grid-cols-2 gap-3">
+                    <button type="button" class="rounded-md bg-sagra px-3 py-4 text-base font-semibold text-white hover:bg-sagra-dark" @click="scegliMetodo('contante')">
+                        <span class="block font-mono text-xs text-white/70">C</span>
+                        <span x-text="labelPulsanteContante"></span>
+                    </button>
+                    <button type="button" class="rounded-md bg-white px-3 py-4 text-base font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="scegliMetodo('pos')">
+                        <span class="block font-mono text-xs text-sagra-muted">P</span>
+                        <span x-text="labelPulsantePos"></span>
+                    </button>
+                </div>
+                <div class="mt-3" x-show="mostraOpzioneMisto" x-cloak>
+                    <button type="button" class="w-full rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriMisto()">
+                        <span class="font-mono text-xs text-sagra-muted">M</span> Misto (contante + POS)
+                    </button>
+                    <div class="mt-3 grid grid-cols-2 gap-2 text-left" x-show="mostraMisto" x-cloak>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-sagra-muted">Contante €</label>
+                            <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" x-model.number="importoContanteMisto" @input="syncMistoPos()">
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-xs font-medium text-sagra-muted">POS €</label>
+                            <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" x-model.number="importoPosMisto" @focus="syncMistoPos()">
+                        </div>
+                        <button type="button" class="col-span-2 rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark" @click="confermaMisto()">Conferma misto</button>
+                    </div>
+                </div>
+                <div class="mt-3 grid grid-cols-2 gap-3">
+                    <button type="button" class="rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriAuthSpeciale('omaggio')">
+                        Omaggio
+                    </button>
+                    <button type="button" class="rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriAuthSpeciale('sospeso')">
+                        Sospeso
+                    </button>
+                </div>
             </div>
-            <div class="mt-3" x-show="!comandaId" x-cloak>
-                <button type="button" class="w-full rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriMisto()">
-                    <span class="font-mono text-xs text-sagra-muted">M</span> Misto (contante + POS)
-                </button>
-                <div class="mt-3 grid grid-cols-2 gap-2 text-left" x-show="mostraMisto" x-cloak>
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-sagra-muted">Contante €</label>
-                        <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" x-model.number="importoContanteMisto" @input="syncMistoPos()">
-                    </div>
-                    <div>
-                        <label class="mb-1 block text-xs font-medium text-sagra-muted">POS €</label>
-                        <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="0.01" min="0" x-model.number="importoPosMisto" @focus="syncMistoPos()">
-                    </div>
-                    <button type="button" class="col-span-2 rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark" @click="confermaMisto()">Conferma misto</button>
+
+            <div class="mt-4 space-y-3 text-left" x-show="mostraAuthSpeciale" x-cloak>
+                <p class="text-center text-sm font-semibold text-sagra-ink"
+                   x-text="authMetodo === 'omaggio' ? 'Omaggio — autorizzazione PIN' : 'Sospeso — autorizzazione PIN'"></p>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-sagra-muted">PIN gestione</label>
+                    <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="password" inputmode="numeric" autocomplete="off" x-model="pinAutorizzazione" x-ref="pinAuth">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-sagra-muted">Autorizzato da</label>
+                    <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="80" x-model="autorizzatoDa">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-sagra-muted" x-text="authMetodo === 'omaggio' ? 'Nome ospite' : 'Nominativo'"></label>
+                    <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="80" x-model="nominativoPagamento">
+                </div>
+                <div>
+                    <label class="mb-1 block text-xs font-medium text-sagra-muted">Note</label>
+                    <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="pagamentoNote">
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button type="button" class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="annullaAuthSpeciale()">Indietro</button>
+                    <button type="button" class="rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark" @click="confermaAuthSpeciale()">Conferma</button>
                 </div>
             </div>
             <p class="mt-4 text-xs text-sagra-muted">Esc per annullare</p>
@@ -395,8 +425,10 @@
                             @endif
                             <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
                             <div class="a4-pay"
-                                 :class="metodo === 'contante' ? 'a4-pay--contante' : (metodo === 'pos' ? 'a4-pay--pos' : 'a4-pay--misto')"
+                                 :class="'a4-pay--' + (metodo || 'contante')"
                                  x-text="badgeMetodoAnteprima"></div>
+                            <div class="a4-meta" x-show="metodo === 'omaggio' || metodo === 'sospeso'" x-cloak
+                                 x-text="(autorizzatoDa ? ('Aut. ' + autorizzatoDa) : '') + (nominativoPagamento ? (' · ' + nominativoPagamento) : '')"></div>
                         </section>
                         <div class="a4-produzione">
                             <template x-for="zona in zoneProduzione" :key="zona.key">
@@ -498,7 +530,10 @@
                                         <span class="font-mono text-base font-semibold">n.<span x-text="c.numero"></span></span>
                                         <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-xs text-sagra-muted">
                                             <span x-text="c.n_righe + ' voci · ' + c.coperti + ' cop.'"></span>
-                                            <span class="text-xs font-medium text-sagra" x-text="c.metodo_pagamento === 'contante' ? 'CONT' : (c.metodo_pagamento === 'pos' ? 'POS' : 'MISTO')"></span>
+                                            <span class="text-xs font-medium text-sagra"
+                                                  :class="c.metodo_pagamento === 'sospeso' ? 'text-sagra-amber' : (c.metodo_pagamento === 'omaggio' ? 'text-sky-800' : 'text-sagra')"
+                                                  x-text="labelMetodoBreve(c.metodo_pagamento)"></span>
+                                            <span class="text-xs text-sagra-muted" x-show="c.nominativo" x-text="c.nominativo"></span>
                                         </span>
                                         <span class="font-mono text-sm font-semibold tabular-nums" x-text="formatEuro(c.totale)"></span>
                                         <span class="ml-auto whitespace-nowrap text-xs font-medium text-sagra">Correggi →</span>
@@ -619,7 +654,14 @@ function cassaApp(cfg) {
         topPad: 120,
         metodo: null,
         metodoOriginale: null,
+        nominativoOriginale: null,
         mostraMisto: false,
+        mostraAuthSpeciale: false,
+        authMetodo: null,
+        pinAutorizzazione: '',
+        autorizzatoDa: '',
+        nominativoPagamento: '',
+        pagamentoNote: '',
         importoContanteMisto: 0,
         importoPosMisto: 0,
         comandaId: null,
@@ -691,15 +733,43 @@ function cassaApp(cfg) {
         },
 
         get deltaCorrezioneMessaggio() {
+            if (this.metodoOriginale === 'sospeso') {
+                return 'Sospeso da saldare · ' + this.formatEuro(this.totale);
+            }
             const d = this.deltaCorrezione;
             if (d > 0) return 'Da chiedere ' + this.formatEuro(d);
             if (d < 0) return 'Da restituire ' + this.formatEuro(Math.abs(d));
             return 'Nessuna differenza · ' + this.formatEuro(this.totale);
         },
 
+        get mostraOpzioneMisto() {
+            return !this.comandaId || this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio';
+        },
+
+        get labelPulsanteContante() {
+            if (!this.comandaId) return 'Contante';
+            if (this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio') return 'Incassa contante';
+            if (this.deltaCorrezione > 0) return 'Incassa contante';
+            if (this.deltaCorrezione < 0) return 'Restituisci contante';
+            return 'Contante';
+        },
+
+        get labelPulsantePos() {
+            if (!this.comandaId) return 'POS';
+            if (this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio') return 'Incassa POS';
+            if (this.deltaCorrezione > 0) return 'Incassa POS';
+            if (this.deltaCorrezione < 0) return 'Restituisci POS';
+            return 'POS';
+        },
+
         get badgeMetodoAnteprima() {
+            if (this.metodo === 'omaggio') return 'OMAGGIO';
+            if (this.metodo === 'sospeso') return 'SOSPESO';
+            if (this.comandaId && this.metodoOriginale === 'sospeso') {
+                return this.labelMetodo(this.metodo) + ' (chiusura)';
+            }
             if (this.comandaId && this.deltaCorrezione === 0) {
-                const label = this.metodo === 'pos' ? 'POS' : (this.metodo === 'misto' ? 'MISTO' : 'CONTANTE');
+                const label = this.labelMetodo(this.metodo);
                 if (this.metodoOriginale && this.metodo !== this.metodoOriginale) {
                     return label + ' (corretto)';
                 }
@@ -715,7 +785,33 @@ function cassaApp(cfg) {
                 return 'MISTO · € ' + this.formatEuro(this.importoContanteMisto)
                     + ' + ▭ ' + this.formatEuro(this.importoPosMisto);
             }
-            return this.metodo === 'contante' ? 'CONTANTE' : 'POS';
+            return this.labelMetodo(this.metodo);
+        },
+
+        labelMetodo(m) {
+            if (m === 'pos') return 'POS';
+            if (m === 'misto') return 'MISTO';
+            if (m === 'omaggio') return 'OMAGGIO';
+            if (m === 'sospeso') return 'SOSPESO';
+            if (m === 'contante') return 'CONTANTE';
+            return '—';
+        },
+
+        labelMetodoBreve(m) {
+            if (m === 'contante') return 'CONT';
+            if (m === 'pos') return 'POS';
+            if (m === 'misto') return 'MISTO';
+            if (m === 'omaggio') return 'OMAG';
+            if (m === 'sospeso') return 'SOSP';
+            return '—';
+        },
+
+        labelMetodoClass(m) {
+            if (m === 'pos') return 'bg-sky-50 text-sky-950 ring-sky-200';
+            if (m === 'misto') return 'bg-amber-50 text-amber-950 ring-amber-200';
+            if (m === 'omaggio') return 'bg-violet-50 text-violet-950 ring-violet-200';
+            if (m === 'sospeso') return 'bg-orange-50 text-orange-950 ring-orange-200';
+            return 'bg-emerald-50 text-emerald-950 ring-emerald-200';
         },
 
         get movimentiCorrezione() {
@@ -1101,7 +1197,14 @@ function cassaApp(cfg) {
             this.printUrlRichiamata = null;
             this.metodo = null;
             this.metodoOriginale = null;
+            this.nominativoOriginale = null;
             this.mostraMisto = false;
+            this.mostraAuthSpeciale = false;
+            this.authMetodo = null;
+            this.pinAutorizzazione = '';
+            this.autorizzatoDa = '';
+            this.nominativoPagamento = '';
+            this.pagamentoNote = '';
             this.importoContanteMisto = 0;
             this.importoPosMisto = 0;
             this.errore = null;
@@ -1147,6 +1250,12 @@ function cassaApp(cfg) {
             // Sempre chiedere Contante/POS: anche con delta 0 si può correggere il metodo.
             this.metodo = null;
             this.mostraMisto = false;
+            this.mostraAuthSpeciale = false;
+            this.authMetodo = null;
+            this.pinAutorizzazione = '';
+            this.autorizzatoDa = '';
+            this.nominativoPagamento = this.nominativoOriginale || '';
+            this.pagamentoNote = '';
             this.importoContanteMisto = 0;
             this.importoPosMisto = 0;
             this.modalPagamento = true;
@@ -1155,6 +1264,7 @@ function cassaApp(cfg) {
         scegliMetodo(m) {
             this.metodo = m;
             this.mostraMisto = false;
+            this.mostraAuthSpeciale = false;
             this.modalPagamento = false;
             this.modalAnteprima = true;
             this.$nextTick(() => {
@@ -1167,6 +1277,40 @@ function cassaApp(cfg) {
             this.mostraMisto = true;
             this.importoContanteMisto = this.totale;
             this.importoPosMisto = 0;
+        },
+
+        apriAuthSpeciale(metodo) {
+            this.authMetodo = metodo;
+            this.mostraAuthSpeciale = true;
+            this.mostraMisto = false;
+            this.pinAutorizzazione = '';
+            this.autorizzatoDa = '';
+            this.nominativoPagamento = this.nominativoOriginale || '';
+            this.pagamentoNote = '';
+            this.$nextTick(() => this.$refs.pinAuth?.focus());
+        },
+
+        annullaAuthSpeciale() {
+            this.mostraAuthSpeciale = false;
+            this.authMetodo = null;
+            this.pinAutorizzazione = '';
+        },
+
+        confermaAuthSpeciale() {
+            if (!this.pinAutorizzazione) {
+                this.errore = 'Inserisci il PIN di autorizzazione.';
+                return;
+            }
+            if (!String(this.autorizzatoDa || '').trim()) {
+                this.errore = 'Indica chi ha autorizzato.';
+                return;
+            }
+            if (!String(this.nominativoPagamento || '').trim()) {
+                this.errore = this.authMetodo === 'omaggio' ? 'Indica il nome ospite.' : 'Indica il nominativo.';
+                return;
+            }
+            this.errore = null;
+            this.scegliMetodo(this.authMetodo);
         },
 
         syncMistoPos() {
@@ -1204,9 +1348,15 @@ function cassaApp(cfg) {
                         quantita: r.q,
                     })),
                 };
-                if (this.metodo === 'misto' && !this.comandaId) {
+                if (this.metodo === 'misto' && (!this.comandaId || this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio')) {
                     payload.importo_contante = this.importoContanteMisto;
                     payload.importo_pos = this.importoPosMisto;
+                }
+                if (this.metodo === 'omaggio' || this.metodo === 'sospeso') {
+                    payload.pin_autorizzazione = this.pinAutorizzazione;
+                    payload.autorizzato_da = String(this.autorizzatoDa || '').trim();
+                    payload.nominativo = String(this.nominativoPagamento || '').trim();
+                    payload.pagamento_note = String(this.pagamentoNote || '').trim() || null;
                 }
                 if (this.comandaId && this.comandaVersion != null) {
                     payload.version = this.comandaVersion;
@@ -1383,6 +1533,7 @@ function cassaApp(cfg) {
                     ? data.totale
                     : Math.round(Number(data.totale || 0) * 100) / 100;
                 this.metodoOriginale = data.metodo_pagamento || null;
+                this.nominativoOriginale = data.nominativo || null;
                 const orig = {};
                 const prezzi = {};
                 for (const r of data.righe) {
@@ -1396,9 +1547,13 @@ function cassaApp(cfg) {
                 this.printUrlRichiamata = data.print_url || null;
                 this.motivo = '';
                 this.chiudiModal();
+                const statoPag = data.metodo_pagamento === 'sospeso'
+                    ? 'SOSPESO'
+                    : (data.metodo_pagamento === 'omaggio' ? 'OMAGGIO' : ('pagato ' + this.formatEuro(this.totaleOriginale)));
                 this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')
                     + 'rif. #' + data.numero
-                    + ' · pagato ' + this.formatEuro(this.totaleOriginale)
+                    + ' · ' + statoPag
+                    + (data.nominativo ? ' · ' + data.nominativo : '')
                     + (this.correzioniCount ? ' (già corretta ' + this.correzioniCount + '×)' : '');
             } catch (e) {
                 this.errore = e.message;
@@ -1471,6 +1626,10 @@ function cassaApp(cfg) {
                 return;
             }
             if (this.modalPagamento) {
+                if (this.mostraAuthSpeciale) {
+                    if (e.key === 'Escape') { e.preventDefault(); this.annullaAuthSpeciale(); }
+                    return;
+                }
                 if (e.key === 'c' || e.key === 'C') { e.preventDefault(); this.scegliMetodo('contante'); }
                 if (e.key === 'p' || e.key === 'P') { e.preventDefault(); this.scegliMetodo('pos'); }
                 if (e.key === 'Escape') { e.preventDefault(); this.chiudiModal(); }

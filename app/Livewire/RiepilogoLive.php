@@ -20,6 +20,8 @@ class RiepilogoLive extends Component
             'incasso' => 0,
             'contante' => 0,
             'pos' => 0,
+            'omaggi' => 0,
+            'sospesi' => 0,
             'di_cui_bar' => 0,
             'per_piatto' => collect(),
             'per_postazione' => collect(),
@@ -35,25 +37,33 @@ class RiepilogoLive extends Component
                 ->get();
 
             $dati['coperti'] = $comande->sum('coperti');
-            $dati['incasso'] = round($comande->sum('totale'), 2);
+            $dati['incasso'] = round($comande->sum(fn ($c) => $c->importoIncasso()), 2);
             $dati['contante'] = round($comande->sum(fn ($c) => $c->importoContanteEffettivo()), 2);
             $dati['pos'] = round($comande->sum(fn ($c) => $c->importoPosEffettivo()), 2);
+            $dati['omaggi'] = round($comande->where('metodo_pagamento', 'omaggio')->sum('totale'), 2);
+            $dati['sospesi'] = round($comande->where('metodo_pagamento', 'sospeso')->sum('totale'), 2);
             $dati['di_cui_bar'] = \App\Livewire\Report\ReportHub::totaleBarPerSerate(collect([$serata->id]));
 
             $dati['per_postazione'] = $comande->groupBy('postazione_id')->map(function ($group) {
                 return [
                     'nome' => $group->first()->postazione->nome,
                     'n' => $group->count(),
-                    'totale' => round($group->sum('totale'), 2),
+                    'totale' => round($group->sum(fn ($c) => $c->importoIncasso()), 2),
                 ];
             })->values();
 
             $dati['per_piatto'] = ComandaRiga::query()
-                ->select('menu_item_id', DB::raw('SUM(quantita) as qta'), DB::raw('SUM(quantita * prezzo_unitario) as incasso'))
-                ->whereHas('comanda', fn ($q) => $q->where('serata_id', $serata->id)->where('stato', 'stampata'))
-                ->with('menuItem')
-                ->groupBy('menu_item_id')
+                ->join('comande', 'comande.id', '=', 'comanda_righe.comanda_id')
+                ->select(
+                    'comanda_righe.menu_item_id',
+                    DB::raw('SUM(comanda_righe.quantita) as qta'),
+                    DB::raw("SUM(CASE WHEN comande.metodo_pagamento NOT IN ('omaggio', 'sospeso') THEN comanda_righe.quantita * comanda_righe.prezzo_unitario ELSE 0 END) as incasso")
+                )
+                ->where('comande.serata_id', $serata->id)
+                ->where('comande.stato', 'stampata')
+                ->groupBy('comanda_righe.menu_item_id')
                 ->orderByDesc('qta')
+                ->with('menuItem')
                 ->get();
 
             $dati['annullate'] = Comanda::query()
