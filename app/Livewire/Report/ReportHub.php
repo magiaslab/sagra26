@@ -345,23 +345,68 @@ class ReportHub extends Component
             })
             ->values();
 
-        $itemIds = $items->pluck('id');
+        $bevande = $items->where('bar', false)->values();
+        $bar = $items->where('bar', true)->values();
+        $bevandeIds = $bevande->pluck('id');
+        $barIds = $bar->pluck('id');
 
         $riepilogo = [
-            'bar_stasera' => $this->incassoBar($idsStasera, true, $itemIds),
-            'non_bar_stasera' => $this->incassoBar($idsStasera, false, $itemIds),
-            'bar_cumulato' => $this->incassoBar($idsFino, true, $itemIds),
-            'non_bar_cumulato' => $this->incassoBar($idsFino, false, $itemIds),
+            'bar_stasera' => $this->incassoBar($idsStasera, true, $barIds),
+            'non_bar_stasera' => $this->incassoBar($idsStasera, false, $bevandeIds),
+            'bar_cumulato' => $this->incassoBar($idsFino, true, $barIds),
+            'non_bar_cumulato' => $this->incassoBar($idsFino, false, $bevandeIds),
+            'bevande_stasera_qta' => $this->sommaQtaMappa($s['qta'], $bevandeIds),
+            'bevande_cumulato_qta' => $this->sommaQtaMappa($c['qta'], $bevandeIds),
+            'bar_stasera_qta' => $this->sommaQtaMappa($s['qta'], $barIds),
+            'bar_cumulato_qta' => $this->sommaQtaMappa($c['qta'], $barIds),
+        ];
+
+        $sezioni = [
+            [
+                'key' => 'bevande',
+                'label' => 'Bevande',
+                'descrizione' => 'Voci da tavolo / servizio (non bar)',
+                'items' => $bevande,
+                'stasera' => $riepilogo['non_bar_stasera'],
+                'cumulato' => $riepilogo['non_bar_cumulato'],
+                'stasera_qta' => $riepilogo['bevande_stasera_qta'],
+                'cumulato_qta' => $riepilogo['bevande_cumulato_qta'],
+            ],
+            [
+                'key' => 'bar',
+                'label' => 'Bar',
+                'descrizione' => 'Voci servite al bar',
+                'items' => $bar,
+                'stasera' => $riepilogo['bar_stasera'],
+                'cumulato' => $riepilogo['bar_cumulato'],
+                'stasera_qta' => $riepilogo['bar_stasera_qta'],
+                'cumulato_qta' => $riepilogo['bar_cumulato_qta'],
+            ],
         ];
 
         return [
             'items' => $items,
+            'sezioni' => $sezioni,
             'stasera_qta' => $s['qta'],
             'stasera_incasso' => $s['incasso'],
             'cumulato_qta' => $c['qta'],
             'cumulato_incasso' => $c['incasso'],
             'riepilogo' => $riepilogo,
         ];
+    }
+
+    /**
+     * @param  array<int, int>  $qtaMap
+     * @param  \Illuminate\Support\Collection<int, int>  $ids
+     */
+    private function sommaQtaMappa(array $qtaMap, Collection $ids): int
+    {
+        $tot = 0;
+        foreach ($ids as $id) {
+            $tot += (int) ($qtaMap[(int) $id] ?? 0);
+        }
+
+        return $tot;
     }
 
     private function incassoBar($serataIds, bool $bar, Collection $menuItemIds): float
