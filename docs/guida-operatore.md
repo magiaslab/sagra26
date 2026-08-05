@@ -187,6 +187,8 @@ Serve per comande non incassate (omaggio autorizzato). **Non conta negli incassi
 2. Inserisci il **PIN gestione**, chi ha **autorizzato**, **nome ospite** e eventuali **note**.
 3. Controlla l’anteprima (badge OMAGGIO solo sul pezzo cliente) e premi **Invio**.
 
+In Gestione → **Omaggi** trovi l’elenco della serata (ospite + chi ha autorizzato) e puoi scaricare un **export CSV di riepilogo** per i responsabili.
+
 ### Sospeso
 
 Comanda stampata subito (cucina/cameriere) e **pagata dopo** durante la serata. Finché è aperta **non conta negli incassi**.

@@ -52,6 +52,14 @@
             </div>
         </a>
         <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.omaggi', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">In serata</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Omaggi</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Elenco omaggi con ospite e autorizzatore · export CSV</p>
+            </div>
+        </a>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
            href="{{ route('gestione.report', absolute: false) }}">
             <div class="flex-1">
                 <span class="text-xs font-medium uppercase tracking-wide text-sagra">Stampe</span>
