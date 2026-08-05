@@ -17,7 +17,7 @@ it('il css di stampa forza una sola pagina per la comanda', function () {
         ->toContain('size: 297mm 210mm')
         ->toContain('position: fixed !important')
         ->toContain('page-break-after: avoid !important')
-        ->toContain('padding-bottom: 5.5mm')
+        ->toContain('padding-bottom: 10.5mm')
         ->toContain('grid-template-columns: 1fr 1fr 1fr');
 });
 

@@ -113,18 +113,18 @@
     padding: 4mm !important;
   }
 
-  /* Margine basso contenuto (+3mm) senza spostare i terzi/tagli */
+  /* Margine basso contenuto (+8mm totali) senza spostare i terzi/tagli */
   .print-sheet .tag-cliente {
-    padding-bottom: 5.5mm !important;
+    padding-bottom: 10.5mm !important;
   }
   .print-sheet .tag-cameriere {
-    padding-bottom: 5.5mm !important;
+    padding-bottom: 10.5mm !important;
   }
   .print-sheet .tag-produzione {
-    padding-bottom: 3mm !important;
+    padding-bottom: 8mm !important;
   }
   .print-sheet .tag-box-zona:last-child {
-    padding-bottom: 3mm !important;
+    padding-bottom: 8mm !important;
   }
 
   /* Evita che figli “lunghi” spingano una seconda pagina */
@@ -157,8 +157,8 @@
 
 .tag-cliente {
   border-right: 2px dashed #000;
-  /* top/left: bordo stampante; right: stacco dal taglio; bottom: +3mm anti-taglio testo */
-  padding: 4mm 2.5mm 5.5mm 4mm;
+  /* top/left: bordo stampante; right: stacco dal taglio; bottom: anti-taglio testo */
+  padding: 4mm 2.5mm 10.5mm 4mm;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -176,7 +176,7 @@
   min-height: 0;
   min-width: 0;
   box-sizing: border-box;
-  padding: 4mm 0 3mm;
+  padding: 4mm 0 8mm;
 }
 
 .tag-box-zona {
@@ -191,7 +191,7 @@
 }
 .tag-box-zona:last-child {
   border-bottom: none;
-  padding-bottom: 3mm;
+  padding-bottom: 8mm;
 }
 
 .tag-box-head {
@@ -206,8 +206,8 @@
 }
 
 .tag-cameriere {
-  /* top/right: bordo stampante; left: stacco dal taglio; bottom: +3mm anti-taglio Tavolo */
-  padding: 4mm 4mm 5.5mm 2.5mm;
+  /* top/right: bordo stampante; left: stacco dal taglio; bottom: anti-taglio Tavolo */
+  padding: 4mm 4mm 10.5mm 2.5mm;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -754,7 +754,7 @@
   min-height: 0;
   min-width: 0;
   font-size: 11px;
-  padding: 4mm 2.5mm 5.5mm 4mm;
+  padding: 4mm 2.5mm 10.5mm 4mm;
   box-sizing: border-box;
 }
 .a4-produzione {
@@ -765,7 +765,7 @@
   min-width: 0;
   overflow: hidden;
   box-sizing: border-box;
-  padding: 4mm 0 3mm;
+  padding: 4mm 0 8mm;
 }
 .a4-box-zona {
   flex: 1 1 0;
@@ -779,7 +779,7 @@
 }
 .a4-box-zona:last-child {
   border-bottom: none;
-  padding-bottom: 3mm;
+  padding-bottom: 8mm;
 }
 .a4-box-head {
   display: flex;
@@ -798,7 +798,7 @@
   min-width: 0;
   overflow: hidden;
   font-size: 11px;
-  padding: 4mm 4mm 5.5mm 2.5mm;
+  padding: 4mm 4mm 10.5mm 2.5mm;
   box-sizing: border-box;
 }
 .a4-head--compact {
