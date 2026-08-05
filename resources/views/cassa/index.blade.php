@@ -337,8 +337,9 @@
         </div>
     </div>
 
-    {{-- Postazione sospesa (claim perso): invalicabile --}}
-    <div class="fixed inset-0 z-[140] flex items-center justify-center bg-black/70 p-3" x-show="claimPerso" x-cloak>
+    {{-- Postazione sospesa (claim perso): invalicabile finché non si apre la scelta --}}
+    <div class="fixed inset-0 z-[140] flex items-center justify-center bg-black/70 p-3"
+         x-show="claimPerso && !modalSceltaPostazione" x-cloak>
         <div class="w-[min(440px,96vw)] rounded-lg bg-white p-6 shadow-xl ring-1 ring-sagra-danger/40" @click.stop>
             <h2 class="m-0 text-lg font-semibold text-sagra-danger">Postazione sospesa</h2>
             <p class="mt-2 text-sm text-sagra-ink">
@@ -1743,7 +1744,14 @@ function cassaApp(cfg) {
         },
 
         apriSceltaPostazione(obbligatoria = false) {
-            this.sceltaObbligatoria = !!obbligatoria || this.claimPerso || !(this.postazioneId > 0);
+            const daClaimPerso = this.claimPerso;
+            this.sceltaObbligatoria = !!obbligatoria || daClaimPerso || !(this.postazioneId > 0);
+            // Il modal "Postazione sospesa" sta sopra (z-140) a quello di scelta (z-120):
+            // se non lo chiudiamo, "Scegli un’altra postazione" apre la lista ma resta coperta.
+            if (daClaimPerso) {
+                this.claimPerso = false;
+                this.sceltaObbligatoria = true;
+            }
             this.modalSceltaPostazione = true;
             this.modalClaim = false;
             this.claimPin = '';
