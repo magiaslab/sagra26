@@ -80,6 +80,13 @@
                             x-cloak
                             x-text="correzioniCount > 0 ? ('corr.×' + correzioniCount) : 'mod.'"
                         ></span>
+                        <span
+                            class="hidden max-w-[6.5rem] truncate rounded bg-white/15 px-1.5 py-0.5 text-[0.6rem] font-semibold tracking-wide text-white/90 ring-1 ring-inset ring-white/25 md:inline"
+                            x-show="comandaId && postazioneOriginale"
+                            x-cloak
+                            :title="'Emessa da ' + postazioneOriginale"
+                            x-text="postazioneOriginale"
+                        ></span>
                     </div>
 
                     <div class="flex h-10 shrink-0 flex-col items-center justify-center rounded-md bg-white/15 px-2 ring-1 ring-inset ring-white/20 xl:min-w-[4.75rem] xl:px-2.5">
@@ -375,7 +382,8 @@
                          :class="labelMetodoClass(metodoOriginale)">
                         <p class="text-[0.65rem] font-semibold uppercase tracking-wider opacity-70">Metodo attuale</p>
                         <p class="mt-0.5 text-xl font-bold tracking-wide" x-text="labelMetodo(metodoOriginale)"></p>
-                        <p class="mt-1 text-xs opacity-80" x-show="nominativoOriginale" x-text="'Nominativo: ' + nominativoOriginale"></p>
+                        <p class="mt-1 text-xs opacity-80" x-show="postazioneOriginale" x-text="'Emessa da: ' + postazioneOriginale"></p>
+                        <p class="mt-0.5 text-xs opacity-80" x-show="nominativoOriginale" x-text="'Nominativo: ' + nominativoOriginale"></p>
                     </div>
                 </div>
             </template>
@@ -576,23 +584,27 @@
         </div>
     </div>
 
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45" x-show="modalRichiamo" x-cloak>
-        <div class="max-h-[90vh] w-[min(27rem,94vw)] overflow-auto rounded-lg bg-white p-5 shadow-xl ring-1 ring-sagra-line" @click.stop>
-            <h2 class="text-lg font-semibold text-sagra-ink">Richiama una comanda</h2>
-            <p class="mb-3 text-xs leading-relaxed text-sagra-muted">
-                Tocca la riga per correggerla. «Ristampa» ristampa tutto o solo una sezione (cliente / produzione / cameriere). «Annulla» è irreversibile e richiede un motivo.
-            </p>
-            <label class="mb-1 block text-sm font-medium text-sagra-ink">Numero progressivo</label>
-            <div class="mb-2 flex gap-2">
-                <input class="block h-10 min-w-0 flex-1 rounded-md bg-white px-3 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
-                       @keydown.enter.prevent="eseguiRichiamo()" placeholder="Es. 42">
-                <button class="inline-flex shrink-0 items-center rounded-md bg-sagra px-3 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
+    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-2 sm:p-4" x-show="modalRichiamo" x-cloak>
+        <div class="flex max-h-[94vh] w-[min(52rem,98vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line" @click.stop>
+            <div class="shrink-0 border-b border-sagra-line px-5 py-4">
+                <h2 class="text-xl font-semibold text-sagra-ink">Richiama una comanda</h2>
+                <p class="mt-1 text-sm leading-relaxed text-sagra-muted">
+                    Tutte le casse possono aprire qualsiasi comanda. Nella lista vedi <span class="font-medium text-sagra-ink">chi l’ha emessa</span>.
+                    Tocca la riga per correggerla · Ristampa / Annulla a destra.
+                </p>
+                <label class="mb-1 mt-3 block text-sm font-medium text-sagra-ink">Numero progressivo</label>
+                <div class="flex gap-2">
+                    <input class="block h-11 min-w-0 flex-1 rounded-md bg-white px-3 text-base text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" x-model="richiamoNumero" x-ref="richiamoInput"
+                           @keydown.enter.prevent="eseguiRichiamo()" placeholder="Es. 42">
+                    <button class="inline-flex shrink-0 items-center rounded-md bg-sagra px-4 py-2 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
+                </div>
             </div>
-            <h3 class="mb-2 mt-4 text-xs font-semibold uppercase tracking-wide text-sagra-muted">Ultime comande</h3>
-            <div class="max-h-[42vh] overflow-auto" x-show="storico.length === 0">
-                <p class="rounded-md bg-sagra-bg p-4 text-center text-sm text-sagra-muted ring-1 ring-inset ring-sagra-line/80">Nessuna comanda stampata ancora in questa serata.</p>
+            <div class="min-h-0 flex-1 overflow-auto px-5 py-3">
+            <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-sagra-muted">Ultime comande di stasera</h3>
+            <div x-show="storico.length === 0">
+                <p class="rounded-md bg-sagra-bg p-6 text-center text-sm text-sagra-muted ring-1 ring-inset ring-sagra-line/80">Nessuna comanda stampata ancora in questa serata.</p>
             </div>
-            <div class="max-h-[42vh] overflow-auto rounded-lg ring-1 ring-sagra-line/80" x-show="storico.length > 0">
+            <div class="overflow-hidden rounded-lg ring-1 ring-sagra-line/80" x-show="storico.length > 0">
                 <div class="divide-y divide-sagra-line">
                 <template x-for="c in storico" :key="c.comanda_id">
                     <div class="bg-white"
@@ -602,9 +614,10 @@
                              'bg-sagra-softer': ristampaId === c.comanda_id,
                          }">
                         <template x-if="c.stato === 'annullata'">
-                            <div class="px-3 py-2">
-                                <div class="flex items-center justify-between gap-2">
+                            <div class="px-3 py-2.5">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
                                     <span class="font-mono text-base font-semibold line-through text-neutral-500">n.<span x-text="c.numero"></span></span>
+                                    <span class="rounded bg-neutral-200/80 px-1.5 py-0.5 text-xs font-semibold text-neutral-600" x-text="c.postazione || '—'"></span>
                                     <span class="text-xs font-medium text-neutral-500">Annullata</span>
                                 </div>
                                 <div class="mt-1 text-xs text-neutral-500">Motivo: <span x-text="c.motivo_annullo || '—'"></span></div>
@@ -613,17 +626,20 @@
                         <template x-if="c.stato !== 'annullata'">
                             <div>
                                 <div class="flex items-stretch">
-                                    <button type="button" class="flex min-h-10 flex-1 flex-wrap items-center gap-2 bg-white px-3 py-2 text-left hover:bg-sagra-softer" @click="caricaDaStorico(c)">
-                                        <span class="font-mono text-base font-semibold">n.<span x-text="c.numero"></span></span>
-                                        <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-xs text-sagra-muted">
+                                    <button type="button" class="flex min-h-12 flex-1 flex-wrap items-center gap-x-3 gap-y-1 bg-white px-3 py-2.5 text-left hover:bg-sagra-softer" @click="caricaDaStorico(c)">
+                                        <span class="font-mono text-lg font-semibold">n.<span x-text="c.numero"></span></span>
+                                        <span class="rounded bg-sagra-softer px-1.5 py-0.5 text-xs font-semibold text-sagra-dark ring-1 ring-inset ring-sagra-line/80"
+                                              x-text="c.postazione || '—'"
+                                              :title="'Emessa da ' + (c.postazione || 'postazione sconosciuta')"></span>
+                                        <span class="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm text-sagra-muted">
                                             <span x-text="c.n_righe + ' voci · ' + c.coperti + ' cop.'"></span>
                                             <span class="text-xs font-medium text-sagra"
                                                   :class="c.metodo_pagamento === 'sospeso' ? 'text-sagra-amber' : (c.metodo_pagamento === 'omaggio' ? 'text-sky-800' : 'text-sagra')"
                                                   x-text="labelMetodoBreve(c.metodo_pagamento)"></span>
                                             <span class="text-xs text-sagra-muted" x-show="c.nominativo" x-text="c.nominativo"></span>
                                         </span>
-                                        <span class="font-mono text-sm font-semibold tabular-nums" x-text="formatEuro(c.totale)"></span>
-                                        <span class="ml-auto whitespace-nowrap text-xs font-medium text-sagra">Correggi →</span>
+                                        <span class="font-mono text-base font-semibold tabular-nums" x-text="formatEuro(c.totale)"></span>
+                                        <span class="ml-auto whitespace-nowrap text-sm font-medium text-sagra">Correggi →</span>
                                     </button>
                                     <button type="button" class="min-w-[4.5rem] border-l border-sagra-line bg-white px-2 text-xs font-semibold text-sagra-ink hover:bg-sagra-softer"
                                             @click.stop="apriRistampaStorico(c)" title="Ristampa comanda">Ristampa</button>
@@ -673,7 +689,8 @@
                 </template>
                 </div>
             </div>
-            <div class="mt-4 flex justify-end gap-2">
+            </div>
+            <div class="shrink-0 border-t border-sagra-line px-5 py-3 flex justify-end gap-2">
                 <button class="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" type="button" @click="chiudiModal()">Chiudi (Esc)</button>
             </div>
         </div>
@@ -761,6 +778,7 @@ function cassaApp(cfg) {
         comandaId: null,
         numeroRichiamato: null,
         numeroDiSerataRichiamato: null,
+        postazioneOriginale: null,
         comandaVersion: null,
         correzioniCount: 0,
         totaleOriginale: null,
@@ -1301,6 +1319,7 @@ function cassaApp(cfg) {
             this.comandaId = null;
             this.numeroRichiamato = null;
             this.numeroDiSerataRichiamato = null;
+            this.postazioneOriginale = null;
             this.comandaVersion = null;
             this.correzioniCount = 0;
             this.totaleOriginale = null;
@@ -1665,6 +1684,7 @@ function cassaApp(cfg) {
                     : Math.round(Number(data.totale || 0) * 100) / 100;
                 this.metodoOriginale = data.metodo_pagamento || null;
                 this.nominativoOriginale = data.nominativo || null;
+                this.postazioneOriginale = data.postazione || null;
                 const orig = {};
                 const prezzi = {};
                 for (const r of data.righe) {
@@ -1683,6 +1703,7 @@ function cassaApp(cfg) {
                     : (data.metodo_pagamento === 'omaggio' ? 'OMAGGIO' : ('pagato ' + this.formatEuro(this.totaleOriginale)));
                 this.messaggio = 'Caricata comanda ' + (data.numero_di_serata ? (data.numero_di_serata + ' di stasera · ') : '')
                     + 'rif. #' + data.numero
+                    + (data.postazione ? (' · ' + data.postazione) : '')
                     + ' · ' + statoPag
                     + (data.nominativo ? ' · ' + data.nominativo : '')
                     + (this.correzioniCount ? ' (già corretta ' + this.correzioniCount + '×)' : '');

@@ -216,7 +216,8 @@ Serve se hai sbagliato un piatto, una quantità, o il cliente cambia idea **dopo
 
 1. Tocca **Richiama** (oppure **F2**).
 2. Digita il **numero progressivo** della comanda (es. 42) e **Carica**,  
-   **oppure** tocca la riga nelle **Ultime comande** → **Correggi →**.
+   **oppure** tocca la riga nelle **Ultime comande** → **Correggi →**.  
+   Nella lista vedi anche **quale postazione** ha emesso la comanda (puoi aprire le comande di tutte le casse).
 3. La comanda si ricarica sullo schermo (badge *mod.* / *corr.*).
 4. Modifica le quantità come in una comanda normale.
 5. Se vuoi, scrivi un **Motivo correzione**.

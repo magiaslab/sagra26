@@ -55,27 +55,44 @@
             </div>
             <div class="flex flex-col gap-4">
                 <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
-                    <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Per postazione</h2>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-sagra-line text-sm">
-                            <thead>
-                                <tr class="bg-sagra-softer">
-                                    <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Postazione</th>
-                                    <th class="px-3 py-2 text-left font-semibold text-sagra-ink">N°</th>
-                                    <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Totale</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-sagra-line">
+                    <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Comande per postazione</h2>
+                    <p class="mb-3 text-xs text-sagra-muted">Quante comande ha emesso ciascuna cassa (incasso al netto di omaggi e sospesi aperti).</p>
+                    @if ($dati['per_postazione']->isEmpty())
+                        <p class="m-0 text-sm text-sagra-muted">Nessuna comanda ancora.</p>
+                    @else
+                        <div class="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
                             @foreach ($dati['per_postazione'] as $p)
-                                <tr>
-                                    <td class="px-3 py-2">{{ $p['nome'] }}</td>
-                                    <td class="px-3 py-2">{{ $p['n'] }}</td>
-                                    <td class="px-3 py-2">{{ number_format($p['totale'], 2, ',', '.') }} €</td>
-                                </tr>
+                                <div class="rounded-md bg-sagra-softer px-3 py-2.5 ring-1 ring-inset ring-sagra-line/70">
+                                    <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">{{ $p['nome'] }}</div>
+                                    <div class="mt-0.5 flex items-baseline justify-between gap-2">
+                                        <span class="text-2xl font-bold tabular-nums text-sagra-dark">{{ $p['n'] }}</span>
+                                        <span class="text-sm text-sagra-muted">comande</span>
+                                        <span class="ml-auto font-mono text-sm font-semibold tabular-nums text-sagra-ink">{{ number_format($p['totale'], 2, ',', '.') }} €</span>
+                                    </div>
+                                </div>
                             @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-sagra-line text-sm">
+                                <thead>
+                                    <tr class="bg-sagra-softer">
+                                        <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Postazione</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-sagra-ink">Comande</th>
+                                        <th class="px-3 py-2 text-right font-semibold text-sagra-ink">Incasso</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-sagra-line">
+                                @foreach ($dati['per_postazione'] as $p)
+                                    <tr>
+                                        <td class="px-3 py-2 font-medium">{{ $p['nome'] }}</td>
+                                        <td class="px-3 py-2 text-right font-mono tabular-nums">{{ $p['n'] }}</td>
+                                        <td class="px-3 py-2 text-right font-mono tabular-nums">{{ number_format($p['totale'], 2, ',', '.') }} €</td>
+                                    </tr>
+                                @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
                 <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
                     <h2 class="mb-3 mt-0 text-xl font-semibold text-sagra-ink">Annullate</h2>
