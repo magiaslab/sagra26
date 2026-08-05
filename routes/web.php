@@ -10,6 +10,7 @@ use App\Livewire\Gestione\ImpostazioniPage;
 use App\Livewire\Gestione\MenuCrud;
 use App\Livewire\Gestione\Pin;
 use App\Livewire\Gestione\Serate;
+use App\Livewire\Gestione\Sospesi;
 use App\Livewire\Gestione\StatoSistema;
 use App\Livewire\Report\ReportHub;
 use App\Livewire\RiepilogoLive;
@@ -39,6 +40,7 @@ Route::middleware(PinGestione::class)->prefix('gestione')->name('gestione.')->gr
     Route::get('/menu', MenuCrud::class)->name('menu');
     Route::get('/menu/facsimile', [FacsimileController::class, 'index'])->name('menu.facsimile');
     Route::get('/chiusura', ChiusuraForm::class)->name('chiusura');
+    Route::get('/sospesi', Sospesi::class)->name('sospesi');
     Route::get('/report', ReportHub::class)->name('report');
     Route::get('/impostazioni', ImpostazioniPage::class)->name('impostazioni');
     Route::get('/stato', StatoSistema::class)->name('stato');

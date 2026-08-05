@@ -203,7 +203,7 @@ class ReportHub extends Component
             'label' => $serata->data->format('d/m/Y'),
             'coperti' => (int) $comande->sum('coperti'),
             'comande' => $comande->count(),
-            'incasso' => round($comande->sum('totale'), 2),
+            'incasso' => round($comande->sum(fn ($c) => $c->importoIncasso()), 2),
             'contante' => round($comande->sum(fn ($c) => $c->importoContanteEffettivo()), 2),
             'pos' => round($comande->sum(fn ($c) => $c->importoPosEffettivo()), 2),
             'qta' => $dettaglio['qta'],
@@ -215,20 +215,26 @@ class ReportHub extends Component
      */
     private function venditeDettaglioPerItem($serataIds): array
     {
-        $rows = ComandaRiga::query()
-            ->select(
-                'menu_item_id',
-                DB::raw('SUM(quantita) as qta'),
-                DB::raw('SUM(quantita * prezzo_unitario) as incasso')
-            )
+        // Quantità: tutte le comande stampate (anche omaggio/sospeso).
+        $qtaRows = ComandaRiga::query()
+            ->select('menu_item_id', DB::raw('SUM(quantita) as qta'))
             ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata'))
+            ->groupBy('menu_item_id')
+            ->get();
+
+        // Incasso €: esclude omaggio e sospesi aperti.
+        $incassoRows = ComandaRiga::query()
+            ->select('menu_item_id', DB::raw('SUM(quantita * prezzo_unitario) as incasso'))
+            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata')->contanoComeIncasso())
             ->groupBy('menu_item_id')
             ->get();
 
         $qta = [];
         $incasso = [];
-        foreach ($rows as $row) {
+        foreach ($qtaRows as $row) {
             $qta[(int) $row->menu_item_id] = (int) $row->qta;
+        }
+        foreach ($incassoRows as $row) {
             $incasso[(int) $row->menu_item_id] = round((float) $row->incasso, 2);
         }
 
@@ -367,7 +373,7 @@ class ReportHub extends Component
         $val = ComandaRiga::query()
             ->where('bar', $bar)
             ->whereIn('menu_item_id', $menuItemIds)
-            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata'))
+            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata')->contanoComeIncasso())
             ->selectRaw('COALESCE(SUM(quantita * prezzo_unitario), 0) as tot')
             ->value('tot');
 
@@ -378,7 +384,7 @@ class ReportHub extends Component
     {
         $val = ComandaRiga::query()
             ->where('bar', true)
-            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata'))
+            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata')->contanoComeIncasso())
             ->selectRaw('COALESCE(SUM(quantita * prezzo_unitario), 0) as tot')
             ->value('tot');
 
@@ -390,7 +396,7 @@ class ReportHub extends Component
         $ids = $serateFino->pluck('id');
         $comande = Comanda::query()->whereIn('serata_id', $ids)->where('stato', 'stampata')->get();
         $coperti = (int) $comande->sum('coperti');
-        $incasso = round($comande->sum('totale'), 2);
+        $incasso = round($comande->sum(fn ($c) => $c->importoIncasso()), 2);
         $nSerate = max(1, $serateFino->count());
         $mediaCoperti = round($coperti / $nSerate, 1);
 
@@ -400,7 +406,7 @@ class ReportHub extends Component
             return [
                 'data' => $s->data->format('d/m'),
                 'coperti' => (int) $c->sum('coperti'),
-                'incasso' => round($c->sum('totale'), 2),
+                'incasso' => round($c->sum(fn ($x) => $x->importoIncasso()), 2),
             ];
         });
 

@@ -25,6 +25,12 @@
             'icon' => 'cash',
         ],
         [
+            'label' => 'Sospesi',
+            'route' => 'gestione.sospesi',
+            'match' => 'gestione.sospesi',
+            'icon' => 'sospesi',
+        ],
+        [
             'label' => 'Report',
             'route' => 'gestione.report',
             'match' => 'gestione.report',
@@ -75,6 +81,9 @@
                             @break
                         @case('cash')
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><rect x="2" y="6" width="20" height="12" rx="2"/><circle cx="12" cy="12" r="2.5"/><path stroke-linecap="round" d="M6 12h.01M18 12h.01"/></svg>
+                            @break
+                        @case('sospesi')
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7h8M8 12h8M8 17h5"/><path stroke-linecap="round" d="M4 4h16v16H4z"/></svg>
                             @break
                         @case('chart')
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5M4 19h16M8 17V11M12 17V7M16 17v-4"/></svg>

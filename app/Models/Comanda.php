@@ -25,6 +25,11 @@ class Comanda extends Model
         'motivo_annullo',
         'tavolo',
         'note',
+        'autorizzato_da',
+        'nominativo',
+        'pagamento_note',
+        'sospeso_chiuso_at',
+        'era_sospeso',
     ];
 
     protected function casts(): array
@@ -33,7 +38,39 @@ class Comanda extends Model
             'totale' => 'decimal:2',
             'importo_contante' => 'decimal:2',
             'importo_pos' => 'decimal:2',
+            'sospeso_chiuso_at' => 'datetime',
+            'era_sospeso' => 'boolean',
         ];
+    }
+
+    public function isOmaggio(): bool
+    {
+        return $this->metodo_pagamento === 'omaggio';
+    }
+
+    public function isSospesoAperto(): bool
+    {
+        return $this->metodo_pagamento === 'sospeso';
+    }
+
+    /** Conta nel totale incassi (esclude omaggio e sospesi ancora aperti). */
+    public function contaComeIncasso(): bool
+    {
+        return ! $this->isOmaggio() && ! $this->isSospesoAperto();
+    }
+
+    public function importoIncasso(): float
+    {
+        return $this->contaComeIncasso() ? (float) $this->totale : 0.0;
+    }
+
+    /**
+     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Comanda>  $query
+     * @return \Illuminate\Database\Eloquent\Builder<\App\Models\Comanda>
+     */
+    public function scopeContanoComeIncasso($query)
+    {
+        return $query->whereNotIn('metodo_pagamento', ['omaggio', 'sospeso']);
     }
 
     public function serata(): BelongsTo

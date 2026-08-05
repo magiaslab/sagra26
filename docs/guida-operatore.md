@@ -153,7 +153,7 @@ Un foglio A4 diviso in tre parti:
 
 ---
 
-## 5. Pagamento (contante, POS, misto)
+## 5. Pagamento (contante, POS, misto, omaggio, sospeso)
 
 Dopo **Conferma e stampa** appare la domanda: **Come paga il cliente?**
 
@@ -179,6 +179,24 @@ Dopo **Conferma e stampa** appare la domanda: **Come paga il cliente?**
 
 > Se i due importi non sommano al totale, il sistema non salva la comanda.
 
+### Omaggio
+
+Serve per comande non incassate (omaggio autorizzato). **Non conta negli incassi**, ma conta piatti e coperti.
+
+1. Tocca **Omaggio**.
+2. Inserisci il **PIN gestione**, chi ha **autorizzato**, **nome ospite** e eventuali **note**.
+3. Controlla l’anteprima (badge OMAGGIO solo sul pezzo cliente) e premi **Invio**.
+
+### Sospeso
+
+Comanda stampata subito (cucina/cameriere) e **pagata dopo** durante la serata. Finché è aperta **non conta negli incassi**.
+
+1. Tocca **Sospeso**.
+2. PIN gestione + chi ha autorizzato + **nominativo** + note.
+3. Stampa come una comanda normale.
+4. Per saldare: **Richiama** il numero e scegli Contante/POS/Misto/Omaggio,  
+   **oppure** in Gestione → **Sospesi** → **Chiudi / Incassa**.
+
 ### Annullare prima di stampare
 
 - Premi **Esc** per chiudere e tornare alla comanda senza stampare.
@@ -198,10 +216,10 @@ Serve se hai sbagliato un piatto, una quantità, o il cliente cambia idea **dopo
 4. Modifica le quantità come in una comanda normale.
 5. Se vuoi, scrivi un **Motivo correzione**.
 6. Tocca **Conferma e stampa** (**F9**).
-7. Scegli come gestire la **differenza**:
-   - se il totale **aumenta** → **Incassa contante** o **Incassa POS**
+7. Scegli Contante o POS:
+   - se il totale **aumenta** → **Incassa contante** o **Incassa POS** (solo la differenza)
    - se il totale **diminuisce** → **Restituisci contante** o **Restituisci POS**
-   - se non cambia nulla → conferma e ristampa comunque
+   - se il totale **non cambia** → conferma o **correggi il metodo** (es. era POS e doveva essere contante, o il POS non funziona)
 8. Controlla l’anteprima (c’è scritto **CORREZIONE**) e conferma con **Invio**.
 
 ### Attenzione

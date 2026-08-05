@@ -203,12 +203,29 @@
                 € CONTANTE
             @elseif ($metodo === 'pos')
                 ▭ POS
+            @elseif ($metodo === 'omaggio')
+                OMAGGIO
+            @elseif ($metodo === 'sospeso')
+                SOSPESO
             @else
                 MISTO
                 · € {{ number_format($comanda->importoContanteEffettivo(), 2, ',', '.') }}
                 + ▭ {{ number_format($comanda->importoPosEffettivo(), 2, ',', '.') }}
             @endif
         </div>
+        @if (in_array($metodo, ['omaggio', 'sospeso'], true))
+            <div class="tag-pagamento-meta">
+                @if (filled($comanda->autorizzato_da))
+                    Aut. {{ $comanda->autorizzato_da }}
+                @endif
+                @if (filled($comanda->nominativo))
+                    · {{ $metodo === 'omaggio' ? 'Ospite' : 'Nominativo' }}: {{ $comanda->nominativo }}
+                @endif
+                @if (filled($comanda->pagamento_note))
+                    · {{ $comanda->pagamento_note }}
+                @endif
+            </div>
+        @endif
         @if ($haCongelati)
             <div class="tag-nota-congelato">* Prodotto surgelato o congelato all'origine.</div>
         @endif

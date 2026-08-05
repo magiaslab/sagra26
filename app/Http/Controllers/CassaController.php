@@ -54,6 +54,8 @@ class CassaController extends Controller
         $prossimoNumeroDiSerata = Comanda::prossimoNumeroDiSerata($serata?->id);
         $copertiTotali = Comanda::copertiTotaliSerata($serata?->id);
 
+        $ultimaPayload = $this->ultimaStampataPayload($postazioneId);
+
         return view('cassa.index', [
             'serata' => $serata,
             'postazioni' => $postazioni,
@@ -64,6 +66,12 @@ class CassaController extends Controller
             'prossimoNumero' => $prossimoNumero,
             'prossimoNumeroDiSerata' => $prossimoNumeroDiSerata,
             'copertiTotali' => $copertiTotali,
+            'ultimaStampata' => $ultimaPayload
+                ? (object) [
+                    'numero_progressivo' => $ultimaPayload['numero'],
+                    'totale' => $ultimaPayload['totale'],
+                ]
+                : null,
         ]);
     }
 
@@ -101,6 +109,7 @@ class CassaController extends Controller
             'warning' => $mappata
                 ? null
                 : 'Questa postazione non è ancora collegata al cassetto — chiedi a chi gestisce le Impostazioni di completare il collegamento.',
+            'ultima_stampata' => $this->ultimaStampataPayload($postazione->id),
         ]);
     }
 
@@ -117,7 +126,11 @@ class CassaController extends Controller
 
         $serata = Serata::corrente();
         if (! $serata) {
-            return response()->json(['stock' => [], 'coperti_totali' => 0]);
+            return response()->json([
+                'stock' => [],
+                'coperti_totali' => 0,
+                'ultima_stampata' => null,
+            ]);
         }
 
         $stock->assicuraStockLimitati($serata->id);
@@ -125,6 +138,7 @@ class CassaController extends Controller
         return response()->json([
             'stock' => $stock->mappaResidui($serata->id),
             'coperti_totali' => Comanda::copertiTotaliSerata($serata->id),
+            'ultima_stampata' => $this->ultimaStampataPayload($postazioneId),
         ]);
     }
 
@@ -133,7 +147,7 @@ class CassaController extends Controller
         $data = $request->validate([
             'postazione_id' => 'required|exists:postazioni,id',
             'coperti' => 'required|integer|min:0',
-            'metodo_pagamento' => 'required|in:contante,pos,misto',
+            'metodo_pagamento' => 'required|in:contante,pos,misto,omaggio,sospeso',
             'importo_contante' => 'nullable|numeric',
             'importo_pos' => 'nullable|numeric',
             'comanda_id' => 'nullable|exists:comande,id',
@@ -141,6 +155,10 @@ class CassaController extends Controller
             'tavolo' => 'nullable|string|max:40',
             'note' => 'nullable|string|max:255',
             'version' => 'nullable|integer|min:1',
+            'pin_autorizzazione' => 'nullable|string|max:40',
+            'autorizzato_da' => 'nullable|string|max:80',
+            'nominativo' => 'nullable|string|max:80',
+            'pagamento_note' => 'nullable|string|max:255',
             'righe' => 'required|array|min:1',
             'righe.*.menu_item_id' => 'required|exists:menu_items,id',
             'righe.*.quantita' => 'required|integer|min:1',
@@ -149,6 +167,14 @@ class CassaController extends Controller
         $serata = Serata::corrente();
         if (! $serata) {
             return response()->json(['error' => 'Nessuna serata aperta.'], 422);
+        }
+
+        if (in_array($data['metodo_pagamento'], ['omaggio', 'sospeso'], true)) {
+            $pin = (string) ($data['pin_autorizzazione'] ?? '');
+            $atteso = (string) Impostazione::corrente()->pin_gestione;
+            if ($pin === '' || ! hash_equals($atteso, $pin)) {
+                return response()->json(['error' => 'PIN non valido.'], 422);
+            }
         }
 
         try {
@@ -169,6 +195,9 @@ class CassaController extends Controller
                 isset($data['version']) ? (int) $data['version'] : null,
                 $data['tavolo'] ?? null,
                 $data['note'] ?? null,
+                $data['autorizzato_da'] ?? null,
+                $data['nominativo'] ?? null,
+                $data['pagamento_note'] ?? null,
             );
 
             return response()->json([
@@ -207,6 +236,7 @@ class CassaController extends Controller
                 'version' => $c->version,
                 'coperti' => $c->coperti,
                 'metodo_pagamento' => $c->metodo_pagamento,
+                'nominativo' => $c->nominativo,
                 'totale' => (float) $c->totale,
                 'stato' => $c->stato,
                 'motivo_annullo' => $c->motivo_annullo,
@@ -249,6 +279,10 @@ class CassaController extends Controller
             'totale' => (float) $comanda->totale,
             'tavolo' => $comanda->tavolo,
             'note' => $comanda->note,
+            'autorizzato_da' => $comanda->autorizzato_da,
+            'nominativo' => $comanda->nominativo,
+            'pagamento_note' => $comanda->pagamento_note,
+            'era_sospeso' => (bool) $comanda->era_sospeso,
             'correzioni_count' => $comanda->correzioni()->count(),
             'print_url' => route('cassa.stampa', $comanda, absolute: false),
             'righe' => $comanda->righe->map(fn ($r) => [
@@ -323,5 +357,32 @@ class CassaController extends Controller
         $request->session()->put('postazione_claim_token', $token);
 
         return $token;
+    }
+
+    /**
+     * @return array{numero: int, totale: float}|null
+     */
+    private function ultimaStampataPayload(int $postazioneId): ?array
+    {
+        $serata = Serata::corrente();
+        if (! $serata || $postazioneId <= 0) {
+            return null;
+        }
+
+        $comanda = Comanda::query()
+            ->where('serata_id', $serata->id)
+            ->where('postazione_id', $postazioneId)
+            ->where('stato', 'stampata')
+            ->orderByDesc('id')
+            ->first(['numero_progressivo', 'totale']);
+
+        if (! $comanda) {
+            return null;
+        }
+
+        return [
+            'numero' => (int) $comanda->numero_progressivo,
+            'totale' => (float) $comanda->totale,
+        ];
     }
 }
