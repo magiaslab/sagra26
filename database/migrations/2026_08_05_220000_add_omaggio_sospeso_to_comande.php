@@ -11,7 +11,7 @@ return new class extends Migration
     {
         $driver = Schema::getConnection()->getDriverName();
 
-        if ($driver === 'mysql') {
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
             DB::statement("ALTER TABLE comande MODIFY metodo_pagamento ENUM('contante','pos','misto','omaggio','sospeso') NULL");
         } elseif ($driver === 'sqlite') {
             $this->rebuildSqliteMetodoPagamento();
@@ -39,7 +39,7 @@ return new class extends Migration
         });
 
         $driver = Schema::getConnection()->getDriverName();
-        if ($driver === 'mysql') {
+        if (in_array($driver, ['mysql', 'mariadb'], true)) {
             DB::statement("ALTER TABLE comande MODIFY metodo_pagamento ENUM('contante','pos','misto') NULL");
         }
     }
