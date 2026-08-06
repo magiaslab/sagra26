@@ -78,5 +78,7 @@ it('la ui richiamo è allargata e mostra la postazione in lista', function () {
         ->toContain('>Annulla</button>')
         ->toContain('c.postazione')
         ->toContain('Emessa da')
-        ->toContain('postazioneOriginale');
+        ->toContain('postazioneOriginale')
+        ->toContain('max-h-[calc(100dvh-1.5rem)]')
+        ->toContain('overflow-y-auto overscroll-contain');
 });

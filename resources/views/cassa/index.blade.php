@@ -585,9 +585,9 @@
         </div>
     </div>
 
-    {{-- Modal richiamo: una riga, bottoni uniformi, notebook 15.6" --}}
-    <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3 sm:p-5" x-show="modalRichiamo" x-cloak>
-        <div class="flex max-h-[92vh] w-[min(58rem,96vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line" @click.stop>
+    {{-- Modal richiamo: una riga, bottoni uniformi, notebook 15.6" — lista scrollabile --}}
+    <div class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/45 p-3 sm:p-5" x-show="modalRichiamo" x-cloak>
+        <div class="flex max-h-[calc(100dvh-1.5rem)] w-[min(58rem,96vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line sm:max-h-[calc(100dvh-2.5rem)]" @click.stop>
             <div class="shrink-0 border-b border-sagra-line px-4 py-3 sm:px-5 sm:py-3.5">
                 <h2 class="text-lg font-semibold text-sagra-ink sm:text-xl">Richiama una comanda</h2>
                 <p class="mt-1 text-sm leading-snug text-sagra-muted">
@@ -600,12 +600,12 @@
                     <button class="inline-flex h-10 shrink-0 items-center rounded-md bg-sagra px-4 text-sm font-semibold text-white hover:bg-sagra-dark" type="button" @click="eseguiRichiamo()">Carica (Invio)</button>
                 </div>
             </div>
-            <div class="min-h-0 flex-1 overflow-auto px-4 py-3 sm:px-5">
-                <h3 class="mb-2 text-xs font-semibold uppercase tracking-wide text-sagra-muted">Ultime comande di stasera</h3>
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5">
+                <h3 class="mb-2 sticky top-0 z-[1] -mx-4 bg-white px-4 py-1 text-xs font-semibold uppercase tracking-wide text-sagra-muted sm:-mx-5 sm:px-5">Ultime comande di stasera</h3>
                 <div x-show="storico.length === 0">
                     <p class="rounded-md bg-sagra-bg px-4 py-6 text-center text-sm text-sagra-muted ring-1 ring-inset ring-sagra-line/80">Nessuna comanda stampata ancora in questa serata.</p>
                 </div>
-                <div class="overflow-hidden rounded-lg ring-1 ring-sagra-line/80" x-show="storico.length > 0">
+                <div class="rounded-lg ring-1 ring-sagra-line/80" x-show="storico.length > 0">
                     <div class="divide-y divide-sagra-line">
                     <template x-for="c in storico" :key="c.comanda_id">
                         <div class="bg-white"
