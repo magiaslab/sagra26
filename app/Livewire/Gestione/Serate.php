@@ -69,7 +69,8 @@ class Serate extends Component
         try {
             $stock->rifornisci($serata->id, $menuItemId, $qty);
             $this->rifornimenti[$menuItemId] = '';
-            $this->toastOk('Stock aggiornato (+'.$qty.').');
+            $segno = $qty > 0 ? '+'.$qty : (string) $qty;
+            $this->toastOk('Stock aggiornato ('.$segno.').');
         } catch (\Throwable $e) {
             $this->errore = $e->getMessage();
             $this->toastDanger($e->getMessage());

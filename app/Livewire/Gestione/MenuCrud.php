@@ -6,6 +6,8 @@ use App\Livewire\Concerns\WithToast;
 use App\Models\Categoria;
 use App\Models\Impostazione;
 use App\Models\MenuItem;
+use App\Models\Serata;
+use App\Services\StockService;
 use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
@@ -118,13 +120,25 @@ class MenuCrud extends Component
             'area_stampa' => $this->area_stampa === '' ? null : $this->area_stampa,
         ];
 
+        $menuItemId = $this->editingId;
         if ($this->editingId) {
             MenuItem::query()->whereKey($this->editingId)->update($data);
             $this->toastOk('Voce menù aggiornata.');
         } else {
             $data['ordinamento'] = $maxOrd + 1;
-            MenuItem::query()->create($data);
+            $creata = MenuItem::query()->create($data);
+            $menuItemId = (int) $creata->id;
             $this->toastOk('Voce menù creata.');
+        }
+
+        // Se c’è una serata aperta, allinea lo stock usato in cassa al nuovo default.
+        $serata = Serata::corrente();
+        if ($serata && $menuItemId && array_key_exists('stock_default', $data)) {
+            app(StockService::class)->sincronizzaDaMenuDefault(
+                $serata->id,
+                (int) $menuItemId,
+                $data['stock_default'],
+            );
         }
 
         $this->nuovo();

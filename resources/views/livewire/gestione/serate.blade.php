@@ -39,8 +39,8 @@
         <div class="mb-4 rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
             <h2 class="mb-1 mt-0 text-xl font-semibold text-sagra-ink">Stock in serata</h2>
             <p class="mb-3 text-sm text-sagra-muted">
-                Rifornisci pezzi senza chiudere la serata. Soglia alert cassa: ≤ {{ $sogliaAlert }} residui
-                (modificabile in Impostazioni).
+                Correggi lo stock senza chiudere la serata: valori positivi aggiungono, negativi tolgono
+                (non sotto zero). Soglia alert cassa: ≤ {{ $sogliaAlert }} residui (Impostazioni).
             </p>
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-sagra-line text-sm">
@@ -49,7 +49,7 @@
                             <th class="px-3 py-2 font-semibold">Voce</th>
                             <th class="px-3 py-2 font-semibold">Iniziale</th>
                             <th class="px-3 py-2 font-semibold">Residuo</th>
-                            <th class="px-3 py-2 font-semibold">Aggiungi</th>
+                            <th class="px-3 py-2 font-semibold">Correggi (±)</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-sagra-line">
@@ -63,8 +63,8 @@
                                 <td class="px-3 py-2 tabular-nums font-semibold">{{ $row->stock_residuo }}</td>
                                 <td class="px-3 py-2">
                                     <div class="flex flex-wrap items-center gap-2">
-                                        <input class="block w-20 rounded-md bg-white px-2 py-1.5 text-sm shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" min="1" wire:model="rifornimenti.{{ $row->menu_item_id }}" placeholder="+">
-                                        <button type="button" class="inline-flex items-center rounded-md bg-sagra px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-sagra-dark" wire:click="rifornisciStock({{ $row->menu_item_id }})">Rifornisci</button>
+                                        <input class="block w-24 rounded-md bg-white px-2 py-1.5 text-sm shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" step="1" wire:model="rifornimenti.{{ $row->menu_item_id }}" placeholder="es. -5">
+                                        <button type="button" class="inline-flex items-center rounded-md bg-sagra px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-sagra-dark" wire:click="rifornisciStock({{ $row->menu_item_id }})">Applica</button>
                                     </div>
                                 </td>
                             </tr>

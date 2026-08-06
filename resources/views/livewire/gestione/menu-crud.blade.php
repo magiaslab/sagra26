@@ -54,7 +54,8 @@
                 </div>
                 <div class="mb-3">
                     <label class="mb-1 block text-sm font-medium text-sagra-ink">Stock default (vuoto = illimitato)</label>
-                    <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" wire:model="stock_default">
+                    <input class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="number" min="0" wire:model="stock_default">
+                    <p class="mt-1 text-xs text-sagra-muted">Con serata aperta, il valore si applica subito allo stock in cassa (i pezzi già venduti restano scalati).</p>
                 </div>
                 <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2">
                     <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model="attivo"> Attivo</label>
