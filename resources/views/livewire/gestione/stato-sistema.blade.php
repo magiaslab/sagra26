@@ -72,6 +72,9 @@
                         <div><dt class="inline font-medium text-sagra-ink">Ultimo:</dt> {{ $check['detail']['latest'] ?? '—' }}</div>
                         <div><dt class="inline font-medium text-sagra-ink">Script:</dt> {{ ($check['detail']['script_exists'] ?? false) ? 'presente' : 'mancante' }}</div>
                     </dl>
+                    <p class="mt-2 mb-0 text-sm">
+                        <a class="font-semibold text-sagra underline hover:text-sagra-dark" href="{{ route('gestione.backup', absolute: false) }}">Gestisci backup →</a>
+                    </p>
                 @elseif (($check['key'] ?? '') === 'app')
                     <dl class="mt-3 grid grid-cols-1 gap-1 text-sm text-sagra-muted sm:grid-cols-2">
                         <div><dt class="inline font-medium text-sagra-ink">Env:</dt> {{ $check['detail']['app_env'] ?? '—' }}</div>

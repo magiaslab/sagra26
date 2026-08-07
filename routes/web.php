@@ -1,9 +1,11 @@
 <?php
 
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\CassaController;
 use App\Http\Controllers\DocumentiController;
 use App\Http\Controllers\FacsimileController;
 use App\Http\Middleware\PinGestione;
+use App\Livewire\Gestione\BackupPage;
 use App\Livewire\Gestione\ChiusuraForm;
 use App\Livewire\Gestione\Dashboard;
 use App\Livewire\Gestione\ImpostazioniPage;
@@ -45,6 +47,10 @@ Route::middleware(PinGestione::class)->prefix('gestione')->name('gestione.')->gr
     Route::get('/omaggi', Omaggi::class)->name('omaggi');
     Route::get('/report', ReportHub::class)->name('report');
     Route::get('/impostazioni', ImpostazioniPage::class)->name('impostazioni');
+    Route::get('/backup', BackupPage::class)->name('backup');
+    Route::get('/backup/download/{filename}', [BackupController::class, 'download'])
+        ->where('filename', 'database-[A-Za-z0-9.-]+\.sqlite')
+        ->name('backup.download');
     Route::get('/stato', StatoSistema::class)->name('stato');
     Route::get('/guida', [DocumentiController::class, 'guida'])->name('guida');
     Route::get('/documenti/guida.md', [DocumentiController::class, 'downloadGuida'])->name('documenti.guida.download');

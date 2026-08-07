@@ -49,6 +49,12 @@
             'icon' => 'cog',
         ],
         [
+            'label' => 'Backup',
+            'route' => 'gestione.backup',
+            'match' => 'gestione.backup*',
+            'icon' => 'backup',
+        ],
+        [
             'label' => 'Stato',
             'route' => 'gestione.stato',
             'match' => 'gestione.stato',
@@ -100,6 +106,9 @@
                         @case('cog')
                             {{-- Impostazioni: ingranaggio semplice --}}
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>
+                            @break
+                        @case('backup')
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v12"/><path stroke-linecap="round" stroke-linejoin="round" d="m8 11 4 4 4-4"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 19h16"/></svg>
                             @break
                         @case('status')
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
