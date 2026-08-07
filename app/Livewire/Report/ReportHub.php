@@ -24,6 +24,10 @@ class ReportHub extends Component
 
     public ?int $serataId = null;
 
+    /** Inizio range per report Confronto (fine = serataId). */
+    public ?int $serataDaId = null;
+
+    /** @deprecated Usare serataDaId; mantenuto per query string legacy. */
     public ?int $serataConfrontoId = null;
 
     public ?int $puntoCassaId = null;
@@ -61,15 +65,38 @@ class ReportHub extends Component
             $this->puntoCassaId = PuntoCassa::query()->where('attivo', true)->value('id');
         }
 
-        $this->serataConfrontoId = $this->serataPrecedenteId($this->serataId);
+        $daQuery = request()->query('serata_da_id') ?? request()->query('serataDaId')
+            ?? request()->query('serata_confronto_id') ?? request()->query('serataConfrontoId');
+        if ($daQuery !== null && $daQuery !== '' && Serata::queryEdizione()->whereKey((int) $daQuery)->exists()) {
+            $this->serataDaId = (int) $daQuery;
+        } else {
+            $this->serataDaId = $this->serataPrecedenteId($this->serataId)
+                ?? Serata::queryEdizione()->orderBy('data')->value('id');
+        }
+        $this->serataConfrontoId = $this->serataDaId;
         $this->autoPrint = request()->boolean('print');
     }
 
     public function updatedSerataId(?int $value): void
     {
-        if ($this->tipo === 'confronto') {
-            $this->serataConfrontoId = $this->serataPrecedenteId($value);
+        if ($this->tipo !== 'confronto' || ! $value) {
+            return;
         }
+        // Se il range è invertito, riallinea l’inizio.
+        if ($this->serataDaId) {
+            $fine = Serata::query()->find($value);
+            $inizio = Serata::query()->find($this->serataDaId);
+            if ($fine && $inizio && $inizio->data->gt($fine->data)) {
+                $this->serataDaId = $this->serataPrecedenteId($value)
+                    ?? Serata::queryEdizione()->orderBy('data')->value('id');
+            }
+        }
+        $this->serataConfrontoId = $this->serataDaId;
+    }
+
+    public function updatedSerataDaId(?int $value): void
+    {
+        $this->serataConfrontoId = $value;
     }
 
     public function exportCsv()
@@ -144,24 +171,24 @@ class ReportHub extends Component
         $dati = [];
 
         if ($serata) {
-            // "Completo" = tutta l'edizione sagra corrente (non tutti gli anni nel DB).
-            $serateFino = $this->completo
+            // Completo = tutta l’edizione; senza spunta = solo la serata selezionata.
+            $serateAmbito = $this->completo
                 ? $serate
-                : $serate->filter(fn ($s) => $s->data->lte($serata->data));
+                : $serate->where('id', $serata->id)->values();
 
-            $idsFino = $serateFino->pluck('id');
+            $idsAmbito = $serateAmbito->pluck('id');
             $idsStasera = collect([$serata->id]);
 
             $dati = match ($this->tipo) {
-                'cumulativo' => $this->datiReparto($idsStasera, $idsFino, $serata, null),
-                'cucina_1' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina_1'),
-                'cucina_2' => $this->datiReparto($idsStasera, $idsFino, $serata, 'cucina_2'),
-                'griglia' => $this->datiReparto($idsStasera, $idsFino, $serata, 'griglia'),
-                'bevande' => $this->datiBevande($idsStasera, $idsFino),
-                'statistiche' => $this->datiStatistiche($serateFino),
-                'economico' => $this->datiEconomico($serateFino),
+                'cumulativo' => $this->datiReparto($idsStasera, $idsAmbito, $serata, null),
+                'cucina_1' => $this->datiReparto($idsStasera, $idsAmbito, $serata, 'cucina_1'),
+                'cucina_2' => $this->datiReparto($idsStasera, $idsAmbito, $serata, 'cucina_2'),
+                'griglia' => $this->datiReparto($idsStasera, $idsAmbito, $serata, 'griglia'),
+                'bevande' => $this->datiBevande($idsStasera, $idsAmbito),
+                'statistiche' => $this->datiStatistiche($serateAmbito),
+                'economico' => $this->datiEconomico($serateAmbito),
                 'consegna' => $this->datiConsegna($serata),
-                'confronto' => $this->datiConfronto($serata),
+                'confronto' => $this->datiConfrontoRange($serate, $serata),
                 default => [],
             };
         }
@@ -192,38 +219,78 @@ class ReportHub extends Component
             ->value('id');
     }
 
-    private function datiConfronto(Serata $serata): array
+    /**
+     * Riepilogo su un range di serate (da → a), con totali/medie e top piatti.
+     *
+     * @param  Collection<int, Serata>  $tutte
+     */
+    private function datiConfrontoRange(Collection $tutte, Serata $serataFine): array
     {
-        $altra = $this->serataConfrontoId
-            ? Serata::query()->find($this->serataConfrontoId)
+        $inizio = $this->serataDaId
+            ? Serata::query()->find($this->serataDaId)
             : null;
 
-        $a = $this->riepilogoSerataBreve($serata);
-        $b = $altra ? $this->riepilogoSerataBreve($altra) : null;
+        if (! $inizio) {
+            $inizio = $serataFine;
+        }
 
+        if ($inizio->data->gt($serataFine->data)) {
+            [$inizio, $serataFine] = [$serataFine, $inizio];
+        }
+
+        $range = $tutte
+            ->filter(fn (Serata $s) => $s->data->gte($inizio->data) && $s->data->lte($serataFine->data))
+            ->values();
+
+        $righe = $range->map(fn (Serata $s) => $this->riepilogoSerataBreve($s))->all();
+        $n = max(1, count($righe));
+        $totCoperti = array_sum(array_column($righe, 'coperti'));
+        $totComande = array_sum(array_column($righe, 'comande'));
+        $totIncasso = round(array_sum(array_column($righe, 'incasso')), 2);
+        $totContante = round(array_sum(array_column($righe, 'contante')), 2);
+        $totPos = round(array_sum(array_column($righe, 'pos')), 2);
+
+        $idsRange = $range->pluck('id');
+        $dettaglio = $this->venditeDettaglioPerItem($idsRange);
+        $nomi = MenuItem::query()->whereIn('id', array_keys($dettaglio['qta']))->pluck('nome', 'id');
         $piatti = [];
-        $idsA = $a['qta'];
-        $idsB = $b['qta'] ?? [];
-        $allIds = collect(array_keys($idsA))->merge(array_keys($idsB))->unique()->values();
-        $nomi = MenuItem::query()->whereIn('id', $allIds)->pluck('nome', 'id');
-        foreach ($allIds as $id) {
-            $qa = (int) ($idsA[$id] ?? 0);
-            $qb = (int) ($idsB[$id] ?? 0);
-            if ($qa === 0 && $qb === 0) {
-                continue;
-            }
+        foreach ($dettaglio['qta'] as $id => $qta) {
             $piatti[] = [
                 'nome' => $nomi[$id] ?? ('#'.$id),
-                'qta_a' => $qa,
-                'qta_b' => $qb,
-                'delta' => $qa - $qb,
+                'qta' => (int) $qta,
+                'incasso' => (float) ($dettaglio['incasso'][$id] ?? 0),
             ];
         }
-        usort($piatti, fn ($x, $y) => abs($y['delta']) <=> abs($x['delta']));
+        usort($piatti, fn ($x, $y) => $y['qta'] <=> $x['qta']);
+        $piatti = array_slice($piatti, 0, 15);
+
+        $prima = $righe[0] ?? null;
+        $ultima = $righe[count($righe) - 1] ?? null;
+        $delta = ($prima && $ultima && count($righe) >= 2)
+            ? [
+                'coperti' => $ultima['coperti'] - $prima['coperti'],
+                'comande' => $ultima['comande'] - $prima['comande'],
+                'incasso' => round($ultima['incasso'] - $prima['incasso'], 2),
+            ]
+            : null;
 
         return [
-            'a' => $a,
-            'b' => $b,
+            'label_da' => $inizio->data->format('d/m/Y'),
+            'label_a' => $serataFine->data->format('d/m/Y'),
+            'righe' => $righe,
+            'totale' => [
+                'coperti' => $totCoperti,
+                'comande' => $totComande,
+                'incasso' => $totIncasso,
+                'contante' => $totContante,
+                'pos' => $totPos,
+            ],
+            'media' => [
+                'coperti' => round($totCoperti / $n, 1),
+                'comande' => round($totComande / $n, 1),
+                'incasso' => round($totIncasso / $n, 2),
+            ],
+            'delta_estremi' => $delta,
             'piatti' => $piatti,
         ];
     }

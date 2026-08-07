@@ -39,11 +39,13 @@
                     <option value="statistiche">Statistiche</option>
                     <option value="economico">Economico</option>
                     <option value="consegna">Consegna incassi</option>
-                    <option value="confronto">Confronto serate</option>
+                    <option value="confronto">Confronto / range serate</option>
                 </select>
             </div>
             <div class="mb-3">
-                <label class="mb-1 block text-sm font-medium text-sagra-ink">Serata (fino a / di riferimento)</label>
+                <label class="mb-1 block text-sm font-medium text-sagra-ink">
+                    {{ $tipo === 'confronto' ? 'Serata fine range' : 'Serata' }}
+                </label>
                 <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="serataId">
                     @foreach ($serate as $s)
                         <option value="{{ $s->id }}">{{ $s->data->format('d/m/Y') }}</option>
@@ -52,10 +54,15 @@
             </div>
             <div class="mb-3">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Ambito</label>
-                <label class="text-sm font-medium text-sagra-ink">
-                    <input type="checkbox" wire:model.live="completo">
-                    Completo (tutta l’edizione{{ isset($edizione) && $edizione ? ' '.$edizione->anno : '' }})
-                </label>
+                @if ($tipo !== 'confronto' && $tipo !== 'consegna')
+                    <label class="text-sm font-medium text-sagra-ink">
+                        <input type="checkbox" wire:model.live="completo">
+                        Completo (tutta l’edizione{{ isset($edizione) && $edizione ? ' '.$edizione->anno : '' }})
+                    </label>
+                    <p class="mt-1 text-xs text-sagra-muted">
+                        Spunta tolta = solo la serata selezionata.
+                    </p>
+                @endif
                 @if ($tipo === 'consegna')
                     <select class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="puntoCassaId">
                         @foreach ($punti as $p)
@@ -64,15 +71,13 @@
                     </select>
                 @endif
                 @if ($tipo === 'confronto')
-                    <label class="mt-2 mb-1 block text-sm font-medium text-sagra-ink">Confronta con</label>
-                    <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="serataConfrontoId">
-                        <option value="">—</option>
+                    <label class="mt-1 mb-1 block text-sm font-medium text-sagra-ink">Serata inizio range</label>
+                    <select class="block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="serataDaId">
                         @foreach ($serate as $s)
-                            @if ((int) $s->id !== (int) $serataId)
-                                <option value="{{ $s->id }}">{{ $s->data->format('d/m/Y') }}</option>
-                            @endif
+                            <option value="{{ $s->id }}">{{ $s->data->format('d/m/Y') }}</option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-xs text-sagra-muted">Include tutte le serate tra inizio e fine.</p>
                 @endif
             </div>
         </div>

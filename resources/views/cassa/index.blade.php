@@ -38,7 +38,8 @@
             postazione: '{{ route('cassa.postazione', absolute: false) }}',
             gestione: '{{ route('gestione.dashboard', absolute: false) }}',
             home: '{{ route('home', absolute: false) }}'
-        }
+        },
+        richiamoIniziale: {{ request()->filled('richiamo') ? (int) request()->query('richiamo') : 'null' }}
     })"
     @keydown.window="onKey($event)"
 >
@@ -796,18 +797,33 @@ function cassaApp(cfg) {
         annulloId: null,
         annulloMotivo: '',
         ristampaId: null,
+        richiamoIniziale: cfg.richiamoIniziale ?? null,
+        _richiamoInizialeFatto: false,
         errore: null,
         messaggio: null,
         busy: false,
         pollTimer: null,
 
         get grouped() {
+            // Ordine categorie = prima occorrenza nel menù; voci ordinate per ordinamento
+            // così una voce nuova (anche con id alto) resta nella sua sezione in navigazione.
             const map = new Map();
             for (const item of this.menu) {
-                if (!map.has(item.categoria)) map.set(item.categoria, []);
-                map.get(item.categoria).push(item);
+                const key = item.categoria_id ?? item.categoria;
+                if (!map.has(key)) {
+                    map.set(key, { categoria: item.categoria, items: [] });
+                }
+                map.get(key).items.push(item);
             }
-            return [...map.entries()].map(([categoria, items]) => ({ categoria, items }));
+            return [...map.values()].map(g => ({
+                categoria: g.categoria,
+                items: [...g.items].sort((a, b) => {
+                    const oa = Number(a.ordinamento ?? 0);
+                    const ob = Number(b.ordinamento ?? 0);
+                    if (oa !== ob) return oa - ob;
+                    return Number(a.id) - Number(b.id);
+                }),
+            }));
         },
 
         get numeroDisplay() {
@@ -1077,8 +1093,9 @@ function cassaApp(cfg) {
             return String(r.qShow);
         },
 
+        /** Ordine di navigazione = ordine visuale per sezione (non l’ordinamento globale DB). */
         get flatIds() {
-            return this.menu.map(i => i.id);
+            return this.grouped.flatMap(g => g.items.map(i => i.id));
         },
 
         applicaUltimaStampata(payload) {
@@ -1108,6 +1125,7 @@ function cassaApp(cfg) {
             this.$nextTick(() => {
                 this.syncTopPad();
                 this.scrollActive();
+                this.provaRichiamoIniziale();
             });
             this.$watch('errore', (v) => { if (v) window.sagraToast?.(v, 'danger'); });
             this.$watch('messaggio', (v) => { if (v) window.sagraToast?.(v, 'ok'); });
@@ -1117,11 +1135,32 @@ function cassaApp(cfg) {
             this.$watch('comandaId', () => {
                 this.$nextTick(() => this.syncTopPad());
             });
+            this.$watch('postazioneId', (id) => {
+                if (id > 0) this.provaRichiamoIniziale();
+            });
             this._onResizeCassa = () => {
                 this.syncTopPad();
                 if (this.modalAnteprima) this.fitAnteprima();
             };
             window.addEventListener('resize', this._onResizeCassa);
+        },
+
+        async provaRichiamoIniziale() {
+            const n = parseInt(this.richiamoIniziale, 10);
+            if (!n || this._richiamoInizialeFatto) return;
+            if (!this.postazionePronta) return;
+            this._richiamoInizialeFatto = true;
+            this.richiamoNumero = String(n);
+            this.richiamoIniziale = null;
+            await this.eseguiRichiamo();
+            // Pulisce ?richiamo= dall’URL senza ricaricare.
+            try {
+                const url = new URL(window.location.href);
+                if (url.searchParams.has('richiamo')) {
+                    url.searchParams.delete('richiamo');
+                    window.history.replaceState({}, '', url.pathname + url.search + url.hash);
+                }
+            } catch (_) {}
         },
 
         syncTopPad() {

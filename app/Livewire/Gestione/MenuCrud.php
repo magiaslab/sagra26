@@ -105,8 +105,6 @@ class MenuCrud extends Component
 
         $this->assertUnicoCopertoAttivo($this->editingId, $this->is_coperto, $this->attivo);
 
-        $maxOrd = (int) MenuItem::query()->max('ordinamento');
-
         $data = [
             'nome' => $this->nome,
             'prezzo' => $this->prezzo,
@@ -125,7 +123,8 @@ class MenuCrud extends Component
             MenuItem::query()->whereKey($this->editingId)->update($data);
             $this->toastOk('Voce menù aggiornata.');
         } else {
-            $data['ordinamento'] = $maxOrd + 1;
+            // In coda alla categoria (non in fondo a tutto il menù), così frecce/cassa restano coerenti.
+            $data['ordinamento'] = $this->prossimoOrdinamentoInCategoria((int) $this->categoria_id);
             $creata = MenuItem::query()->create($data);
             $menuItemId = (int) $creata->id;
             $this->toastOk('Voce menù creata.');
@@ -185,6 +184,7 @@ class MenuCrud extends Component
     {
         $item = MenuItem::query()->findOrFail($id);
         $swap = MenuItem::query()
+            ->where('categoria_id', $item->categoria_id)
             ->when($dir === 'up', fn ($q) => $q->where('ordinamento', '<', $item->ordinamento)->orderByDesc('ordinamento'))
             ->when($dir === 'down', fn ($q) => $q->where('ordinamento', '>', $item->ordinamento)->orderBy('ordinamento'))
             ->first();
@@ -196,6 +196,34 @@ class MenuCrud extends Component
         $swap->ordinamento = $tmp;
         $item->save();
         $swap->save();
+    }
+
+    /**
+     * Prossimo ordinamento in coda alla categoria: sposta in avanti le voci delle categorie successive.
+     */
+    private function prossimoOrdinamentoInCategoria(int $categoriaId): int
+    {
+        $catMax = MenuItem::query()
+            ->where('categoria_id', $categoriaId)
+            ->max('ordinamento');
+
+        if ($catMax !== null) {
+            $dopo = (int) $catMax;
+            MenuItem::query()->where('ordinamento', '>', $dopo)->increment('ordinamento');
+
+            return $dopo + 1;
+        }
+
+        $catOrd = (int) (Categoria::query()->whereKey($categoriaId)->value('ordinamento') ?? 0);
+        $prevMax = MenuItem::query()
+            ->whereHas('categoria', fn ($q) => $q->where('ordinamento', '<', $catOrd))
+            ->max('ordinamento');
+        $dopo = (int) ($prevMax ?? 0);
+        if ($dopo > 0) {
+            MenuItem::query()->where('ordinamento', '>', $dopo)->increment('ordinamento');
+        }
+
+        return $dopo + 1;
     }
 
     public function creaCategoria(): void
