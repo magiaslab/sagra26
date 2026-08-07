@@ -98,11 +98,51 @@ it('la form chiusura sincronizza fondo trattenuto dai pezzi fondo', function () 
         ->set('puntoCassaId', $punto->id)
         ->set('pezziFondo.n_050', 4)
         ->set('pezziFondo.n_1', 2)
-        ->assertSet('fondo_trattenuto', 4.0)
+        ->assertSet('fondo_trattenuto', '4.00')
         ->call('applicaTotalePezziFondo')
-        ->assertSet('fondo_trattenuto', 4.0)
+        ->assertSet('fondo_trattenuto', '4.00')
         ->assertSee('Fondo cassa sera dopo')
         ->assertDontSee('Riapri per correggere conteggi');
+});
+
+it('accetta campi euro vuoti e decimali senza errori Livewire', function () {
+    $punto = PuntoCassa::query()->firstOrFail();
+    app(SerataService::class)->apri(now()->toDateString(), null, [], [$punto->id => 50]);
+
+    Livewire::test(ChiusuraForm::class)
+        ->set('puntoCassaId', $punto->id)
+        ->set('pezzi.n_1', '')
+        ->set('totale_pos', '')
+        ->set('totale_z', '12,50')
+        ->set('fondo_iniziale', '50.5')
+        ->assertHasNoErrors()
+        ->assertSet('errore', null)
+        ->set('totale_pos', '33.75')
+        ->call('salva')
+        ->assertHasNoErrors()
+        ->assertSet('errore', null);
+
+    $chiusura = Chiusura::query()->where('punto_cassa_id', $punto->id)->firstOrFail();
+    expect((float) $chiusura->totale_pos)->toBe(33.75)
+        ->and((float) $chiusura->totale_z)->toBe(12.5)
+        ->and((float) $chiusura->fondo_iniziale)->toBe(50.5)
+        ->and((int) $chiusura->n_1)->toBe(0);
+});
+
+it('copia i pezzi contati nel fondo sera dopo', function () {
+    $punto = PuntoCassa::query()->firstOrFail();
+    app(SerataService::class)->apri(now()->toDateString(), null, [], [$punto->id => 50]);
+
+    Livewire::test(ChiusuraForm::class)
+        ->set('puntoCassaId', $punto->id)
+        ->set('pezzi.n_1', 50)
+        ->set('pezzi.n_050', 10)
+        ->set('pezziFondo.n_1', 0)
+        ->call('copiaPezziNelFondo')
+        ->assertSet('pezziFondo.n_1', '50')
+        ->assertSet('pezziFondo.n_050', '10')
+        ->assertSet('fondo_trattenuto', '55.00')
+        ->assertDispatched('toast');
 });
 
 it('dopo riapertura permette di correggere i pezzi e risalvare', function () {
