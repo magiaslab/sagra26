@@ -86,6 +86,53 @@
                 </div>
             </div>
 
+            @if ($dati['stock']->isNotEmpty())
+                <div class="mb-4 rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80 print:p-0 print:shadow-none print:ring-0 sm:p-5">
+                    <div class="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                        <h3 class="m-0 text-base font-semibold text-sagra-ink lg:text-xl">Stock residuo</h3>
+                        <p class="m-0 text-xs text-sagra-muted">Check veloce · soglia alert ≤ {{ $dati['stock_soglia'] }}</p>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-sagra-line text-sm">
+                            <thead>
+                                <tr class="bg-sagra-softer">
+                                    <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Piatto</th>
+                                    <th class="px-3 py-2 text-right font-semibold text-sagra-ink">Iniziale</th>
+                                    <th class="px-3 py-2 text-right font-semibold text-sagra-ink">Rimasti</th>
+                                    <th class="px-3 py-2 text-left font-semibold text-sagra-ink">Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-sagra-line">
+                            @foreach ($dati['stock'] as $row)
+                                @php
+                                    $residuo = (int) $row->stock_residuo;
+                                    $esaurito = $residuo <= 0;
+                                    $basso = ! $esaurito && $residuo <= (int) $dati['stock_soglia'];
+                                @endphp
+                                <tr @class([
+                                    'bg-sagra-danger-soft/40' => $esaurito,
+                                    'bg-amber-50' => $basso,
+                                ])>
+                                    <td class="px-3 py-2 font-medium text-sagra-ink">{{ $row->menuItem->nome }}</td>
+                                    <td class="px-3 py-2 text-right tabular-nums text-sagra-muted">{{ (int) $row->stock_iniziale }}</td>
+                                    <td class="px-3 py-2 text-right text-base font-bold tabular-nums text-sagra-ink">{{ $residuo }}</td>
+                                    <td class="px-3 py-2">
+                                        @if ($esaurito)
+                                            <span class="rounded bg-sagra-danger-soft px-1.5 py-0.5 text-xs font-semibold text-sagra-danger">ESAURITO</span>
+                                        @elseif ($basso)
+                                            <span class="rounded bg-sagra-warn-soft px-1.5 py-0.5 text-xs font-semibold text-sagra-warn">BASSO</span>
+                                        @else
+                                            <span class="text-xs text-sagra-muted">ok</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            @endif
+
             <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 print:grid-cols-2 print:gap-3">
                 <div class="rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80 print:p-0 print:shadow-none print:ring-0">
                     <h3 class="mb-3 mt-0 text-base font-semibold text-sagra-ink lg:text-xl">Vendite per piatto</h3>

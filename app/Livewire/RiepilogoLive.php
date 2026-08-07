@@ -7,6 +7,7 @@ use App\Models\ComandaCorrezione;
 use App\Models\ComandaRiga;
 use App\Models\Impostazione;
 use App\Models\Serata;
+use App\Models\SerataStock;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
 
@@ -36,6 +37,8 @@ class RiepilogoLive extends Component
             'per_postazione' => collect(),
             'annullate' => collect(),
             'correzioni_per_postazione' => collect(),
+            'stock' => collect(),
+            'stock_soglia' => $impostazioni->sogliaStockAlert(),
         ];
 
         if ($serata) {
@@ -91,6 +94,19 @@ class RiepilogoLive extends Component
                     'nome' => $row->postazione->nome,
                     'n' => (int) $row->n,
                 ]);
+
+            // Solo voci con stock attivo in serata: residui in ordine (esauriti/bassi prima).
+            $dati['stock'] = SerataStock::query()
+                ->where('serata_id', $serata->id)
+                ->with(['menuItem' => fn ($q) => $q->orderBy('ordinamento')])
+                ->get()
+                ->filter(fn (SerataStock $row) => $row->menuItem !== null)
+                ->sortBy([
+                    fn (SerataStock $row) => (int) $row->stock_residuo,
+                    fn (SerataStock $row) => (int) ($row->menuItem->ordinamento ?? 0),
+                    fn (SerataStock $row) => (string) $row->menuItem->nome,
+                ])
+                ->values();
         }
 
         return view('livewire.riepilogo-live', [

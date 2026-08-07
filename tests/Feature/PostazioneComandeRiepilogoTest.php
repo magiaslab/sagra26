@@ -1,9 +1,10 @@
 <?php
 
 use App\Livewire\RiepilogoLive;
+use App\Models\MenuItem;
 use App\Models\Postazione;
 use App\Models\PuntoCassa;
-use App\Models\MenuItem;
+use App\Models\SerataStock;
 use App\Services\ComandaService;
 use App\Services\SerataService;
 use Livewire\Livewire;
@@ -36,6 +37,38 @@ it('il richiamo espone la postazione che ha emesso la comanda', function () {
 
     expect($comanda->fresh()->postazione_id)->toBe($a->id)
         ->and($comanda->fresh()->postazione_id)->not->toBe($b->id);
+});
+
+it('il riepilogo mostra lo stock residuo dei piatti limitati', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $item = MenuItem::query()->whereNotNull('stock_default')->where('attivo', true)->firstOrFail();
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->firstOrFail();
+
+    app(ComandaService::class)->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $item->id, 'quantita' => 2]],
+        0,
+        'contante',
+    );
+
+    $residuo = (int) SerataStock::query()
+        ->where('serata_id', $serata->id)
+        ->where('menu_item_id', $item->id)
+        ->value('stock_residuo');
+
+    Livewire::test(RiepilogoLive::class)
+        ->assertSee('Stock residuo')
+        ->assertSee($item->nome)
+        ->assertSee((string) $residuo)
+        ->assertViewHas('dati', function (array $dati) use ($item, $residuo) {
+            $row = collect($dati['stock'])->first(
+                fn ($s) => (int) $s->menu_item_id === (int) $item->id
+            );
+
+            return $row !== null && (int) $row->stock_residuo === $residuo;
+        });
 });
 
 it('il riepilogo espone stampa veloce con orario', function () {
