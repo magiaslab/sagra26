@@ -38,6 +38,35 @@ it('il richiamo espone la postazione che ha emesso la comanda', function () {
         ->and($comanda->fresh()->postazione_id)->not->toBe($b->id);
 });
 
+it('il riepilogo espone stampa veloce con orario', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->firstOrFail();
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+
+    app(ComandaService::class)->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+        0,
+        'contante',
+    );
+
+    $ora = now()->timezone(config('app.timezone'))->format('H:i');
+
+    Livewire::test(RiepilogoLive::class)
+        ->assertSee('Stampa veloce')
+        ->assertSee('Stampato alle '.$ora)
+        ->assertSee($serata->data->format('d/m/Y'))
+        ->assertSeeHtml('onclick="window.print()"')
+        ->assertSeeHtml('size: A4 portrait');
+
+    Livewire::withQueryParams(['print' => 1])
+        ->test(RiepilogoLive::class)
+        ->assertSet('autoPrint', true)
+        ->assertSeeHtml('window.print()');
+});
+
 it('il riepilogo mostra quante comande ha fatto ciascuna postazione', function () {
     $puntoId = PuntoCassa::query()->first()->id;
     $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);

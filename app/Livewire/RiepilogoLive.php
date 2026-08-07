@@ -12,9 +12,18 @@ use Livewire\Component;
 
 class RiepilogoLive extends Component
 {
+    /** Se true, avvia window.print() al caricamento (?print=1). */
+    public bool $autoPrint = false;
+
+    public function mount(): void
+    {
+        $this->autoPrint = request()->boolean('print');
+    }
+
     public function render()
     {
         $serata = Serata::corrente();
+        $impostazioni = Impostazione::corrente();
         $dati = [
             'coperti' => 0,
             'incasso' => 0,
@@ -87,6 +96,8 @@ class RiepilogoLive extends Component
         return view('livewire.riepilogo-live', [
             'serata' => $serata,
             'dati' => $dati,
-        ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+            'impostazioni' => $impostazioni,
+            'stampatoAt' => now()->timezone(config('app.timezone')),
+        ])->layout('layouts.app', ['impostazioni' => $impostazioni]);
     }
 }
