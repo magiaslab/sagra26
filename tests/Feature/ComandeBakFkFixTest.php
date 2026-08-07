@@ -13,9 +13,10 @@ beforeEach(function () {
     $this->seed();
 });
 
-it('ripara FK comande_bak e permette stampa sospeso', function () {
+it('ripara FK comande_bak e permette stampa sospeso e omaggio', function () {
     // Simula il bug SQLite: RENAME comande → comande_bak aggiorna le FK figlie,
     // poi la tabella bak viene eliminata e resta "no such table: comande_bak".
+    // Colpisce qualsiasi conferma (sospeso, omaggio, contante…) sull’insert righe.
     Schema::disableForeignKeyConstraints();
     Schema::rename('comande', 'comande_bak');
     Schema::create('comande', function (Blueprint $table) {
@@ -52,22 +53,25 @@ it('ripara FK comande_bak e permette stampa sospeso', function () {
     $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
     $postazione = Postazione::query()->first();
     $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+    $righe = [['menu_item_id' => $acqua->id, 'quantita' => 1]];
 
-    try {
-        app(ComandaService::class)->confermaEStampa(
-            $serata,
-            $postazione,
-            [['menu_item_id' => $acqua->id, 'quantita' => 1]],
-            0,
-            'sospeso',
-            null, null, null, null, null, null, null,
-            'Cassiere',
-            'Luca',
-            null,
-        );
-        expect(false)->toBeTrue('doveva fallire con comande_bak mancante');
-    } catch (Throwable $e) {
-        expect($e->getMessage())->toContain('comande_bak');
+    foreach (['sospeso', 'omaggio'] as $metodo) {
+        try {
+            app(ComandaService::class)->confermaEStampa(
+                $serata,
+                $postazione,
+                $righe,
+                0,
+                $metodo,
+                null, null, null, null, null, null, null,
+                'Cassiere',
+                'Luca',
+                null,
+            );
+            expect(false)->toBeTrue("doveva fallire con comande_bak per {$metodo}");
+        } catch (Throwable $e) {
+            expect($e->getMessage())->toContain('comande_bak');
+        }
     }
 
     $migration = require database_path('migrations/2026_08_07_042500_fix_sqlite_fk_comande_bak.php');
@@ -79,7 +83,7 @@ it('ripara FK comande_bak e permette stampa sospeso', function () {
         ->and($sqlRighe)->toContain('references "comande"')
         ->and($sqlCorr)->not->toContain('comande_bak');
 
-    $comanda = app(ComandaService::class)->confermaEStampa(
+    $sospeso = app(ComandaService::class)->confermaEStampa(
         $serata->fresh(),
         $postazione,
         [['menu_item_id' => $acqua->id, 'quantita' => 2]],
@@ -91,11 +95,32 @@ it('ripara FK comande_bak e permette stampa sospeso', function () {
         null,
     );
 
-    expect($comanda->metodo_pagamento)->toBe('sospeso')
-        ->and($comanda->righe)->toHaveCount(1);
+    $omaggio = app(ComandaService::class)->confermaEStampa(
+        $serata->fresh(),
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+        0,
+        'omaggio',
+        null, null, null, null, null, null, null,
+        'Mario',
+        'Ospite VIP',
+        'prova',
+    );
 
-    $this->get(route('cassa.stampa', $comanda))
+    expect($sospeso->metodo_pagamento)->toBe('sospeso')
+        ->and($sospeso->righe)->toHaveCount(1)
+        ->and($omaggio->metodo_pagamento)->toBe('omaggio')
+        ->and($omaggio->righe)->toHaveCount(1)
+        ->and($omaggio->autorizzato_da)->toBe('Mario')
+        ->and($omaggio->nominativo)->toBe('Ospite VIP');
+
+    $this->get(route('cassa.stampa', $sospeso))
         ->assertOk()
         ->assertSee('SOSPESO')
         ->assertSee('Luca');
+
+    $this->get(route('cassa.stampa', $omaggio))
+        ->assertOk()
+        ->assertSee('OMAGGIO')
+        ->assertSee('Ospite VIP');
 });
