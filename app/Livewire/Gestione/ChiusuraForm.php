@@ -12,6 +12,7 @@ use App\Services\ChiusuraService;
 use App\Services\RiconciliazioneService;
 use Illuminate\Support\Collection;
 use Livewire\Component;
+use Throwable;
 
 class ChiusuraForm extends Component
 {
@@ -21,20 +22,21 @@ class ChiusuraForm extends Component
 
     public ?int $puntoCassaId = null;
 
-    public float $fondo_iniziale = 0;
+    /** Stringhe: evitano TypeError Livewire quando il campo è vuoto in digitazione. */
+    public string $fondo_iniziale = '0';
 
-    public float $fondo_trattenuto = 0;
+    public string $fondo_trattenuto = '0';
 
-    public float $totale_pos = 0;
+    public string $totale_pos = '0';
 
-    public float $totale_z = 0;
+    public string $totale_z = '0';
 
     public string $note = '';
 
-    /** @var array<string, int> */
+    /** @var array<string, int|string> */
     public array $pezzi = [];
 
-    /** @var array<string, int> Pezzi lasciati in cassa come fondo sera dopo */
+    /** @var array<string, int|string> Pezzi lasciati in cassa come fondo sera dopo */
     public array $pezziFondo = [];
 
     public bool $syncFondoDaPezzi = true;
@@ -50,8 +52,8 @@ class ChiusuraForm extends Component
     public function mount(): void
     {
         foreach (array_keys(Chiusura::TAGLI) as $campo) {
-            $this->pezzi[$campo] = 0;
-            $this->pezziFondo[$campo] = 0;
+            $this->pezzi[$campo] = '0';
+            $this->pezziFondo[$campo] = '0';
         }
         $serata = Serata::corrente() ?? Serata::query()->orderByDesc('data')->first();
         $this->serataId = $serata?->id;
@@ -78,7 +80,9 @@ class ChiusuraForm extends Component
     public function updatedPezziFondo(): void
     {
         if ($this->syncFondoDaPezzi) {
-            $this->fondo_trattenuto = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+            $this->fondo_trattenuto = $this->formatEuro(
+                Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo))
+            );
         }
         $this->ricalcolaPreview();
     }
@@ -107,8 +111,26 @@ class ChiusuraForm extends Component
     public function applicaTotalePezziFondo(): void
     {
         $this->syncFondoDaPezzi = true;
-        $this->fondo_trattenuto = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+        $this->fondo_trattenuto = $this->formatEuro(
+            Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo))
+        );
         $this->ricalcolaPreview();
+    }
+
+    /**
+     * Copia i pezzi del cassetto (sezione 1) nei pezzi del fondo sera dopo (sezione 2).
+     */
+    public function copiaPezziNelFondo(): void
+    {
+        foreach (array_keys(Chiusura::TAGLI) as $campo) {
+            $this->pezziFondo[$campo] = (string) max(0, (int) ($this->pezzi[$campo] ?? 0));
+        }
+        $this->syncFondoDaPezzi = true;
+        $this->fondo_trattenuto = $this->formatEuro(
+            Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo))
+        );
+        $this->ricalcolaPreview();
+        $this->toastOk('Pezzi copiati nel fondo sera dopo.');
     }
 
     public function carica(): void
@@ -127,31 +149,34 @@ class ChiusuraForm extends Component
             ->first();
 
         if ($chiusura) {
-            $this->fondo_iniziale = (float) $chiusura->fondo_iniziale;
-            $this->fondo_trattenuto = (float) $chiusura->fondo_trattenuto;
-            $this->totale_pos = (float) $chiusura->totale_pos;
-            $this->totale_z = (float) $chiusura->totale_z;
+            $this->fondo_iniziale = $this->formatEuro((float) $chiusura->fondo_iniziale);
+            $this->fondo_trattenuto = $this->formatEuro((float) $chiusura->fondo_trattenuto);
+            $this->totale_pos = $this->formatEuro((float) $chiusura->totale_pos);
+            $this->totale_z = $this->formatEuro((float) $chiusura->totale_z);
             $this->note = (string) ($chiusura->note ?? '');
             foreach (array_keys(Chiusura::TAGLI) as $campo) {
-                $this->pezzi[$campo] = (int) $chiusura->{$campo};
+                $this->pezzi[$campo] = (string) (int) $chiusura->{$campo};
             }
-            $this->pezziFondo = $chiusura->pezziFondoNormalizzati();
+            $norm = $chiusura->pezziFondoNormalizzati();
+            foreach (array_keys(Chiusura::TAGLI) as $campo) {
+                $this->pezziFondo[$campo] = (string) ($norm[$campo] ?? 0);
+            }
             $this->chiusuraCompletata = $chiusura->isCompletata();
             $this->chiusaAtLabel = $chiusura->chiusa_at?->timezone(config('app.timezone'))->format('d/m/Y H:i');
-            if (array_sum($this->pezziFondo) > 0) {
+            if (array_sum(array_map('intval', $this->pezziFondo)) > 0) {
                 $this->syncFondoDaPezzi = true;
             }
         } else {
             foreach (array_keys(Chiusura::TAGLI) as $campo) {
-                $this->pezzi[$campo] = 0;
-                $this->pezziFondo[$campo] = 0;
+                $this->pezzi[$campo] = '0';
+                $this->pezziFondo[$campo] = '0';
             }
             $punto = PuntoCassa::query()->find($this->puntoCassaId);
             $sug = $punto ? app(RiconciliazioneService::class)->fondoInizialeSuggerito($punto) : null;
-            $this->fondo_iniziale = $sug ?? 0;
-            $this->fondo_trattenuto = 0;
-            $this->totale_pos = 0;
-            $this->totale_z = 0;
+            $this->fondo_iniziale = $this->formatEuro($sug ?? 0);
+            $this->fondo_trattenuto = '0';
+            $this->totale_pos = '0';
+            $this->totale_z = '0';
             $this->note = '';
         }
         $this->ricalcolaPreview();
@@ -164,42 +189,67 @@ class ChiusuraForm extends Component
 
             return;
         }
-        $tmp = new Chiusura($this->pezzi);
-        $tmp->fondo_iniziale = $this->fondo_iniziale;
-        $tmp->fondo_trattenuto = $this->fondo_trattenuto;
-        $tmp->totale_pos = $this->totale_pos;
-        $tmp->totale_z = $this->totale_z;
-        $tmp->contante_contato = $tmp->calcolaContanteContato();
 
-        $this->riconciliazione = app(RiconciliazioneService::class)->calcola(
-            Serata::query()->findOrFail($this->serataId),
-            PuntoCassa::query()->findOrFail($this->puntoCassaId),
-            $tmp,
-        );
-        $this->riconciliazione['contante_contato'] = $tmp->contante_contato;
-        $this->riconciliazione['fondo_pezzi_totale'] = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+        try {
+            $pezziNorm = Chiusura::normalizzaPezzi($this->pezzi);
+            $tmp = new Chiusura($pezziNorm);
+            $tmp->fondo_iniziale = $this->parseEuro($this->fondo_iniziale);
+            $tmp->fondo_trattenuto = $this->parseEuro($this->fondo_trattenuto);
+            $tmp->totale_pos = $this->parseEuro($this->totale_pos);
+            $tmp->totale_z = $this->parseEuro($this->totale_z);
+            $tmp->contante_contato = $tmp->calcolaContanteContato();
+
+            $this->riconciliazione = app(RiconciliazioneService::class)->calcola(
+                Serata::query()->findOrFail($this->serataId),
+                PuntoCassa::query()->findOrFail($this->puntoCassaId),
+                $tmp,
+            );
+            $this->riconciliazione['contante_contato'] = $tmp->contante_contato;
+            $this->riconciliazione['fondo_pezzi_totale'] = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
+            $this->errore = null;
+        } catch (Throwable $e) {
+            $this->riconciliazione = null;
+            $this->errore = 'Controlla i numeri inseriti (usa il punto per i decimali, es. 12.50).';
+        }
     }
 
     public function salva(ChiusuraService $service): void
     {
         $this->errore = null;
-        $serata = Serata::query()->findOrFail($this->serataId);
-        $punto = PuntoCassa::query()->findOrFail($this->puntoCassaId);
+        if (! $this->serataId || ! $this->puntoCassaId) {
+            $this->errore = 'Seleziona serata e punto cassa.';
+            $this->toastDanger($this->errore);
+
+            return;
+        }
+
+        $serata = Serata::query()->find($this->serataId);
+        $punto = PuntoCassa::query()->find($this->puntoCassaId);
+        if (! $serata || ! $punto) {
+            $this->errore = 'Serata o punto cassa non validi.';
+            $this->toastDanger($this->errore);
+
+            return;
+        }
+
         try {
-            if ($this->syncFondoDaPezzi) {
-                $this->fondo_trattenuto = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
-            }
-            $service->salva($serata, $punto, array_merge($this->pezzi, [
-                'fondo_iniziale' => $this->fondo_iniziale,
-                'fondo_trattenuto' => $this->fondo_trattenuto,
-                'pezzi_fondo' => $this->pezziFondo,
-                'totale_pos' => $this->totale_pos,
-                'totale_z' => $this->totale_z,
+            $pezziNorm = Chiusura::normalizzaPezzi($this->pezzi);
+            $pezziFondoNorm = Chiusura::normalizzaPezzi($this->pezziFondo);
+            $fondoTrattenuto = $this->syncFondoDaPezzi
+                ? Chiusura::totaleDaPezzi($pezziFondoNorm)
+                : $this->parseEuro($this->fondo_trattenuto);
+
+            $service->salva($serata, $punto, array_merge($pezziNorm, [
+                'fondo_iniziale' => $this->parseEuro($this->fondo_iniziale),
+                'fondo_trattenuto' => $fondoTrattenuto,
+                'pezzi_fondo' => $pezziFondoNorm,
+                'totale_pos' => $this->parseEuro($this->totale_pos),
+                'totale_z' => $this->parseEuro($this->totale_z),
                 'note' => $this->note,
             ]));
             $this->toastOk('Chiusura salvata.');
             $this->carica();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errore = $e->getMessage();
             $this->toastDanger($e->getMessage());
         }
@@ -214,7 +264,7 @@ class ChiusuraForm extends Component
             $service->riapriPerCorrezione($serata, $punto);
             $this->toastOk('Chiusura sbloccata: puoi correggere i conteggi e salvare di nuovo.');
             $this->carica();
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             $this->errore = $e->getMessage();
             $this->toastDanger($e->getMessage());
         }
@@ -254,6 +304,7 @@ class ChiusuraForm extends Component
     {
         $fondoPezziTotale = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezziFondo));
         $sospesiAperti = $this->sospesiAperti();
+        $contanteContato = Chiusura::totaleDaPezzi(Chiusura::normalizzaPezzi($this->pezzi));
 
         return view('livewire.gestione.chiusura-form', [
             'serate' => Serata::query()->orderByDesc('data')->get(),
@@ -262,8 +313,35 @@ class ChiusuraForm extends Component
             'bloccata' => $this->serataBloccata(),
             'fondoPezziTotale' => $fondoPezziTotale,
             'fondoPezziDescrizione' => Chiusura::descrizionePezzi(Chiusura::normalizzaPezzi($this->pezziFondo)),
+            'contanteContato' => $contanteContato,
             'sospesiAperti' => $sospesiAperti,
             'sospesiApertiTotale' => (float) $sospesiAperti->sum('totale'),
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+    }
+
+    private function parseEuro(string|int|float|null $value): float
+    {
+        if ($value === null || $value === '') {
+            return 0.0;
+        }
+
+        $raw = trim((string) $value);
+        // Accetta sia 12.50 sia 12,50
+        if (str_contains($raw, ',') && ! str_contains($raw, '.')) {
+            $raw = str_replace(',', '.', $raw);
+        } else {
+            $raw = str_replace(',', '', $raw);
+        }
+
+        if (! is_numeric($raw)) {
+            return 0.0;
+        }
+
+        return round((float) $raw, 2);
+    }
+
+    private function formatEuro(float|int|string|null $value): string
+    {
+        return number_format($this->parseEuro($value), 2, '.', '');
     }
 }
