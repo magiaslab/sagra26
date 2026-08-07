@@ -12,8 +12,11 @@
                     <div class="mt-1 text-xs font-medium text-sagra-amber print:hidden">Serata chiusa — foglio in sola lettura (ristampa ok). Per correzioni: Riapri serata.</div>
                 @endif
             </div>
-            <div class="text-lg font-semibold text-sagra-ink">
-                {{ $serata->data->format('d/m/Y') }}
+            <div class="text-right">
+                <div class="text-lg font-semibold text-sagra-ink">{{ $serata->data->format('d/m/Y') }}</div>
+                <div class="mt-0.5 text-sm font-medium tabular-nums text-sagra-ink">
+                    Coperti: {{ (int) ($dati['coperti'] ?? 0) }}
+                </div>
             </div>
         </div>
 

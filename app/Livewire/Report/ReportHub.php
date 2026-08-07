@@ -552,12 +552,18 @@ class ReportHub extends Component
             return ['errore' => 'Nessuna chiusura salvata per questo punto cassa.'];
         }
         $ric = app(RiconciliazioneService::class)->calcola($serata, $punto, $chiusura);
+        $coperti = (int) Comanda::query()
+            ->where('serata_id', $serata->id)
+            ->where('punto_cassa_id', $punto->id)
+            ->where('stato', 'stampata')
+            ->sum('coperti');
 
         return [
             'punto' => $punto,
             'chiusura' => $chiusura,
             'ric' => $ric,
             'tagli' => Chiusura::TAGLI,
+            'coperti' => $coperti,
         ];
     }
 }
