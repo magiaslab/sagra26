@@ -51,7 +51,18 @@ class ChiusuraService
         }
 
         $chiusura->totale_pos = (float) ($dati['totale_pos'] ?? 0);
-        $chiusura->totale_z = (float) ($dati['totale_z'] ?? 0);
+        if (array_key_exists('totale_z_contante', $dati) || array_key_exists('totale_z_pos', $dati)) {
+            $chiusura->totale_z_contante = (float) ($dati['totale_z_contante'] ?? 0);
+            $chiusura->totale_z_pos = (float) ($dati['totale_z_pos'] ?? 0);
+            $chiusura->sincronizzaTotaleZ();
+        } else {
+            // Compat: un solo totale_z (test / chiamate legacy).
+            $chiusura->totale_z = (float) ($dati['totale_z'] ?? 0);
+            if ((float) $chiusura->totale_z_contante === 0.0 && (float) $chiusura->totale_z_pos === 0.0) {
+                $chiusura->totale_z_contante = (float) $chiusura->totale_z;
+                $chiusura->totale_z_pos = 0;
+            }
+        }
         $chiusura->note = $dati['note'] ?? null;
         $chiusura->contante_contato = $chiusura->calcolaContanteContato();
         $chiusura->contante_consegnato = round(

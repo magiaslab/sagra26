@@ -20,6 +20,8 @@ class Chiusura extends Model
         'pezzi_fondo',
         'contante_consegnato',
         'totale_pos',
+        'totale_z_contante',
+        'totale_z_pos',
         'totale_z',
         'note',
         'chiusa_at',
@@ -33,10 +35,21 @@ class Chiusura extends Model
             'fondo_trattenuto' => 'decimal:2',
             'contante_consegnato' => 'decimal:2',
             'totale_pos' => 'decimal:2',
+            'totale_z_contante' => 'decimal:2',
+            'totale_z_pos' => 'decimal:2',
             'totale_z' => 'decimal:2',
             'chiusa_at' => 'datetime',
             'pezzi_fondo' => 'array',
         ];
+    }
+
+    /** Totale Z fiscale = Z contante + Z POS dal registratore. */
+    public function sincronizzaTotaleZ(): void
+    {
+        $this->totale_z = round(
+            (float) $this->totale_z_contante + (float) $this->totale_z_pos,
+            2
+        );
     }
 
     public const TAGLI = [

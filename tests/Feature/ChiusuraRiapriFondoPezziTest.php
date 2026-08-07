@@ -113,7 +113,8 @@ it('accetta campi euro vuoti e decimali senza errori Livewire', function () {
         ->set('puntoCassaId', $punto->id)
         ->set('pezzi.n_1', '')
         ->set('totale_pos', '')
-        ->set('totale_z', '12,50')
+        ->set('totale_z_contante', '12,50')
+        ->set('totale_z_pos', '0')
         ->set('fondo_iniziale', '50.5')
         ->assertHasNoErrors()
         ->assertSet('errore', null)
@@ -124,9 +125,43 @@ it('accetta campi euro vuoti e decimali senza errori Livewire', function () {
 
     $chiusura = Chiusura::query()->where('punto_cassa_id', $punto->id)->firstOrFail();
     expect((float) $chiusura->totale_pos)->toBe(33.75)
+        ->and((float) $chiusura->totale_z_contante)->toBe(12.5)
         ->and((float) $chiusura->totale_z)->toBe(12.5)
         ->and((float) $chiusura->fondo_iniziale)->toBe(50.5)
         ->and((int) $chiusura->n_1)->toBe(0);
+});
+
+it('somma Z contante e Z POS nel totale Z e nei delta fiscali', function () {
+    $punto = PuntoCassa::query()->firstOrFail();
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$punto->id => 50]);
+    $postazione = \App\Models\Postazione::query()->firstOrFail();
+    $acqua = \App\Models\MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+
+    // 3×2€ contante = 6; 2×2€ pos = 4; totale 10
+    app(\App\Services\ComandaService::class)->confermaEStampa($serata, $postazione, [['menu_item_id' => $acqua->id, 'quantita' => 3]], 0, 'contante');
+    app(\App\Services\ComandaService::class)->confermaEStampa($serata, $postazione, [['menu_item_id' => $acqua->id, 'quantita' => 2]], 0, 'pos');
+
+    Livewire::test(ChiusuraForm::class)
+        ->set('puntoCassaId', $punto->id)
+        ->set('totale_pos', '4')
+        ->set('totale_z_contante', '6')
+        ->set('totale_z_pos', '4')
+        ->assertSet('totale_z', '10.00')
+        ->call('salva')
+        ->assertHasNoErrors();
+
+    $chiusura = Chiusura::query()->where('serata_id', $serata->id)->where('punto_cassa_id', $punto->id)->firstOrFail();
+    expect((float) $chiusura->totale_z_contante)->toBe(6.0)
+        ->and((float) $chiusura->totale_z_pos)->toBe(4.0)
+        ->and((float) $chiusura->totale_z)->toBe(10.0);
+
+    $ric = app(\App\Services\RiconciliazioneService::class)->calcola($serata, $punto, $chiusura);
+    expect($ric['fiscale_contante'])->toBe(6.0)
+        ->and($ric['fiscale_pos'])->toBe(4.0)
+        ->and($ric['fiscale'])->toBe(10.0)
+        ->and($ric['delta_fiscale_contante'])->toBe(0.0)
+        ->and($ric['delta_fiscale_pos'])->toBe(0.0)
+        ->and($ric['delta_fiscale'])->toBe(0.0);
 });
 
 it('copia i pezzi contati nel fondo sera dopo', function () {

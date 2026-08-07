@@ -16,9 +16,13 @@ class RiconciliazioneService
      *   atteso_totale: float,
      *   reale_contante: float,
      *   reale_pos: float,
+     *   fiscale_contante: float,
+     *   fiscale_pos: float,
      *   fiscale: float,
      *   delta_contante: float,
      *   delta_pos: float,
+     *   delta_fiscale_contante: float,
+     *   delta_fiscale_pos: float,
      *   delta_fiscale: float,
      *   contante_consegnato: float,
      *   incasso_contante_reale: float
@@ -30,7 +34,13 @@ class RiconciliazioneService
 
         $realeContante = round((float) $chiusura->contante_contato - (float) $chiusura->fondo_iniziale, 2);
         $realePos = round((float) $chiusura->totale_pos, 2);
-        $fiscale = round((float) $chiusura->totale_z, 2);
+        $fiscaleContante = round((float) ($chiusura->totale_z_contante ?? 0), 2);
+        $fiscalePos = round((float) ($chiusura->totale_z_pos ?? 0), 2);
+        // Compat: chiusure legacy senza split → usa totale_z come unico fiscale.
+        if ($fiscaleContante === 0.0 && $fiscalePos === 0.0 && (float) $chiusura->totale_z !== 0.0) {
+            $fiscaleContante = round((float) $chiusura->totale_z, 2);
+        }
+        $fiscale = round($fiscaleContante + $fiscalePos, 2);
         $consegnato = round((float) $chiusura->contante_contato - (float) $chiusura->fondo_trattenuto, 2);
 
         return [
@@ -39,9 +49,13 @@ class RiconciliazioneService
             'atteso_totale' => $atteso['totale'],
             'reale_contante' => $realeContante,
             'reale_pos' => $realePos,
+            'fiscale_contante' => $fiscaleContante,
+            'fiscale_pos' => $fiscalePos,
             'fiscale' => $fiscale,
             'delta_contante' => round($realeContante - $atteso['contante'], 2),
             'delta_pos' => round($realePos - $atteso['pos'], 2),
+            'delta_fiscale_contante' => round($atteso['contante'] - $fiscaleContante, 2),
+            'delta_fiscale_pos' => round($atteso['pos'] - $fiscalePos, 2),
             'delta_fiscale' => round($atteso['totale'] - $fiscale, 2),
             'contante_consegnato' => $consegnato,
             'incasso_contante_reale' => $realeContante,

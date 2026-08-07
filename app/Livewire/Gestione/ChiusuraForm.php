@@ -29,6 +29,11 @@ class ChiusuraForm extends Component
 
     public string $totale_pos = '0';
 
+    /** Z contante e Z POS dal registratore; totale_z = somma. */
+    public string $totale_z_contante = '0';
+
+    public string $totale_z_pos = '0';
+
     public string $totale_z = '0';
 
     public string $note = '';
@@ -103,9 +108,23 @@ class ChiusuraForm extends Component
         $this->ricalcolaPreview();
     }
 
-    public function updatedTotaleZ(): void
+    public function updatedTotaleZContante(): void
     {
+        $this->sincronizzaTotaleZForm();
         $this->ricalcolaPreview();
+    }
+
+    public function updatedTotaleZPos(): void
+    {
+        $this->sincronizzaTotaleZForm();
+        $this->ricalcolaPreview();
+    }
+
+    private function sincronizzaTotaleZForm(): void
+    {
+        $this->totale_z = $this->formatEuro(
+            $this->parseEuro($this->totale_z_contante) + $this->parseEuro($this->totale_z_pos)
+        );
     }
 
     public function applicaTotalePezziFondo(): void
@@ -152,7 +171,14 @@ class ChiusuraForm extends Component
             $this->fondo_iniziale = $this->formatEuro((float) $chiusura->fondo_iniziale);
             $this->fondo_trattenuto = $this->formatEuro((float) $chiusura->fondo_trattenuto);
             $this->totale_pos = $this->formatEuro((float) $chiusura->totale_pos);
-            $this->totale_z = $this->formatEuro((float) $chiusura->totale_z);
+            $zc = (float) ($chiusura->totale_z_contante ?? 0);
+            $zp = (float) ($chiusura->totale_z_pos ?? 0);
+            if ($zc === 0.0 && $zp === 0.0 && (float) $chiusura->totale_z !== 0.0) {
+                $zc = (float) $chiusura->totale_z;
+            }
+            $this->totale_z_contante = $this->formatEuro($zc);
+            $this->totale_z_pos = $this->formatEuro($zp);
+            $this->sincronizzaTotaleZForm();
             $this->note = (string) ($chiusura->note ?? '');
             foreach (array_keys(Chiusura::TAGLI) as $campo) {
                 $this->pezzi[$campo] = (string) (int) $chiusura->{$campo};
@@ -176,6 +202,8 @@ class ChiusuraForm extends Component
             $this->fondo_iniziale = $this->formatEuro($sug ?? 0);
             $this->fondo_trattenuto = '0';
             $this->totale_pos = '0';
+            $this->totale_z_contante = '0';
+            $this->totale_z_pos = '0';
             $this->totale_z = '0';
             $this->note = '';
         }
@@ -196,7 +224,9 @@ class ChiusuraForm extends Component
             $tmp->fondo_iniziale = $this->parseEuro($this->fondo_iniziale);
             $tmp->fondo_trattenuto = $this->parseEuro($this->fondo_trattenuto);
             $tmp->totale_pos = $this->parseEuro($this->totale_pos);
-            $tmp->totale_z = $this->parseEuro($this->totale_z);
+            $tmp->totale_z_contante = $this->parseEuro($this->totale_z_contante);
+            $tmp->totale_z_pos = $this->parseEuro($this->totale_z_pos);
+            $tmp->sincronizzaTotaleZ();
             $tmp->contante_contato = $tmp->calcolaContanteContato();
 
             $this->riconciliazione = app(RiconciliazioneService::class)->calcola(
@@ -244,7 +274,8 @@ class ChiusuraForm extends Component
                 'fondo_trattenuto' => $fondoTrattenuto,
                 'pezzi_fondo' => $pezziFondoNorm,
                 'totale_pos' => $this->parseEuro($this->totale_pos),
-                'totale_z' => $this->parseEuro($this->totale_z),
+                'totale_z_contante' => $this->parseEuro($this->totale_z_contante),
+                'totale_z_pos' => $this->parseEuro($this->totale_z_pos),
                 'note' => $this->note,
             ]));
             $this->toastOk('Chiusura salvata.');
