@@ -1,7 +1,11 @@
 <?php
 
 use App\Livewire\Report\ReportHub;
+use App\Models\MenuItem;
+use App\Models\Postazione;
 use App\Models\PuntoCassa;
+use App\Services\ChiusuraService;
+use App\Services\ComandaService;
 use App\Services\SerataService;
 use Livewire\Livewire;
 
@@ -24,6 +28,39 @@ it('nasconde header UI in stampa e usa portrait per consegna', function () {
         ->toContain('Consegna incassi')
         ->toContain('size: A4 portrait')
         ->toContain('report-sheet');
+});
+
+it('mostra i coperti accanto alla data nel foglio consegna', function () {
+    $punto = PuntoCassa::query()->firstOrFail();
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$punto->id => 50]);
+    $postazione = Postazione::query()->firstOrFail();
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+    $coperto = MenuItem::query()->where('is_coperto', true)->firstOrFail();
+
+    app(ComandaService::class)->confermaEStampa(
+        $serata,
+        $postazione,
+        [
+            ['menu_item_id' => $acqua->id, 'quantita' => 1],
+            ['menu_item_id' => $coperto->id, 'quantita' => 5],
+        ],
+        0,
+        'contante',
+    );
+
+    app(ChiusuraService::class)->salva($serata, $punto, [
+        'fondo_iniziale' => 50,
+        'fondo_trattenuto' => 50,
+        'totale_pos' => 0,
+        'totale_z' => 0,
+    ]);
+
+    Livewire::test(ReportHub::class)
+        ->set('serataId', $serata->id)
+        ->set('puntoCassaId', $punto->id)
+        ->set('tipo', 'consegna')
+        ->assertSee($serata->data->format('d/m/Y'))
+        ->assertSee('Coperti: 5');
 });
 
 it('apre il foglio consegna da query string e prepara la stampa automatica', function () {
