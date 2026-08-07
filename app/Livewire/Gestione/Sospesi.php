@@ -77,6 +77,7 @@ class Sospesi extends Component
         $serata = Serata::corrente();
         if (! $serata) {
             $this->errore = 'Nessuna serata aperta.';
+            $this->toastWarn($this->errore);
 
             return;
         }
@@ -84,12 +85,14 @@ class Sospesi extends Component
         $comanda = Comanda::query()->with('righe')->find($this->chiudiId);
         if (! $comanda || ! $comanda->isSospesoAperto()) {
             $this->errore = 'Sospeso non trovato o già chiuso.';
+            $this->toastWarn($this->errore);
 
             return;
         }
 
         if (! in_array($this->metodo, ['contante', 'pos', 'misto', 'omaggio'], true)) {
             $this->errore = 'Metodo non valido.';
+            $this->toastWarn($this->errore);
 
             return;
         }
@@ -98,11 +101,13 @@ class Sospesi extends Component
             $atteso = (string) Impostazione::corrente()->pin_gestione;
             if ($this->pin === '' || ! hash_equals($atteso, $this->pin)) {
                 $this->errore = 'PIN non valido.';
+                $this->toastWarn($this->errore);
 
                 return;
             }
             if (trim($this->autorizzatoDa) === '' || trim($this->nominativo) === '') {
                 $this->errore = 'Per omaggio servono autorizzato da e nome ospite.';
+                $this->toastWarn($this->errore);
 
                 return;
             }

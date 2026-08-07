@@ -32,9 +32,9 @@
         urls: {
             conferma: '{{ route('cassa.conferma', absolute: false) }}',
             stock: '{{ route('cassa.stock', absolute: false) }}',
-            richiamo: '/cassa/richiamo',
+            richiamo: '{{ url('/cassa/richiamo') }}',
             storico: '{{ route('cassa.storico', absolute: false) }}',
-            annulla: '/cassa/annulla',
+            annulla: '{{ url('/cassa/annulla') }}',
             postazione: '{{ route('cassa.postazione', absolute: false) }}',
             gestione: '{{ route('gestione.dashboard', absolute: false) }}',
             home: '{{ route('home', absolute: false) }}'
@@ -279,7 +279,7 @@
                 Puoi selezionare solo una cassa <span class="font-semibold text-sagra-ink">libera</span>.
                 Per prendere una cassa già occupata serve il <span class="font-semibold text-sagra-ink">PIN gestione</span>.
             </p>
-            <ul class="mt-4 divide-y divide-sagra-line overflow-hidden rounded-md ring-1 ring-sagra-line">
+            <ul class="mt-4 max-h-[min(50vh,22rem)] divide-y divide-sagra-line overflow-y-auto overscroll-contain rounded-md ring-1 ring-sagra-line">
                 <template x-for="p in postazioni" :key="'scelta-' + p.id">
                     <li class="flex items-center gap-3 px-3 py-3"
                         :class="p.occupata && !p.mia ? 'bg-sagra-softer/60' : 'bg-white'">
@@ -1647,6 +1647,7 @@ function cassaApp(cfg) {
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Annullamento fallito');
+                if (data.stock) this.stock = data.stock;
                 if (typeof data.coperti_totali === 'number') this.copertiTotali = data.coperti_totali;
                 this.storico = this.storico.map(c =>
                     c.comanda_id === id
@@ -1674,6 +1675,11 @@ function cassaApp(cfg) {
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Non trovata');
+                // Voci disattivate nel menù: le reintegriamo così correzione/anteprima non le perdono.
+                for (const r of (data.righe || [])) {
+                    if (!r.menu_item || this.menu.find(i => i.id === r.menu_item_id)) continue;
+                    this.menu.push({ ...r.menu_item, fuori_menu: true });
+                }
                 const q = {};
                 for (const r of data.righe) q[r.menu_item_id] = r.quantita;
                 this.qty = q;

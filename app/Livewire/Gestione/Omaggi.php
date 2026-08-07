@@ -19,7 +19,7 @@ class Omaggi extends Component
     {
         $corrente = Serata::corrente();
         $this->serataId = $corrente?->id
-            ?? Serata::query()->orderByDesc('data')->value('id');
+            ?? Serata::queryEdizione()->orderByDesc('data')->value('id');
     }
 
     public function exportCsv()
@@ -97,7 +97,7 @@ class Omaggi extends Component
 
     public function render()
     {
-        $serate = Serata::query()->orderByDesc('data')->get();
+        $serate = Serata::queryEdizione()->orderByDesc('data')->get();
         $serata = $this->serataSelezionata();
         $omaggi = $serata ? $this->queryOmaggi($serata->id) : collect();
 

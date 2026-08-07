@@ -6,11 +6,13 @@ use App\Models\Categoria;
 use App\Models\Chiusura;
 use App\Models\Comanda;
 use App\Models\ComandaRiga;
+use App\Models\Edizione;
 use App\Models\Impostazione;
 use App\Models\MenuItem;
 use App\Models\PuntoCassa;
 use App\Models\Serata;
 use App\Models\SerataStock;
+use App\Services\EdizioneService;
 use App\Services\RiconciliazioneService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -43,11 +45,13 @@ class ReportHub extends Component
             $this->tipo = $tipo;
         }
 
+        app(EdizioneService::class)->assicuratiCorrente();
+
         $serataQuery = request()->query('serata_id') ?? request()->query('serataId');
-        if ($serataQuery !== null && $serataQuery !== '' && Serata::query()->whereKey((int) $serataQuery)->exists()) {
+        if ($serataQuery !== null && $serataQuery !== '' && Serata::queryEdizione()->whereKey((int) $serataQuery)->exists()) {
             $this->serataId = (int) $serataQuery;
         } else {
-            $this->serataId = Serata::query()->orderByDesc('data')->value('id');
+            $this->serataId = Serata::queryEdizione()->orderByDesc('data')->value('id');
         }
 
         $puntoQuery = request()->query('punto_cassa_id') ?? request()->query('puntoCassaId');
@@ -130,11 +134,17 @@ class ReportHub extends Component
 
     public function render()
     {
-        $serate = Serata::query()->orderBy('data')->get();
+        $edizione = Edizione::corrente();
+        $serate = Serata::queryEdizione($edizione?->id)->orderBy('data')->get();
         $serata = $this->serataId ? Serata::query()->find($this->serataId) : null;
+        if ($serata && $edizione && (int) $serata->edizione_id !== (int) $edizione->id) {
+            $this->serataId = $serate->last()?->id;
+            $serata = $this->serataId ? Serata::query()->find($this->serataId) : null;
+        }
         $dati = [];
 
         if ($serata) {
+            // "Completo" = tutta l'edizione sagra corrente (non tutti gli anni nel DB).
             $serateFino = $this->completo
                 ? $serate
                 : $serate->filter(fn ($s) => $s->data->lte($serata->data));
@@ -159,6 +169,7 @@ class ReportHub extends Component
         return view('livewire.report.hub', [
             'serate' => $serate,
             'serata' => $serata,
+            'edizione' => $edizione,
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'dati' => $dati,
             'impostazioni' => Impostazione::corrente(),
@@ -175,7 +186,7 @@ class ReportHub extends Component
             return null;
         }
 
-        return Serata::query()
+        return Serata::queryEdizione($corrente->edizione_id)
             ->where('data', '<', $corrente->data->toDateString())
             ->orderByDesc('data')
             ->value('id');
@@ -541,7 +552,7 @@ class ReportHub extends Component
     private function datiConsegna(Serata $serata): array
     {
         if (! $this->puntoCassaId) {
-            return [];
+            return ['errore' => 'Seleziona un punto cassa per il foglio consegna.'];
         }
         $punto = PuntoCassa::query()->findOrFail($this->puntoCassaId);
         $chiusura = Chiusura::query()

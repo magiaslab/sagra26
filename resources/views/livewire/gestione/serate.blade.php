@@ -2,7 +2,9 @@
     <x-gestione.subnav />
     <x-gestione.page-header
         title="Serate"
-        subtitle="Apertura, stock limitati e chiusura della serata"
+        :subtitle="isset($edizione) && $edizione
+            ? ('Edizione '.$edizione->anno.' · apertura, stock e chiusura serata')
+            : 'Apertura, stock limitati e chiusura della serata'"
     />
 
     @if ($errore)

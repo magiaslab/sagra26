@@ -7,6 +7,12 @@
             'icon' => 'home',
         ],
         [
+            'label' => 'Edizione',
+            'route' => 'gestione.edizione',
+            'match' => 'gestione.edizione',
+            'icon' => 'edizione',
+        ],
+        [
             'label' => 'Serate',
             'route' => 'gestione.serate',
             'match' => 'gestione.serate',
@@ -78,6 +84,9 @@
                     @switch($link['icon'])
                         @case('home')
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M3 11.5 12 4l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-8.5Z"/></svg>
+                            @break
+                        @case('edizione')
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5h12l4 4v10H4Z"/><path stroke-linecap="round" d="M16 5v4h4M8 12h6M8 16h4"/></svg>
                             @break
                         @case('calendar')
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M8 3v4M16 3v4M3 11h18"/></svg>
