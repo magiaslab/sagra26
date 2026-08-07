@@ -43,7 +43,7 @@ it('stampa cliente mostra badge sospeso con nominativo', function () {
         ->toContain('pay-badge--sospeso');
 });
 
-it('dopo il fix migration un DB con CHECK vecchio accetta e stampa i sospesi', function () {
+it('dopo il fix migration un DB con CHECK vecchio accetta sospesi e omaggi', function () {
     // Simula DB rimasto con CHECK pre-omaggio/sospeso (causa dell’errore SQL in stampa).
     DB::statement('PRAGMA foreign_keys=OFF');
     DB::statement('DROP TABLE IF EXISTS comande');
@@ -72,55 +72,64 @@ it('dopo il fix migration un DB con CHECK vecchio accetta e stampa i sospesi', f
     $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
     $postazione = Postazione::query()->first();
     $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+    $righe = [['menu_item_id' => $acqua->id, 'quantita' => 1]];
 
-    try {
-        app(ComandaService::class)->confermaEStampa(
-            $serata,
-            $postazione,
-            [['menu_item_id' => $acqua->id, 'quantita' => 1]],
-            0,
-            'sospeso',
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            'Cassiere',
-            'Mario',
-            null,
-        );
-        expect(false)->toBeTrue('doveva fallire con CHECK vecchio');
-    } catch (Throwable $e) {
-        expect($e->getMessage())->toContain('CHECK constraint failed');
+    foreach (['sospeso', 'omaggio'] as $metodo) {
+        try {
+            app(ComandaService::class)->confermaEStampa(
+                $serata,
+                $postazione,
+                $righe,
+                0,
+                $metodo,
+                null, null, null, null, null, null, null,
+                'Cassiere',
+                'Mario',
+                null,
+            );
+            expect(false)->toBeTrue("doveva fallire con CHECK vecchio per {$metodo}");
+        } catch (Throwable $e) {
+            expect($e->getMessage())->toContain('CHECK constraint failed');
+        }
     }
 
     $migration = require database_path('migrations/2026_08_06_205300_fix_comande_metodo_pagamento_sospeso.php');
     $migration->up();
 
-    $comanda = app(ComandaService::class)->confermaEStampa(
+    $sospeso = app(ComandaService::class)->confermaEStampa(
         $serata,
         $postazione,
-        [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+        $righe,
         0,
         'sospeso',
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
-        null,
+        null, null, null, null, null, null, null,
         'Cassiere',
         'Mario',
         null,
     );
 
-    expect($comanda->metodo_pagamento)->toBe('sospeso');
+    $omaggio = app(ComandaService::class)->confermaEStampa(
+        $serata,
+        $postazione,
+        $righe,
+        0,
+        'omaggio',
+        null, null, null, null, null, null, null,
+        'Cassiere',
+        'Ospite',
+        null,
+    );
 
-    $this->get(route('cassa.stampa', $comanda))
+    expect($sospeso->metodo_pagamento)->toBe('sospeso')
+        ->and($omaggio->metodo_pagamento)->toBe('omaggio');
+
+    $this->get(route('cassa.stampa', $sospeso))
         ->assertOk()
         ->assertSee('SOSPESO')
         ->assertSee('Mario');
+
+    $this->get(route('cassa.stampa', $omaggio))
+        ->assertOk()
+        ->assertSee('OMAGGIO')
+        ->assertSee('Ospite');
 });
