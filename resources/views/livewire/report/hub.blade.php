@@ -52,7 +52,10 @@
             </div>
             <div class="mb-3">
                 <label class="mb-1 block text-sm font-medium text-sagra-ink">Ambito</label>
-                <label class="text-sm font-medium text-sagra-ink"><input type="checkbox" wire:model.live="completo"> Completo (tutta la sagra)</label>
+                <label class="text-sm font-medium text-sagra-ink">
+                    <input type="checkbox" wire:model.live="completo">
+                    Completo (tutta l’edizione{{ isset($edizione) && $edizione ? ' '.$edizione->anno : '' }})
+                </label>
                 @if ($tipo === 'consegna')
                     <select class="mt-2 block w-full rounded-md bg-white px-3 py-2 text-sm text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" wire:model.live="puntoCassaId">
                         @foreach ($punti as $p)

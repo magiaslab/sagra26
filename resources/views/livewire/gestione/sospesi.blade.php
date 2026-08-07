@@ -28,8 +28,8 @@
             Nessun sospeso aperto.
         </p>
     @else
-        <div class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
-            <table class="w-full text-left text-sm">
+        <div class="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
+            <table class="w-full min-w-[36rem] text-left text-sm">
                 <thead class="bg-sagra-softer text-xs uppercase tracking-wide text-sagra-muted">
                     <tr>
                         <th class="px-4 py-2.5 font-semibold">N.</th>
@@ -71,15 +71,20 @@
     @if ($chiudiId)
         @php $target = $sospesi->firstWhere('id', $chiudiId); @endphp
         <div class="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3">
-            <div class="w-[min(420px,96vw)] rounded-lg bg-white p-5 shadow-xl ring-1 ring-sagra-line">
-                <h2 class="text-lg font-semibold text-sagra-ink">
-                    Chiudi sospeso #{{ $target?->numero_progressivo }}
-                </h2>
-                <p class="mt-1 text-sm text-sagra-muted">
-                    {{ $target?->nominativo }} · {{ number_format((float) ($target?->totale ?? 0), 2, ',', '.') }} €
-                </p>
+            <div class="flex max-h-[min(92vh,720px)] w-[min(420px,96vw)] flex-col overflow-hidden rounded-lg bg-white shadow-xl ring-1 ring-sagra-line">
+                <div class="shrink-0 px-5 pt-5">
+                    <h2 class="text-lg font-semibold text-sagra-ink">
+                        Chiudi sospeso #{{ $target?->numero_progressivo }}
+                    </h2>
+                    <p class="mt-1 text-sm text-sagra-muted">
+                        {{ $target?->nominativo }} · {{ number_format((float) ($target?->totale ?? 0), 2, ',', '.') }} €
+                    </p>
+                    @if ($errore)
+                        <x-ui.alert type="danger" class="mt-3 mb-0">{{ $errore }}</x-ui.alert>
+                    @endif
+                </div>
 
-                <div class="mt-4 space-y-3">
+                <div class="mt-4 min-h-0 flex-1 space-y-3 overflow-y-auto px-5">
                     <div>
                         <label class="mb-1 block text-xs font-medium text-sagra-muted">Metodo</label>
                         <select class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line" wire:model.live="metodo">
@@ -123,7 +128,7 @@
                     @endif
                 </div>
 
-                <div class="mt-5 grid grid-cols-2 gap-2">
+                <div class="mt-5 grid shrink-0 grid-cols-2 gap-2 px-5 pb-5">
                     <button type="button" class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" wire:click="annullaChiusura">Annulla</button>
                     <button type="button" class="rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark" wire:click="confermaChiusura">Conferma</button>
                 </div>

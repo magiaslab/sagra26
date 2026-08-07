@@ -4,11 +4,13 @@ namespace App\Livewire\Gestione;
 
 use App\Livewire\Concerns\WithToast;
 use App\Models\Chiusura;
+use App\Models\Edizione;
 use App\Models\Impostazione;
 use App\Models\MenuItem;
 use App\Models\PuntoCassa;
 use App\Models\Serata;
 use App\Models\SerataStock;
+use App\Services\EdizioneService;
 use App\Services\RiconciliazioneService;
 use App\Services\SerataService;
 use App\Services\StockService;
@@ -39,8 +41,9 @@ class Serate extends Component
     /** @var array<int, string> Descrizione pezzi fondo dalla chiusura precedente */
     public array $fondiDescrizione = [];
 
-    public function mount(RiconciliazioneService $ric): void
+    public function mount(RiconciliazioneService $ric, EdizioneService $edizioni): void
     {
+        $edizioni->assicuratiCorrente();
         $this->data = now()->toDateString();
         foreach (MenuItem::query()->whereNotNull('stock_default')->where('attivo', true)->get() as $item) {
             $this->stockOverrides[$item->id] = (int) $item->stock_default;
@@ -135,7 +138,7 @@ class Serate extends Component
     {
         $this->errore = null;
         try {
-            $serata = Serata::query()->findOrFail($serataId);
+            $serata = Serata::queryEdizione()->findOrFail($serataId);
             $service->riapri($serata);
             $this->toastOk('Serata riaperta.');
             $this->flashStatus('Serata riaperta.');
@@ -150,7 +153,7 @@ class Serate extends Component
     {
         $this->errore = null;
         try {
-            $serata = Serata::query()->findOrFail($serataId);
+            $serata = Serata::queryEdizione()->findOrFail($serataId);
             $service->elimina($serata);
             $this->toastOk('Serata eliminata.');
             $this->flashStatus('Serata eliminata.');
@@ -206,9 +209,10 @@ class Serate extends Component
 
         return view('livewire.gestione.serate', [
             'serata' => $serata,
+            'edizione' => Edizione::corrente(),
             'stockSerata' => $stockSerata,
             'sogliaAlert' => Impostazione::corrente()->sogliaStockAlert(),
-            'storico' => Serata::query()->orderByDesc('data')->limit(20)->get(),
+            'storico' => Serata::queryEdizione()->orderByDesc('data')->limit(20)->get(),
             'limitati' => MenuItem::query()->whereNotNull('stock_default')->where('attivo', true)->orderBy('ordinamento')->get(),
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'fondiDescrizione' => $this->fondiDescrizione,

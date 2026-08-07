@@ -12,6 +12,7 @@ use App\Services\ComandaService;
 use App\Services\StockService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use RuntimeException;
 use Throwable;
@@ -65,7 +66,8 @@ class CassaController extends Controller
         }
 
         $impostazioni = Impostazione::corrente();
-        $prossimoNumero = (int) (Comanda::query()->max('numero_progressivo') ?? 0) + 1;
+        // Allineato all’allocator atomico (comanda_numeri), non al max delle comande.
+        $prossimoNumero = (int) (DB::table('comanda_numeri')->max('id') ?? 0) + 1;
         $prossimoNumeroDiSerata = Comanda::prossimoNumeroDiSerata($serata?->id);
         $copertiTotali = Comanda::copertiTotaliSerata($serata?->id);
 
@@ -324,7 +326,7 @@ class CassaController extends Controller
         }
 
         $comanda = Comanda::query()
-            ->with(['righe.menuItem', 'postazione'])
+            ->with(['righe.menuItem.categoria', 'postazione'])
             ->where('numero_progressivo', $numero)
             ->where('serata_id', $serata->id)
             ->first();
@@ -355,32 +357,54 @@ class CassaController extends Controller
             'postazione' => $comanda->postazione?->nome,
             'correzioni_count' => $comanda->correzioni()->count(),
             'print_url' => route('cassa.stampa', $comanda, absolute: false),
-            'righe' => $comanda->righe->map(fn ($r) => [
-                'menu_item_id' => $r->menu_item_id,
-                'quantita' => $r->quantita,
-                'prezzo_unitario' => (float) $r->prezzo_unitario,
-                'nome' => $r->menuItem->nome,
-            ]),
+            'righe' => $comanda->righe->map(function ($r) {
+                $item = $r->menuItem;
+
+                return [
+                    'menu_item_id' => $r->menu_item_id,
+                    'quantita' => $r->quantita,
+                    'prezzo_unitario' => (float) $r->prezzo_unitario,
+                    'nome' => $item?->nome ?? ('Voce #'.$r->menu_item_id),
+                    'menu_item' => $item ? [
+                        'id' => $item->id,
+                        'nome' => $item->nome,
+                        'prezzo' => (float) $item->prezzo,
+                        'categoria' => $item->categoria?->nome ?? '',
+                        'categoria_id' => $item->categoria_id,
+                        'area_stampa' => $item->areaStampaEffettiva(),
+                        'stock_limitato' => $item->stock_default !== null,
+                        'ordinamento' => $item->ordinamento,
+                        'piatto_del_giorno' => (bool) $item->piatto_del_giorno,
+                        'is_coperto' => (bool) $item->is_coperto,
+                        'attivo' => (bool) $item->attivo,
+                    ] : null,
+                ];
+            }),
         ]);
     }
 
     public function stampa(Comanda $comanda): View
     {
+        if ($comanda->isAnnullata()) {
+            abort(404, 'Comanda annullata.');
+        }
+
         $comanda->load(['righe.menuItem.categoria', 'serata', 'correzioni']);
         $impostazioni = Impostazione::corrente();
 
         $righe = $comanda->righe->map(function ($r) {
             $prezzo = (float) $r->prezzo_unitario;
+            $item = $r->menuItem;
 
             return [
                 'menu_item_id' => (int) $r->menu_item_id,
                 'quantita' => $r->quantita,
-                'nome' => $r->menuItem->nome,
+                'nome' => $item?->nome ?? ('Voce #'.$r->menu_item_id),
                 // Live dal menù: non storicizzato su comanda_righe (a differenza di bar/prezzo).
-                'congelato' => (bool) $r->menuItem->congelato,
+                'congelato' => (bool) ($item?->congelato ?? false),
                 'prezzo_unitario' => $prezzo,
                 'importo' => round($r->quantita * $prezzo, 2),
-                'area_stampa' => $r->menuItem->areaStampaEffettiva(),
+                'area_stampa' => $item?->areaStampaEffettiva() ?? 'cliente',
             ];
         });
 
@@ -413,6 +437,7 @@ class CassaController extends Controller
             return response()->json([
                 'ok' => true,
                 'coperti_totali' => Comanda::copertiTotaliSerata($comanda->serata_id),
+                'stock' => app(StockService::class)->mappaResidui((int) $comanda->serata_id),
             ]);
         } catch (RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);

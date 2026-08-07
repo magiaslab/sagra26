@@ -68,11 +68,27 @@
             </div>
         </a>
         <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.edizione', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Anno</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Edizione sagra</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Stato edizione, archiviazione a fine sagra e nuova stagione</p>
+            </div>
+        </a>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
            href="{{ route('gestione.impostazioni', absolute: false) }}">
             <div class="flex-1">
                 <span class="text-xs font-medium uppercase tracking-wide text-sagra">Sistema</span>
                 <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Impostazioni</h2>
                 <p class="mt-0.5 text-sm text-sagra-muted">Postazioni, punti cassa e PIN gestione</p>
+            </div>
+        </a>
+        <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"
+           href="{{ route('gestione.backup', absolute: false) }}">
+            <div class="flex-1">
+                <span class="text-xs font-medium uppercase tracking-wide text-sagra">Sistema</span>
+                <h2 class="mt-0.5 text-lg font-semibold text-sagra-ink">Backup</h2>
+                <p class="mt-0.5 text-sm text-sagra-muted">Elenco, download, backup ora e ripristino</p>
             </div>
         </a>
         <a class="flex items-start gap-4 px-5 py-4 text-sagra-ink no-underline transition hover:bg-sagra-softer hover:no-underline"

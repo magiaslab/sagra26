@@ -57,7 +57,7 @@
                 </p>
             @endif
 
-            <div class="mb-4 grid grid-cols-1 gap-3 md:grid-cols-3 print:grid-cols-3 print:gap-2">
+            <div class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5 print:grid-cols-5 print:gap-2">
                 <div class="report-kpi rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
                     <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Coperti</div>
                     <div class="text-3xl font-bold tabular-nums text-sagra-dark print:text-2xl">{{ $dati['coperti'] }}</div>
@@ -70,19 +70,14 @@
                 <div class="report-kpi rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
                     <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Contante / POS</div>
                     <div class="text-xl font-bold tabular-nums text-sagra-dark">{{ number_format($dati['contante'], 2, ',', '.') }} / {{ number_format($dati['pos'], 2, ',', '.') }}</div>
-                    @if ($dati['omaggi'] > 0 || $dati['sospesi'] > 0)
-                        <div class="mt-1 text-xs text-sagra-muted">
-                            @if ($dati['omaggi'] > 0)
-                                Omaggi {{ number_format($dati['omaggi'], 2, ',', '.') }} €
-                            @endif
-                            @if ($dati['omaggi'] > 0 && $dati['sospesi'] > 0)
-                                ·
-                            @endif
-                            @if ($dati['sospesi'] > 0)
-                                Sospesi {{ number_format($dati['sospesi'], 2, ',', '.') }} €
-                            @endif
-                        </div>
-                    @endif
+                </div>
+                <div class="report-kpi rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
+                    <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Omaggi</div>
+                    <div class="text-2xl font-bold tabular-nums text-sagra-dark print:text-xl">{{ number_format($dati['omaggi'], 2, ',', '.') }} €</div>
+                </div>
+                <div class="report-kpi rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
+                    <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Sospesi aperti</div>
+                    <div class="text-2xl font-bold tabular-nums text-sagra-dark print:text-xl">{{ number_format($dati['sospesi'], 2, ',', '.') }} €</div>
                 </div>
             </div>
 
@@ -113,7 +108,7 @@
                                     'bg-sagra-danger-soft/40' => $esaurito,
                                     'bg-amber-50' => $basso,
                                 ])>
-                                    <td class="px-3 py-2 font-medium text-sagra-ink">{{ $row->menuItem->nome }}</td>
+                                    <td class="px-3 py-2 font-medium text-sagra-ink">{{ $row->menuItem?->nome ?? '—' }}</td>
                                     <td class="px-3 py-2 text-right tabular-nums text-sagra-muted">{{ (int) $row->stock_iniziale }}</td>
                                     <td class="px-3 py-2 text-right text-base font-bold tabular-nums text-sagra-ink">{{ $residuo }}</td>
                                     <td class="px-3 py-2">
@@ -148,7 +143,7 @@
                             <tbody class="divide-y divide-sagra-line">
                             @forelse ($dati['per_piatto'] as $r)
                                 <tr>
-                                    <td class="px-3 py-2">{{ $r->menuItem->nome }}</td>
+                                    <td class="px-3 py-2">{{ $r->menuItem?->nome ?? '—' }}</td>
                                     <td class="px-3 py-2 text-right tabular-nums">{{ $r->qta }}</td>
                                     <td class="px-3 py-2 text-right tabular-nums">{{ number_format($r->incasso, 2, ',', '.') }} €</td>
                                 </tr>

@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Chiusura;
+use App\Models\Edizione;
 use App\Models\MenuItem;
 use App\Models\PuntoCassa;
 use App\Models\Serata;
@@ -14,6 +15,7 @@ class SerataService
 {
     public function __construct(
         private readonly RiconciliazioneService $riconciliazione,
+        private readonly EdizioneService $edizioni,
     ) {}
 
     /**
@@ -26,8 +28,14 @@ class SerataService
             throw new RuntimeException('Esiste già una serata aperta.');
         }
 
-        return DB::transaction(function () use ($data, $note, $stockOverrides, $fondiIniziali) {
+        $edizione = Edizione::corrente() ?? $this->edizioni->assicuratiCorrente();
+        if (! $edizione) {
+            throw new RuntimeException('Nessuna edizione aperta. Apri o riapri un’edizione da Gestione → Edizione.');
+        }
+
+        return DB::transaction(function () use ($data, $note, $stockOverrides, $fondiIniziali, $edizione) {
             $serata = Serata::query()->create([
+                'edizione_id' => $edizione->id,
                 'data' => $data,
                 'stato' => 'aperta',
                 'note' => $note,
@@ -91,6 +99,8 @@ class SerataService
             throw new RuntimeException('Esiste già una serata aperta: chiudila prima di riaprirne un\'altra.');
         }
 
+        $this->assertEdizioneOperativa($serata);
+
         $serata->stato = 'aperta';
         $serata->save();
 
@@ -107,6 +117,8 @@ class SerataService
             throw new RuntimeException('Chiudi la serata prima di eliminarla.');
         }
 
+        $this->assertEdizioneOperativa($serata);
+
         DB::transaction(function () use ($serata) {
             // comanda_righe / correzioni: cascadeOnDelete su comande
             $serata->comande()->delete();
@@ -114,5 +126,17 @@ class SerataService
             $serata->chiusure()->delete();
             $serata->delete();
         });
+    }
+
+    private function assertEdizioneOperativa(Serata $serata): void
+    {
+        if (! $serata->edizione_id) {
+            return;
+        }
+
+        $edizione = Edizione::query()->find($serata->edizione_id);
+        if ($edizione && ! $edizione->isAperta()) {
+            throw new RuntimeException('L’edizione di questa serata è archiviata. Riapri l’edizione da Gestione → Edizione.');
+        }
     }
 }
