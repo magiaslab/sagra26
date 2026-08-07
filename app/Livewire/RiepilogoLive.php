@@ -79,7 +79,7 @@ class RiepilogoLive extends Component
                 ->groupBy('postazione_id')
                 ->get()
                 ->map(fn ($row) => [
-                    'nome' => $row->postazione->nome,
+                    'nome' => $row->postazione?->nome ?? '—',
                     'n' => (int) $row->n,
                 ]);
         }

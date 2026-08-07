@@ -67,9 +67,10 @@ class Serata extends Model
 
         $q = static::query();
         if ($id) {
-            $q->where('edizione_id', $id);
+            return $q->where('edizione_id', $id);
         }
 
-        return $q;
+        // Nessuna edizione aperta: non esporre lo storico di edizioni archiviate.
+        return $q->whereRaw('0 = 1');
     }
 }

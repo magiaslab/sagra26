@@ -37,7 +37,7 @@
     <h3 class="mb-2 mt-4 text-base font-semibold text-sagra-ink">Piatti più venduti</h3>
     <ol class="list-decimal pl-5 text-sm text-sagra-ink">
         @foreach ($dati['top'] as $t)
-            <li>{{ $t->menuItem->nome }} — {{ $t->qta }}</li>
+            <li>{{ $t->menuItem?->nome ?? '—' }} — {{ $t->qta }}</li>
         @endforeach
     </ol>
 

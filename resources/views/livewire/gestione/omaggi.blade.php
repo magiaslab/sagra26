@@ -73,8 +73,8 @@
                 </div>
             @endif
 
-            <div class="overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
-                <table class="w-full text-left text-sm">
+            <div class="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
+                <table class="w-full min-w-[40rem] text-left text-sm">
                     <thead class="bg-sagra-softer text-xs uppercase tracking-wide text-sagra-muted">
                         <tr>
                             <th class="px-4 py-2.5 font-semibold">N.</th>
