@@ -109,8 +109,8 @@
                         @foreach ($mappature as $m)
                             <tr>
                                 <td class="px-3 py-2">{{ $m->valido_da->format('d/m/Y') }}</td>
-                                <td class="px-3 py-2">{{ $m->postazione->nome }}</td>
-                                <td class="px-3 py-2">{{ $m->puntoCassa->nome }}</td>
+                                <td class="px-3 py-2">{{ $m->postazione?->nome ?? '—' }}</td>
+                                <td class="px-3 py-2">{{ $m->puntoCassa?->nome ?? '—' }}</td>
                             </tr>
                         @endforeach
                         </tbody>

@@ -13,7 +13,7 @@
                 {{ $dati['correzioni_per_postazione']->map(fn ($c) => $c['nome'].' '.$c['n'])->implode(' · ') }}
             </p>
         @endif
-        <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div class="mb-4 grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-5">
             <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
                 <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Coperti</div>
                 <div class="text-3xl font-bold tabular-nums text-sagra-dark">{{ $dati['coperti'] }}</div>
@@ -26,6 +26,14 @@
             <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
                 <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Contante / POS</div>
                 <div class="text-xl font-bold tabular-nums text-sagra-dark">{{ number_format($dati['contante'], 2, ',', '.') }} / {{ number_format($dati['pos'], 2, ',', '.') }}</div>
+            </div>
+            <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
+                <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Omaggi</div>
+                <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ number_format($dati['omaggi'], 2, ',', '.') }} €</div>
+            </div>
+            <div class="rounded-lg bg-white p-4 shadow-sm ring-1 ring-sagra-line/80">
+                <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Sospesi aperti</div>
+                <div class="text-2xl font-bold tabular-nums text-sagra-dark">{{ number_format($dati['sospesi'], 2, ',', '.') }} €</div>
             </div>
         </div>
 
@@ -44,7 +52,7 @@
                         <tbody class="divide-y divide-sagra-line">
                         @foreach ($dati['per_piatto'] as $r)
                             <tr>
-                                <td class="px-3 py-2">{{ $r->menuItem->nome }}</td>
+                                <td class="px-3 py-2">{{ $r->menuItem?->nome ?? '—' }}</td>
                                 <td class="px-3 py-2">{{ $r->qta }}</td>
                                 <td class="px-3 py-2">{{ number_format($r->incasso, 2, ',', '.') }} €</td>
                             </tr>

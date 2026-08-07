@@ -138,7 +138,7 @@ class Serate extends Component
     {
         $this->errore = null;
         try {
-            $serata = Serata::query()->findOrFail($serataId);
+            $serata = Serata::queryEdizione()->findOrFail($serataId);
             $service->riapri($serata);
             $this->toastOk('Serata riaperta.');
             $this->flashStatus('Serata riaperta.');
@@ -153,7 +153,7 @@ class Serate extends Component
     {
         $this->errore = null;
         try {
-            $serata = Serata::query()->findOrFail($serataId);
+            $serata = Serata::queryEdizione()->findOrFail($serataId);
             $service->elimina($serata);
             $this->toastOk('Serata eliminata.');
             $this->flashStatus('Serata eliminata.');

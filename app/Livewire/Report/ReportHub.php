@@ -552,7 +552,7 @@ class ReportHub extends Component
     private function datiConsegna(Serata $serata): array
     {
         if (! $this->puntoCassaId) {
-            return [];
+            return ['errore' => 'Seleziona un punto cassa per il foglio consegna.'];
         }
         $punto = PuntoCassa::query()->findOrFail($this->puntoCassaId);
         $chiusura = Chiusura::query()

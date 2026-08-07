@@ -99,6 +99,8 @@ class SerataService
             throw new RuntimeException('Esiste già una serata aperta: chiudila prima di riaprirne un\'altra.');
         }
 
+        $this->assertEdizioneOperativa($serata);
+
         $serata->stato = 'aperta';
         $serata->save();
 
@@ -115,6 +117,8 @@ class SerataService
             throw new RuntimeException('Chiudi la serata prima di eliminarla.');
         }
 
+        $this->assertEdizioneOperativa($serata);
+
         DB::transaction(function () use ($serata) {
             // comanda_righe / correzioni: cascadeOnDelete su comande
             $serata->comande()->delete();
@@ -122,5 +126,17 @@ class SerataService
             $serata->chiusure()->delete();
             $serata->delete();
         });
+    }
+
+    private function assertEdizioneOperativa(Serata $serata): void
+    {
+        if (! $serata->edizione_id) {
+            return;
+        }
+
+        $edizione = Edizione::query()->find($serata->edizione_id);
+        if ($edizione && ! $edizione->isAperta()) {
+            throw new RuntimeException('L’edizione di questa serata è archiviata. Riapri l’edizione da Gestione → Edizione.');
+        }
     }
 }
