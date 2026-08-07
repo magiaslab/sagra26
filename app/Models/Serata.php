@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Serata extends Model
@@ -10,6 +12,7 @@ class Serata extends Model
     protected $table = 'serate';
 
     protected $fillable = [
+        'edizione_id',
         'data',
         'stato',
         'note',
@@ -20,6 +23,11 @@ class Serata extends Model
         return [
             'data' => 'date',
         ];
+    }
+
+    public function edizione(): BelongsTo
+    {
+        return $this->belongsTo(Edizione::class);
     }
 
     public function stocks(): HasMany
@@ -50,5 +58,18 @@ class Serata extends Model
             ->where('stato', 'aperta')
             ->orderByDesc('id')
             ->first();
+    }
+
+    /** Serate dell’edizione operativa (o dell’id indicato). */
+    public static function queryEdizione(?int $edizioneId = null): Builder
+    {
+        $id = $edizioneId ?? Edizione::corrente()?->id;
+
+        $q = static::query();
+        if ($id) {
+            $q->where('edizione_id', $id);
+        }
+
+        return $q;
     }
 }

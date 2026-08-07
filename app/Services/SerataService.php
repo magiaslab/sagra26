@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Chiusura;
+use App\Models\Edizione;
 use App\Models\MenuItem;
 use App\Models\PuntoCassa;
 use App\Models\Serata;
@@ -14,6 +15,7 @@ class SerataService
 {
     public function __construct(
         private readonly RiconciliazioneService $riconciliazione,
+        private readonly EdizioneService $edizioni,
     ) {}
 
     /**
@@ -26,8 +28,14 @@ class SerataService
             throw new RuntimeException('Esiste già una serata aperta.');
         }
 
-        return DB::transaction(function () use ($data, $note, $stockOverrides, $fondiIniziali) {
+        $edizione = Edizione::corrente() ?? $this->edizioni->assicuratiCorrente();
+        if (! $edizione) {
+            throw new RuntimeException('Nessuna edizione aperta. Apri o riapri un’edizione da Gestione → Edizione.');
+        }
+
+        return DB::transaction(function () use ($data, $note, $stockOverrides, $fondiIniziali, $edizione) {
             $serata = Serata::query()->create([
+                'edizione_id' => $edizione->id,
                 'data' => $data,
                 'stato' => 'aperta',
                 'note' => $note,

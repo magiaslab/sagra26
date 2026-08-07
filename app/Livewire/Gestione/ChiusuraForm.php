@@ -53,7 +53,7 @@ class ChiusuraForm extends Component
             $this->pezzi[$campo] = 0;
             $this->pezziFondo[$campo] = 0;
         }
-        $serata = Serata::corrente() ?? Serata::query()->orderByDesc('data')->first();
+        $serata = Serata::corrente() ?? Serata::queryEdizione()->orderByDesc('data')->first();
         $this->serataId = $serata?->id;
         $punto = PuntoCassa::query()->where('attivo', true)->first();
         $this->puntoCassaId = $punto?->id;
@@ -256,7 +256,7 @@ class ChiusuraForm extends Component
         $sospesiAperti = $this->sospesiAperti();
 
         return view('livewire.gestione.chiusura-form', [
-            'serate' => Serata::query()->orderByDesc('data')->get(),
+            'serate' => Serata::queryEdizione()->orderByDesc('data')->get(),
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'tagli' => Chiusura::TAGLI,
             'bloccata' => $this->serataBloccata(),

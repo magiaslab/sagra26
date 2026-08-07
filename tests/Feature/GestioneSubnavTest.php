@@ -14,6 +14,7 @@ it('mostra la subnav gestione come pulsanti con icone', function () {
         ->toContain('aria-label="Sezioni gestione"')
         ->toContain('Dashboard')
         ->toContain('Guida')
+        ->toContain('Edizione')
         ->toContain('bg-sagra text-white')
         ->toContain('<svg');
 });

@@ -6,6 +6,7 @@ use App\Http\Controllers\FacsimileController;
 use App\Http\Middleware\PinGestione;
 use App\Livewire\Gestione\ChiusuraForm;
 use App\Livewire\Gestione\Dashboard;
+use App\Livewire\Gestione\EdizionePage;
 use App\Livewire\Gestione\ImpostazioniPage;
 use App\Livewire\Gestione\MenuCrud;
 use App\Livewire\Gestione\Pin;
@@ -37,6 +38,7 @@ Route::get('/gestione/pin', Pin::class)->name('gestione.pin');
 
 Route::middleware(PinGestione::class)->prefix('gestione')->name('gestione.')->group(function () {
     Route::get('/', Dashboard::class)->name('dashboard');
+    Route::get('/edizione', EdizionePage::class)->name('edizione');
     Route::get('/serate', Serate::class)->name('serate');
     Route::get('/menu', MenuCrud::class)->name('menu');
     Route::get('/menu/facsimile', [FacsimileController::class, 'index'])->name('menu.facsimile');
