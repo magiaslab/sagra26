@@ -43,7 +43,11 @@ class CassaController extends Controller
         $menu = MenuItem::query()
             ->with('categoria')
             ->where('attivo', true)
-            ->orderBy('ordinamento')
+            ->join('categorie', 'categorie.id', '=', 'menu_items.categoria_id')
+            ->orderBy('categorie.ordinamento')
+            ->orderBy('menu_items.ordinamento')
+            ->orderBy('menu_items.id')
+            ->select('menu_items.*')
             ->get()
             ->map(fn (MenuItem $item) => [
                 'id' => $item->id,

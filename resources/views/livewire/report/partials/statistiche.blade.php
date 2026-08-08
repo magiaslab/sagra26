@@ -6,7 +6,7 @@
     };
 @endphp
 <div class="report-sheet rounded-lg bg-white p-5 shadow-sm ring-1 ring-sagra-line/80">
-    <h2 class="mt-0 text-xl font-semibold text-sagra-ink">{{ $impostazioni->intestazione_nome }} — Statistiche {{ $completo ? '(completo)' : 'fino al '.$serata->data->format('d/m/Y') }}</h2>
+    <h2 class="mt-0 text-xl font-semibold text-sagra-ink">{{ $impostazioni->intestazione_nome }} — Statistiche {{ $completo ? '(tutta l’edizione)' : 'serata '.$serata->data->format('d/m/Y') }}</h2>
     <div class="my-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div class="report-kpi rounded-lg bg-sagra-softer px-4 py-3">
             <div class="text-xs font-medium uppercase tracking-wide text-sagra-muted">Coperti</div>

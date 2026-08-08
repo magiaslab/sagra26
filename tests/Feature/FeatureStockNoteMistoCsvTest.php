@@ -202,9 +202,12 @@ it('mostra confronto tra due serate nel report hub', function () {
     Livewire::test(ReportHub::class)
         ->set('serataId', $s2->id)
         ->set('tipo', 'confronto')
-        ->set('serataConfrontoId', $s1->id)
+        ->set('serataDaId', $s1->id)
         ->assertSee('Confronto serate')
-        ->assertSee('Acqua Naturale 1L');
+        ->assertSee('Dettaglio per serata')
+        ->assertSee('Acqua Naturale 1L')
+        ->assertSee($s1->data->format('d/m/Y'))
+        ->assertSee($s2->data->format('d/m/Y'));
 });
 
 it('legge e salva soglia stock alert nelle impostazioni', function () {

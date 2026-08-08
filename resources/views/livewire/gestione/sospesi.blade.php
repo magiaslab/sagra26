@@ -56,6 +56,8 @@
                             <td class="px-4 py-3 text-right">
                                 <div class="flex flex-wrap justify-end gap-2">
                                     <a class="inline-flex items-center rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
+                                       href="{{ route('cassa', absolute: false) }}?richiamo={{ $c->numero_progressivo }}">Modifica</a>
+                                    <a class="inline-flex items-center rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
                                        href="{{ route('cassa.stampa', $c, absolute: false) }}" target="_blank">Stampa</a>
                                     <button type="button" class="inline-flex items-center rounded-md bg-sagra px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-sagra-dark"
                                             wire:click="apriChiusura({{ $c->id }})">Chiudi / Incassa</button>
