@@ -69,14 +69,33 @@ return new class extends Migration
             $table->string('autorizzato_da', 80)->nullable();
             $table->string('nominativo', 80)->nullable();
             $table->string('pagamento_note', 255)->nullable();
+            $table->unsignedTinyInteger('sconto_percentuale')->nullable();
             $table->timestamp('sospeso_chiuso_at')->nullable();
             $table->boolean('era_sospeso')->default(false);
             $table->timestamps();
         });
 
+        $haSconto = Schema::hasColumn('comande', 'sconto_percentuale');
         $cols = 'id, numero_progressivo, serata_id, postazione_id, punto_cassa_id, coperti, stato, version, '
             .'metodo_pagamento, importo_contante, importo_pos, totale, motivo_annullo, tavolo, note, '
-            .'autorizzato_da, nominativo, pagamento_note, sospeso_chiuso_at, era_sospeso, created_at, updated_at';
+            .'autorizzato_da, nominativo, pagamento_note, '
+            .($haSconto ? 'sconto_percentuale, ' : '')
+            .'sospeso_chiuso_at, era_sospeso, created_at, updated_at';
+        if (! $haSconto) {
+            // Tabella sorgente senza colonna: inseriamo NULL esplicito nella destinazione.
+            $colsInsert = 'id, numero_progressivo, serata_id, postazione_id, punto_cassa_id, coperti, stato, version, '
+                .'metodo_pagamento, importo_contante, importo_pos, totale, motivo_annullo, tavolo, note, '
+                .'autorizzato_da, nominativo, pagamento_note, sconto_percentuale, sospeso_chiuso_at, era_sospeso, created_at, updated_at';
+            $colsSelect = 'id, numero_progressivo, serata_id, postazione_id, punto_cassa_id, coperti, stato, version, '
+                .'metodo_pagamento, importo_contante, importo_pos, totale, motivo_annullo, tavolo, note, '
+                .'autorizzato_da, nominativo, pagamento_note, NULL, sospeso_chiuso_at, era_sospeso, created_at, updated_at';
+            DB::statement("INSERT INTO comande_fix_metodo ({$colsInsert}) SELECT {$colsSelect} FROM comande");
+            Schema::drop('comande');
+            Schema::rename('comande_fix_metodo', 'comande');
+            Schema::enableForeignKeyConstraints();
+
+            return;
+        }
 
         DB::statement("INSERT INTO comande_fix_metodo ({$cols}) SELECT {$cols} FROM comande");
 

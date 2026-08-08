@@ -33,13 +33,13 @@ class Omaggi extends Component
 
         $omaggi = $this->queryOmaggi($serata->id);
         if ($omaggi->isEmpty()) {
-            $this->toastWarn('Nessun omaggio da esportare.');
+            $this->toastWarn('Nessun omaggio o sconto da esportare.');
 
             return null;
         }
 
-        $filename = 'omaggi-'.$serata->data->format('Y-m-d').'.csv';
-        $this->toastOk('Export omaggi avviato.');
+        $filename = 'omaggi-sconti-'.$serata->data->format('Y-m-d').'.csv';
+        $this->toastOk('Export omaggi/sconti avviato.');
 
         return response()->streamDownload(function () use ($serata, $omaggi) {
             $out = fopen('php://output', 'w');
@@ -48,13 +48,17 @@ class Omaggi extends Component
                 'data_serata',
                 'numero',
                 'ora',
+                'tipo',
+                'sconto_percentuale',
                 'ospite',
                 'autorizzato_da',
                 'note',
                 'cassa',
                 'punto_cassa',
                 'coperti',
-                'totale_valore',
+                'valore_sconto',
+                'totale_pagato',
+                'metodo_pagamento',
                 'voci',
             ], ';');
 
@@ -67,13 +71,17 @@ class Omaggi extends Component
                     $serata->data->format('Y-m-d'),
                     $c->numero_progressivo,
                     optional($c->created_at)?->format('H:i'),
+                    $c->isOmaggio() ? 'OMAGGIO' : ('SCONTO '.(int) $c->sconto_percentuale.'%'),
+                    (int) ($c->sconto_percentuale ?? 0),
                     $c->nominativo,
                     $c->autorizzato_da,
                     $c->pagamento_note,
                     $c->postazione?->nome,
                     $c->puntoCassa?->nome,
                     (int) $c->coperti,
-                    number_format((float) $c->totale, 2, '.', ''),
+                    number_format($c->importoSconto(), 2, '.', ''),
+                    number_format($c->isOmaggio() ? 0.0 : (float) $c->totale, 2, '.', ''),
+                    $c->metodo_pagamento,
                     $voci,
                 ], ';');
             }
@@ -83,8 +91,8 @@ class Omaggi extends Component
                 'RIEPILOGO',
                 'comande',
                 $omaggi->count(),
-                'totale_valore',
-                number_format(round($omaggi->sum('totale'), 2), 2, '.', ''),
+                'valore_sconto_totale',
+                number_format(round($omaggi->sum(fn (Comanda $c) => $c->importoSconto()), 2), 2, '.', ''),
                 'coperti',
                 (int) $omaggi->sum('coperti'),
             ], ';');
@@ -106,7 +114,7 @@ class Omaggi extends Component
             'serata' => $serata,
             'omaggi' => $omaggi,
             'impostazioni' => Impostazione::corrente(),
-            'totaleValore' => round($omaggi->sum('totale'), 2),
+            'totaleValore' => round($omaggi->sum(fn (Comanda $c) => $c->importoSconto()), 2),
             'totaleCoperti' => (int) $omaggi->sum('coperti'),
             'perAutorizzatore' => $this->riepilogoPerAutorizzatore($omaggi),
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
@@ -128,7 +136,13 @@ class Omaggi extends Component
             ->with(['postazione', 'puntoCassa', 'righe.menuItem'])
             ->where('serata_id', $serataId)
             ->where('stato', 'stampata')
-            ->where('metodo_pagamento', 'omaggio')
+            ->where(function ($q) {
+                $q->where('metodo_pagamento', 'omaggio')
+                    ->orWhere(function ($q2) {
+                        $q2->where('sconto_percentuale', '>', 0)
+                            ->where('sconto_percentuale', '<', 100);
+                    });
+            })
             ->orderByDesc('numero_progressivo')
             ->get();
     }
@@ -141,7 +155,7 @@ class Omaggi extends Component
             ->map(fn (Collection $group, string $nome) => [
                 'nome' => $nome,
                 'count' => $group->count(),
-                'totale' => round($group->sum('totale'), 2),
+                'totale' => round($group->sum(fn (Comanda $c) => $c->importoSconto()), 2),
             ])
             ->sortByDesc('totale')
             ->values();

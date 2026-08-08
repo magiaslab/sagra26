@@ -225,6 +225,7 @@ class CassaController extends Controller
             'autorizzato_da' => 'nullable|string|max:80',
             'nominativo' => 'nullable|string|max:80',
             'pagamento_note' => 'nullable|string|max:255',
+            'sconto_percentuale' => 'nullable|integer|min:0|max:100',
             'righe' => 'required|array|min:1',
             'righe.*.menu_item_id' => 'required|exists:menu_items,id',
             'righe.*.quantita' => 'required|integer|min:1',
@@ -240,7 +241,38 @@ class CassaController extends Controller
             return $guard;
         }
 
-        if (in_array($data['metodo_pagamento'], ['omaggio', 'sospeso'], true)) {
+        $esistente = isset($data['comanda_id'])
+            ? Comanda::query()->find($data['comanda_id'])
+            : null;
+
+        $scontoRichiesto = (int) ($data['sconto_percentuale'] ?? 0);
+        if ($data['metodo_pagamento'] === 'omaggio') {
+            $scontoRichiesto = 100;
+        } elseif ($data['metodo_pagamento'] === 'sospeso') {
+            $scontoRichiesto = 0;
+        }
+        $isScontoParziale = $scontoRichiesto > 0 && $scontoRichiesto < 100;
+        $richiedePin = in_array($data['metodo_pagamento'], ['omaggio', 'sospeso'], true)
+            || $isScontoParziale;
+
+        // Correzione con stesso sconto già autorizzato: niente nuovo PIN.
+        if ($isScontoParziale && $esistente
+            && (int) ($esistente->sconto_percentuale ?? 0) === $scontoRichiesto
+            && filled($esistente->autorizzato_da)
+            && filled($esistente->nominativo)) {
+            $richiedePin = false;
+            if (! filled($data['autorizzato_da'] ?? null)) {
+                $data['autorizzato_da'] = $esistente->autorizzato_da;
+            }
+            if (! filled($data['nominativo'] ?? null)) {
+                $data['nominativo'] = $esistente->nominativo;
+            }
+            if (! filled($data['pagamento_note'] ?? null)) {
+                $data['pagamento_note'] = $esistente->pagamento_note;
+            }
+        }
+
+        if ($richiedePin) {
             $pin = (string) ($data['pin_autorizzazione'] ?? '');
             $atteso = (string) Impostazione::corrente()->pin_gestione;
             if ($pin === '' || ! hash_equals($atteso, $pin)) {
@@ -249,10 +281,6 @@ class CassaController extends Controller
         }
 
         try {
-            $esistente = isset($data['comanda_id'])
-                ? Comanda::query()->find($data['comanda_id'])
-                : null;
-
             $comanda = $service->confermaEStampa(
                 $serata,
                 Postazione::query()->findOrFail($data['postazione_id']),
@@ -269,6 +297,7 @@ class CassaController extends Controller
                 $data['autorizzato_da'] ?? null,
                 $data['nominativo'] ?? null,
                 $data['pagamento_note'] ?? null,
+                $scontoRichiesto > 0 ? $scontoRichiesto : null,
             );
 
             return response()->json([
@@ -351,6 +380,7 @@ class CassaController extends Controller
             'coperti' => $comanda->coperti,
             'metodo_pagamento' => $comanda->metodo_pagamento,
             'totale' => (float) $comanda->totale,
+            'sconto_percentuale' => (int) ($comanda->sconto_percentuale ?? 0),
             'tavolo' => $comanda->tavolo,
             'note' => $comanda->note,
             'autorizzato_da' => $comanda->autorizzato_da,

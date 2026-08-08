@@ -361,7 +361,12 @@
         <div class="max-h-[92vh] w-[min(440px,92vw)] overflow-y-auto rounded-lg bg-white p-6 text-center shadow-xl ring-1 ring-sagra-line" @click.stop>
             <h2 class="text-lg font-semibold text-sagra-ink">
                 Comanda <span x-text="numeroDiSerataDisplay"></span> di stasera
-                <span class="block text-sm font-medium text-sagra-muted">rif. #<span x-text="numeroDisplay"></span> · <span x-text="formatEuro(totale)"></span></span>
+                <span class="block text-sm font-medium text-sagra-muted">
+                    rif. #<span x-text="numeroDisplay"></span> ·
+                    <span x-text="formatEuro(totaleDaPagare)"></span>
+                    <span x-show="scontoPercentuale > 0 && scontoPercentuale < 100" x-cloak
+                          x-text="' (sconto ' + scontoPercentuale + '% su ' + formatEuro(totale) + ')'"></span>
+                </span>
             </h2>
             <template x-if="!comandaId">
                 <p class="mt-2 text-sm text-sagra-muted">Come paga il cliente?</p>
@@ -419,7 +424,7 @@
                 </div>
                 <div class="mt-3 grid grid-cols-2 gap-3">
                     <button type="button" class="rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriAuthSpeciale('omaggio')">
-                        Omaggio
+                        Omaggio / Sconto
                     </button>
                     <button type="button" class="rounded-md bg-white px-3 py-3 text-sm font-semibold text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="apriAuthSpeciale('sospeso')">
                         Sospeso
@@ -429,7 +434,7 @@
 
             <div class="mt-4 space-y-3 text-left" x-show="mostraAuthSpeciale" x-cloak>
                 <p class="text-center text-sm font-semibold text-sagra-ink"
-                   x-text="authMetodo === 'omaggio' ? 'Omaggio — autorizzazione PIN' : 'Sospeso — autorizzazione PIN'"></p>
+                   x-text="authMetodo === 'omaggio' ? 'Omaggio / Sconto — PIN' : 'Sospeso — autorizzazione PIN'"></p>
                 <div>
                     <label class="mb-1 block text-xs font-medium text-sagra-muted">PIN gestione</label>
                     <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="password" inputmode="numeric" autocomplete="off" x-model="pinAutorizzazione" x-ref="pinAuth">
@@ -446,6 +451,23 @@
                     <label class="mb-1 block text-xs font-medium text-sagra-muted">Note</label>
                     <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra" type="text" maxlength="255" x-model="pagamentoNote">
                 </div>
+                <template x-if="authMetodo === 'omaggio'">
+                    <div class="space-y-3 rounded-md bg-sagra-softer px-3 py-3 ring-1 ring-inset ring-sagra-line">
+                        <label class="flex items-center gap-2 text-sm font-semibold text-sagra-ink">
+                            <input type="checkbox" class="size-4 rounded border-sagra-line text-sagra focus:ring-sagra" x-model="flagOmaggio">
+                            Omaggio (100% — niente da pagare)
+                        </label>
+                        <div x-show="!flagOmaggio" x-cloak>
+                            <label class="mb-1 block text-xs font-medium text-sagra-muted">Sconto %</label>
+                            <input class="block w-full rounded-md bg-white px-2 py-2 text-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra"
+                                   type="number" min="1" max="99" step="1" x-model.number="scontoPercentualeInput"
+                                   placeholder="es. 30">
+                            <p class="mt-1 text-xs text-sagra-muted"
+                               x-text="'In comanda comparirà «SCONTO ' + (scontoPercentualeInput || '?') + '%» · da pagare ' + formatEuro(totaleScontatoAnteprima)"></p>
+                        </div>
+                        <p class="text-xs text-sagra-muted" x-show="flagOmaggio" x-cloak>In comanda comparirà «OMAGGIO».</p>
+                    </div>
+                </template>
                 <div class="grid grid-cols-2 gap-2 pt-1">
                     <button type="button" class="rounded-md bg-white px-3 py-2.5 text-sm font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer" @click="annullaAuthSpeciale()">Indietro</button>
                     <button type="button" class="rounded-md bg-sagra px-3 py-2.5 text-sm font-semibold text-white hover:bg-sagra-dark" @click="confermaAuthSpeciale()">Conferma</button>
@@ -515,16 +537,18 @@
                                 </template>
                                 <span x-text="deltaCorrezioneMessaggio"></span>
                                 <span class="a4-corr-riepilogo-sub"
-                                      x-text="'prima ' + formatEuro(totaleOriginale) + ' → ora ' + formatEuro(totale)"></span>
+                                      x-text="'prima ' + formatEuro(totaleOriginale) + ' → ora ' + formatEuro(totaleDaPagare)"></span>
                             </div>
                             @if (filled($impostazioni->comunicazione_comanda))
                                 <div class="a4-comunicazione" x-text="comunicazioneComanda"></div>
                             @endif
-                            <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totale)"></span></div>
+                            <div class="a4-totale">TOTALE PAGATO <span x-text="formatEuro(totaleDaPagare)"></span></div>
+                            <div class="a4-meta" x-show="scontoPercentuale > 0 && scontoPercentuale < 100" x-cloak
+                                 x-text="'Lordo ' + formatEuro(totale) + ' − sconto ' + scontoPercentuale + '%'"></div>
                             <div class="a4-pay"
-                                 :class="'a4-pay--' + (metodo || 'contante')"
+                                 :class="'a4-pay--' + classePayAnteprima"
                                  x-text="badgeMetodoAnteprima"></div>
-                            <div class="a4-meta" x-show="metodo === 'omaggio' || metodo === 'sospeso'" x-cloak
+                            <div class="a4-meta" x-show="metodo === 'omaggio' || metodo === 'sospeso' || (scontoPercentuale > 0 && scontoPercentuale < 100)" x-cloak
                                  x-text="(autorizzatoDa ? ('Aut. ' + autorizzatoDa) : '') + (nominativoPagamento ? (' · ' + nominativoPagamento) : '')"></div>
                         </section>
                         <div class="a4-produzione">
@@ -777,6 +801,9 @@ function cassaApp(cfg) {
         autorizzatoDa: '',
         nominativoPagamento: '',
         pagamentoNote: '',
+        flagOmaggio: true,
+        scontoPercentualeInput: 30,
+        scontoPercentuale: 0,
         importoContanteMisto: 0,
         importoPosMisto: 0,
         comandaId: null,
@@ -843,6 +870,29 @@ function cassaApp(cfg) {
             return Math.round(t * 100) / 100;
         },
 
+        /** Totale dopo sconto (omaggio → 0 in cassa; in stampa omaggio usa il lordo). */
+        get totaleDaPagare() {
+            if (this.metodo === 'omaggio' || (this.scontoPercentuale >= 100)) {
+                return this.metodo === 'omaggio' ? this.totale : 0;
+            }
+            const p = Number(this.scontoPercentuale) || 0;
+            if (p > 0 && p < 100) {
+                return Math.round(this.totale * (100 - p)) / 100;
+            }
+            return this.totale;
+        },
+
+        get totaleScontatoAnteprima() {
+            const p = Math.min(99, Math.max(1, Number(this.scontoPercentualeInput) || 0));
+            return Math.round(this.totale * (100 - p)) / 100;
+        },
+
+        get classePayAnteprima() {
+            if (this.metodo === 'omaggio') return 'omaggio';
+            if (this.scontoPercentuale > 0 && this.scontoPercentuale < 100) return 'sconto';
+            return this.metodo || 'contante';
+        },
+
         /** In correzione: prezzo già pagato sulla comanda; voci nuove → prezzo menù. */
         prezzoUnitario(item) {
             if (this.comandaId && this.prezziStorici && this.prezziStorici[item.id] != null) {
@@ -854,7 +904,7 @@ function cassaApp(cfg) {
         /** Differenza vs totale al richiamo: >0 da chiedere, <0 da restituire. */
         get deltaCorrezione() {
             if (!this.comandaId || this.totaleOriginale == null) return 0;
-            return Math.round((this.totale - Number(this.totaleOriginale)) * 100) / 100;
+            return Math.round((this.totaleDaPagare - Number(this.totaleOriginale)) * 100) / 100;
         },
 
         get deltaCorrezioneLabel() {
@@ -865,16 +915,19 @@ function cassaApp(cfg) {
 
         get deltaCorrezioneMessaggio() {
             if (this.metodoOriginale === 'sospeso') {
-                return 'Sospeso da saldare · ' + this.formatEuro(this.totale);
+                return 'Sospeso da saldare · ' + this.formatEuro(this.totaleDaPagare);
             }
             const d = this.deltaCorrezione;
             if (d > 0) return 'Da chiedere ' + this.formatEuro(d);
             if (d < 0) return 'Da restituire ' + this.formatEuro(Math.abs(d));
-            return 'Nessuna differenza · ' + this.formatEuro(this.totale);
+            return 'Nessuna differenza · ' + this.formatEuro(this.totaleDaPagare);
         },
 
         get mostraOpzioneMisto() {
-            return !this.comandaId || this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio';
+            return !this.comandaId
+                || this.metodoOriginale === 'sospeso'
+                || this.metodoOriginale === 'omaggio'
+                || (this.scontoPercentuale > 0 && this.scontoPercentuale < 100);
         },
 
         get labelPulsanteContante() {
@@ -896,27 +949,35 @@ function cassaApp(cfg) {
         get badgeMetodoAnteprima() {
             if (this.metodo === 'omaggio') return 'OMAGGIO';
             if (this.metodo === 'sospeso') return 'SOSPESO';
+            const scontoLabel = (this.scontoPercentuale > 0 && this.scontoPercentuale < 100)
+                ? ('SCONTO ' + this.scontoPercentuale + '%')
+                : null;
             if (this.comandaId && this.metodoOriginale === 'sospeso') {
-                return this.labelMetodo(this.metodo) + ' (chiusura)';
+                const chiusura = this.labelMetodo(this.metodo) + ' (chiusura)';
+                return scontoLabel ? (scontoLabel + ' · ' + chiusura) : chiusura;
             }
             if (this.comandaId && this.deltaCorrezione === 0) {
-                const label = this.labelMetodo(this.metodo);
+                let label = this.labelMetodo(this.metodo);
                 if (this.metodoOriginale && this.metodo !== this.metodoOriginale) {
-                    return label + ' (corretto)';
+                    label = label + ' (corretto)';
                 }
-                return label;
+                return scontoLabel ? (scontoLabel + ' · ' + label) : label;
             }
             if (this.comandaId && this.deltaCorrezione < 0) {
-                return this.metodo === 'pos' ? 'RESTO POS' : 'RESTO CONTANTE';
+                const resto = this.metodo === 'pos' ? 'RESTO POS' : 'RESTO CONTANTE';
+                return scontoLabel ? (scontoLabel + ' · ' + resto) : resto;
             }
             if (this.comandaId && this.deltaCorrezione > 0) {
-                return this.metodo === 'pos' ? '+ POS' : '+ CONTANTE';
+                const plus = this.metodo === 'pos' ? '+ POS' : '+ CONTANTE';
+                return scontoLabel ? (scontoLabel + ' · ' + plus) : plus;
             }
             if (this.metodo === 'misto') {
-                return 'MISTO · € ' + this.formatEuro(this.importoContanteMisto)
+                const misto = 'MISTO · € ' + this.formatEuro(this.importoContanteMisto)
                     + ' + ▭ ' + this.formatEuro(this.importoPosMisto);
+                return scontoLabel ? (scontoLabel + ' · ' + misto) : misto;
             }
-            return this.labelMetodo(this.metodo);
+            const base = this.labelMetodo(this.metodo);
+            return scontoLabel ? (scontoLabel + ' · ' + base) : base;
         },
 
         labelMetodo(m) {
@@ -1381,6 +1442,9 @@ function cassaApp(cfg) {
             this.autorizzatoDa = '';
             this.nominativoPagamento = '';
             this.pagamentoNote = '';
+            this.flagOmaggio = true;
+            this.scontoPercentualeInput = 30;
+            this.scontoPercentuale = 0;
             this.importoContanteMisto = 0;
             this.importoPosMisto = 0;
             this.errore = null;
@@ -1432,6 +1496,12 @@ function cassaApp(cfg) {
             this.autorizzatoDa = '';
             this.nominativoPagamento = this.nominativoOriginale || '';
             this.pagamentoNote = '';
+            this.flagOmaggio = true;
+            this.scontoPercentualeInput = 30;
+            // In correzione mantiene lo sconto già applicato sulla comanda.
+            if (!this.comandaId) {
+                this.scontoPercentuale = 0;
+            }
             this.importoContanteMisto = 0;
             this.importoPosMisto = 0;
             this.modalPagamento = true;
@@ -1451,7 +1521,7 @@ function cassaApp(cfg) {
 
         apriMisto() {
             this.mostraMisto = true;
-            this.importoContanteMisto = this.totale;
+            this.importoContanteMisto = this.totaleDaPagare;
             this.importoPosMisto = 0;
         },
 
@@ -1463,6 +1533,10 @@ function cassaApp(cfg) {
             this.autorizzatoDa = '';
             this.nominativoPagamento = this.nominativoOriginale || '';
             this.pagamentoNote = '';
+            this.flagOmaggio = true;
+            this.scontoPercentualeInput = (this.scontoPercentuale > 0 && this.scontoPercentuale < 100)
+                ? this.scontoPercentuale
+                : 30;
             this.$nextTick(() => this.$refs.pinAuth?.focus());
         },
 
@@ -1485,20 +1559,41 @@ function cassaApp(cfg) {
                 this.errore = this.authMetodo === 'omaggio' ? 'Indica il nome ospite.' : 'Indica il nominativo.';
                 return;
             }
+            if (this.authMetodo === 'omaggio' && !this.flagOmaggio) {
+                const p = Math.round(Number(this.scontoPercentualeInput) || 0);
+                if (p < 1 || p > 99) {
+                    this.errore = 'Inserisci uno sconto tra 1% e 99% (oppure attiva Omaggio).';
+                    return;
+                }
+                this.errore = null;
+                this.scontoPercentuale = p;
+                this.mostraAuthSpeciale = false;
+                this.authMetodo = null;
+                // Residuo da incassare con Contante / POS / Misto.
+                this.mostraMisto = false;
+                return;
+            }
+            if (this.authMetodo === 'omaggio' && this.flagOmaggio) {
+                this.scontoPercentuale = 100;
+            }
+            if (this.authMetodo === 'sospeso') {
+                this.scontoPercentuale = 0;
+            }
             this.errore = null;
             this.scegliMetodo(this.authMetodo);
         },
 
         syncMistoPos() {
             const c = Math.round((Number(this.importoContanteMisto) || 0) * 100) / 100;
-            this.importoPosMisto = Math.max(0, Math.round((this.totale - c) * 100) / 100);
+            this.importoPosMisto = Math.max(0, Math.round((this.totaleDaPagare - c) * 100) / 100);
         },
 
         confermaMisto() {
             const c = Math.round((Number(this.importoContanteMisto) || 0) * 100) / 100;
             const p = Math.round((Number(this.importoPosMisto) || 0) * 100) / 100;
-            if (c < 0 || p < 0 || Math.abs((c + p) - this.totale) > 0.01) {
-                this.errore = 'Misto: contante + POS devono eguagliare il totale.';
+            if (c < 0 || p < 0 || Math.abs((c + p) - this.totaleDaPagare) > 0.01) {
+                this.errore = 'Misto: contante + POS devono eguagliare il totale' +
+                    (this.scontoPercentuale > 0 && this.scontoPercentuale < 100 ? ' scontato.' : '.');
                 return;
             }
             this.importoContanteMisto = c;
@@ -1524,12 +1619,18 @@ function cassaApp(cfg) {
                         quantita: r.q,
                     })),
                 };
-                if (this.metodo === 'misto' && (!this.comandaId || this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio')) {
+                if (this.metodo === 'misto' && (!this.comandaId || this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio' || (this.scontoPercentuale > 0 && this.scontoPercentuale < 100))) {
                     payload.importo_contante = this.importoContanteMisto;
                     payload.importo_pos = this.importoPosMisto;
                 }
-                if (this.metodo === 'omaggio' || this.metodo === 'sospeso') {
-                    payload.pin_autorizzazione = this.pinAutorizzazione;
+                const isSconto = this.scontoPercentuale > 0 && this.scontoPercentuale < 100;
+                if (isSconto) {
+                    payload.sconto_percentuale = this.scontoPercentuale;
+                }
+                if (this.metodo === 'omaggio' || this.metodo === 'sospeso' || isSconto) {
+                    if (this.pinAutorizzazione) {
+                        payload.pin_autorizzazione = this.pinAutorizzazione;
+                    }
                     payload.autorizzato_da = String(this.autorizzatoDa || '').trim();
                     payload.nominativo = String(this.nominativoPagamento || '').trim();
                     payload.pagamento_note = String(this.pagamentoNote || '').trim() || null;
@@ -1733,6 +1834,14 @@ function cassaApp(cfg) {
                 this.metodoOriginale = data.metodo_pagamento || null;
                 this.nominativoOriginale = data.nominativo || null;
                 this.postazioneOriginale = data.postazione || null;
+                this.scontoPercentuale = Number(data.sconto_percentuale) || 0;
+                if (this.scontoPercentuale >= 100) {
+                    // Omaggio: in correzione riparte da zero; si rieffettua da Omaggio/Sconto.
+                    this.scontoPercentuale = 0;
+                }
+                this.autorizzatoDa = data.autorizzato_da || '';
+                this.nominativoPagamento = data.nominativo || '';
+                this.pagamentoNote = data.pagamento_note || '';
                 const orig = {};
                 const prezzi = {};
                 for (const r of data.righe) {

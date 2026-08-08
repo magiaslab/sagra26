@@ -39,7 +39,7 @@ it('pagina omaggi elenca ospite e autorizzatore', function () {
     $this->withSession(['gestione_sbloccata' => true])
         ->get(route('gestione.omaggi'))
         ->assertOk()
-        ->assertSee('Omaggi')
+        ->assertSee('Omaggi e sconti')
         ->assertSee('Ospite VIP')
         ->assertSee('Mario Rossi')
         ->assertSee('tavolo direzione')
@@ -73,7 +73,7 @@ it('export csv omaggi contiene ospite autorizzatore e riepilogo', function () {
     $component = Livewire::test(Omaggi::class)
         ->set('serataId', $serata->id)
         ->call('exportCsv')
-        ->assertFileDownloaded('omaggi-'.$serata->data->format('Y-m-d').'.csv');
+        ->assertFileDownloaded('omaggi-sconti-'.$serata->data->format('Y-m-d').'.csv');
 
     $content = base64_decode(data_get($component->effects, 'download.content'));
     expect($content)
@@ -81,6 +81,7 @@ it('export csv omaggi contiene ospite autorizzatore e riepilogo', function () {
         ->toContain('autorizzato_da')
         ->toContain('Bianchi')
         ->toContain('Luca')
+        ->toContain('OMAGGIO')
         ->toContain('RIEPILOGO');
 });
 

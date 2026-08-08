@@ -38,6 +38,7 @@ it('ripara FK comande_bak e permette stampa sospeso e omaggio', function () {
         $table->string('autorizzato_da', 80)->nullable();
         $table->string('nominativo', 80)->nullable();
         $table->string('pagamento_note', 255)->nullable();
+        $table->unsignedTinyInteger('sconto_percentuale')->nullable();
         $table->timestamp('sospeso_chiuso_at')->nullable();
         $table->boolean('era_sospeso')->default(false);
         $table->timestamps();

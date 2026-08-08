@@ -47,6 +47,7 @@ class ComandaService
         ?string $autorizzatoDa = null,
         ?string $nominativo = null,
         ?string $pagamentoNote = null,
+        ?int $scontoPercentuale = null,
     ): Comanda {
         if (! $serata->isAperta()) {
             throw new RuntimeException('Nessuna serata aperta.');
@@ -56,17 +57,24 @@ class ComandaService
             throw new RuntimeException('Metodo di pagamento non valido.');
         }
 
-        if (in_array($metodoPagamento, ['omaggio', 'sospeso'], true)) {
+        $scontoPercentuale = $this->normalizzaScontoPercentuale($metodoPagamento, $scontoPercentuale);
+        $isScontoParziale = $scontoPercentuale > 0 && $scontoPercentuale < 100;
+
+        if (in_array($metodoPagamento, ['omaggio', 'sospeso'], true) || $isScontoParziale) {
             if ($autorizzatoDa === null || trim($autorizzatoDa) === '') {
                 throw new RuntimeException('Indica chi ha autorizzato.');
             }
             if ($nominativo === null || trim($nominativo) === '') {
                 throw new RuntimeException(
-                    $metodoPagamento === 'omaggio'
-                        ? 'Indica il nome ospite.'
-                        : 'Indica il nominativo del sospeso.'
+                    $metodoPagamento === 'sospeso'
+                        ? 'Indica il nominativo del sospeso.'
+                        : 'Indica il nome ospite.'
                 );
             }
+        }
+
+        if ($isScontoParziale && ! in_array($metodoPagamento, ['contante', 'pos', 'misto'], true)) {
+            throw new RuntimeException('Con lo sconto scegli Contante, POS o Misto per il residuo.');
         }
 
         $puntoCassa = $postazione->puntoCassaAttivo($serata->data->toDateString());
@@ -101,6 +109,8 @@ class ComandaService
             $autorizzatoDa,
             $nominativo,
             $pagamentoNote,
+            $scontoPercentuale,
+            $isScontoParziale,
         ) {
             if ($esistente) {
                 $comanda = Comanda::query()->with('righe.menuItem')->lockForUpdate()->findOrFail($esistente->id);
@@ -167,7 +177,7 @@ class ComandaService
                 $prezziStorici = [];
             }
 
-            $totale = 0.0;
+            $totaleLordo = 0.0;
             $comanda->coperti = $coperti;
             $comanda->stato = 'stampata';
             $comanda->totale = 0;
@@ -186,7 +196,7 @@ class ComandaService
                     ? $prezziStorici[(int) $item->id]
                     : (float) $item->prezzo;
                 $sub = round($riga['quantita'] * $prezzo, 2);
-                $totale += $sub;
+                $totaleLordo += $sub;
 
                 ComandaRiga::query()->create([
                     'comanda_id' => $comanda->id,
@@ -198,8 +208,16 @@ class ComandaService
                 ]);
             }
 
-            $totale = round($totale, 2);
+            $totaleLordo = round($totaleLordo, 2);
+            // Omaggio: totale = valore lordo (non incassato). Sconto: totale = residuo da pagare.
+            // Pagamento pieno: totale = lordo.
+            $totale = $metodoPagamento === 'omaggio'
+                ? $totaleLordo
+                : ($isScontoParziale
+                    ? round($totaleLordo * (100 - $scontoPercentuale) / 100, 2)
+                    : $totaleLordo);
             $comanda->totale = $totale;
+            $comanda->sconto_percentuale = $scontoPercentuale > 0 ? $scontoPercentuale : null;
             $comanda->tavolo = ($tavolo !== null && trim($tavolo) !== '')
                 ? mb_substr(trim($tavolo), 0, 40)
                 : null;
@@ -241,6 +259,26 @@ class ComandaService
 
             return $comanda->load(['righe.menuItem.categoria', 'postazione', 'puntoCassa', 'serata']);
         });
+    }
+
+    private function normalizzaScontoPercentuale(string $metodoPagamento, ?int $scontoPercentuale): int
+    {
+        if ($metodoPagamento === 'omaggio') {
+            return 100;
+        }
+        if ($metodoPagamento === 'sospeso') {
+            return 0;
+        }
+
+        $p = (int) ($scontoPercentuale ?? 0);
+        if ($p < 0 || $p > 100) {
+            throw new RuntimeException('Percentuale sconto non valida.');
+        }
+        if ($p === 100) {
+            throw new RuntimeException('Per lo sconto al 100% usa Omaggio (flag acceso).');
+        }
+
+        return $p;
     }
 
     /**
@@ -335,8 +373,11 @@ class ComandaService
         ?string $pagamentoNote,
     ): void {
         $metodo = (string) $comanda->metodo_pagamento;
+        $sconto = (int) ($comanda->sconto_percentuale ?? 0);
+        $speciale = in_array($metodo, ['omaggio', 'sospeso'], true)
+            || ($sconto > 0 && $sconto < 100);
 
-        if (in_array($metodo, ['omaggio', 'sospeso'], true)) {
+        if ($speciale) {
             $comanda->autorizzato_da = mb_substr(trim((string) $autorizzatoDa), 0, 80);
             $comanda->nominativo = mb_substr(trim((string) $nominativo), 0, 80);
             $comanda->pagamento_note = ($pagamentoNote !== null && trim($pagamentoNote) !== '')
