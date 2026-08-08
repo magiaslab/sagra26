@@ -184,16 +184,43 @@
                             x-on:focus="$el.select()"
                             @disabled($bloccata)
                         >
+                        <p class="mt-1 mb-0 text-xs text-sagra-muted">Chiusura del terminale POS (scontrino bancario).</p>
                     </div>
-                    <div class="min-w-0">
-                        <label class="mb-1 block text-sm font-medium text-sagra-ink">Totale Z (registratore)</label>
-                        <input
-                            class="block w-full min-w-0 rounded-md bg-white px-2.5 py-1.5 text-sm tabular-nums text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra sm:px-3 sm:py-2"
-                            type="number" inputmode="decimal" step="0.01" min="0"
-                            wire:model.live="totale_z"
-                            x-on:focus="$el.select()"
-                            @disabled($bloccata)
-                        >
+                    <div class="min-w-0 sm:col-span-2">
+                        <p class="mb-1.5 text-sm font-medium text-sagra-ink">Registratore di cassa (Z)</p>
+                        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                            <div class="min-w-0">
+                                <label class="mb-1 block text-xs font-medium text-sagra-muted">Z Contante</label>
+                                <input
+                                    class="block w-full min-w-0 rounded-md bg-white px-2.5 py-1.5 text-sm tabular-nums text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra sm:px-3 sm:py-2"
+                                    type="number" inputmode="decimal" step="0.01" min="0"
+                                    wire:model.live="totale_z_contante"
+                                    x-on:focus="$el.select()"
+                                    @disabled($bloccata)
+                                >
+                            </div>
+                            <div class="min-w-0">
+                                <label class="mb-1 block text-xs font-medium text-sagra-muted">Z POS</label>
+                                <input
+                                    class="block w-full min-w-0 rounded-md bg-white px-2.5 py-1.5 text-sm tabular-nums text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line focus:ring-2 focus:ring-sagra sm:px-3 sm:py-2"
+                                    type="number" inputmode="decimal" step="0.01" min="0"
+                                    wire:model.live="totale_z_pos"
+                                    x-on:focus="$el.select()"
+                                    @disabled($bloccata)
+                                >
+                            </div>
+                            <div class="min-w-0">
+                                <label class="mb-1 block text-xs font-medium text-sagra-muted">Totale Z</label>
+                                <input
+                                    class="block w-full min-w-0 rounded-md bg-sagra-softer px-2.5 py-1.5 text-sm font-semibold tabular-nums text-sagra-ink shadow-sm ring-1 ring-inset ring-sagra-line sm:px-3 sm:py-2"
+                                    type="text"
+                                    value="{{ number_format((float) str_replace(',', '.', $totale_z ?: '0'), 2, ',', '.') }} €"
+                                    readonly
+                                    tabindex="-1"
+                                >
+                            </div>
+                        </div>
+                        <p class="mt-1 mb-0 text-xs text-sagra-muted">I due totali del registratore; la somma è il Totale Z usato nei delta.</p>
                     </div>
                 </div>
                 <div class="mt-2">
@@ -241,14 +268,21 @@
                             </tr>
                             <tr>
                                 <td class="px-1.5 py-1.5 sm:px-2">Fiscale (Z)</td>
-                                <td class="px-1.5 py-1.5 text-right text-sagra-muted sm:px-2" colspan="2">—</td>
+                                <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['fiscale_contante'], 2, ',', '.') }}</td>
+                                <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['fiscale_pos'], 2, ',', '.') }}</td>
                                 <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['fiscale'], 2, ',', '.') }}</td>
                             </tr>
                             <tr>
-                                <td class="px-1.5 py-1.5 sm:px-2">Δ</td>
+                                <td class="px-1.5 py-1.5 sm:px-2">Δ reale</td>
                                 <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['delta_contante'], 2, ',', '.') }}</td>
                                 <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['delta_pos'], 2, ',', '.') }}</td>
-                                <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">Δf {{ number_format($riconciliazione['delta_fiscale'], 2, ',', '.') }}</td>
+                                <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['delta_contante'] + $riconciliazione['delta_pos'], 2, ',', '.') }}</td>
+                            </tr>
+                            <tr>
+                                <td class="px-1.5 py-1.5 sm:px-2">Δ fiscale</td>
+                                <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['delta_fiscale_contante'], 2, ',', '.') }}</td>
+                                <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['delta_fiscale_pos'], 2, ',', '.') }}</td>
+                                <td class="px-1.5 py-1.5 text-right tabular-nums sm:px-2">{{ number_format($riconciliazione['delta_fiscale'], 2, ',', '.') }}</td>
                             </tr>
                         </tbody>
                     </table>

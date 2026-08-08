@@ -32,10 +32,14 @@
                     <tr><td class="px-3 py-2">Fondo trattenuto</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($c->fondo_trattenuto, 2, ',', '.') }} €</td></tr>
                     <tr><td class="px-3 py-2">Contante consegnato</td><td class="px-3 py-2 text-right tabular-nums"><strong>{{ number_format($c->contante_consegnato, 2, ',', '.') }} €</strong></td></tr>
                     <tr><td class="px-3 py-2">Totale POS (terminale)</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($c->totale_pos, 2, ',', '.') }} €</td></tr>
-                    <tr><td class="px-3 py-2">Totale Z</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($c->totale_z, 2, ',', '.') }} €</td></tr>
-                    <tr><td class="px-3 py-2">Δ contante</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_contante'], 2, ',', '.') }} €</td></tr>
-                    <tr><td class="px-3 py-2">Δ POS</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_pos'], 2, ',', '.') }} €</td></tr>
-                    <tr><td class="px-3 py-2">Δ fiscale</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_fiscale'], 2, ',', '.') }} €</td></tr>
+                    <tr><td class="px-3 py-2">Z Contante (registratore)</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format((float) ($c->totale_z_contante ?? 0), 2, ',', '.') }} €</td></tr>
+                    <tr><td class="px-3 py-2">Z POS (registratore)</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format((float) ($c->totale_z_pos ?? 0), 2, ',', '.') }} €</td></tr>
+                    <tr><td class="px-3 py-2">Totale Z</td><td class="px-3 py-2 text-right tabular-nums"><strong>{{ number_format($c->totale_z, 2, ',', '.') }} €</strong></td></tr>
+                    <tr><td class="px-3 py-2">Δ contante (reale)</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_contante'], 2, ',', '.') }} €</td></tr>
+                    <tr><td class="px-3 py-2">Δ POS (terminale)</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_pos'], 2, ',', '.') }} €</td></tr>
+                    <tr><td class="px-3 py-2">Δ fiscale contante</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_fiscale_contante'] ?? 0, 2, ',', '.') }} €</td></tr>
+                    <tr><td class="px-3 py-2">Δ fiscale POS</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_fiscale_pos'] ?? 0, 2, ',', '.') }} €</td></tr>
+                    <tr><td class="px-3 py-2">Δ fiscale totale</td><td class="px-3 py-2 text-right tabular-nums">{{ number_format($ric['delta_fiscale'], 2, ',', '.') }} €</td></tr>
                 </tbody>
             </table>
         </div>

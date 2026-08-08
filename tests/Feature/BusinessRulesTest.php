@@ -83,7 +83,9 @@ it('calcola la riconciliazione a tre vie', function () {
     $chiusura->contante_contato = $chiusura->calcolaContanteContato();
     $chiusura->fondo_trattenuto = 100;
     $chiusura->totale_pos = 4;
-    $chiusura->totale_z = 10;
+    $chiusura->totale_z_contante = 6;
+    $chiusura->totale_z_pos = 4;
+    $chiusura->sincronizzaTotaleZ();
     $chiusura->save();
 
     $ric = app(RiconciliazioneService::class)->calcola($serata, $punto, $chiusura);
@@ -94,6 +96,10 @@ it('calcola la riconciliazione a tre vie', function () {
         ->and($ric['reale_contante'])->toBe(6.0)
         ->and($ric['delta_contante'])->toBe(0.0)
         ->and($ric['delta_pos'])->toBe(0.0)
+        ->and($ric['fiscale_contante'])->toBe(6.0)
+        ->and($ric['fiscale_pos'])->toBe(4.0)
+        ->and($ric['delta_fiscale_contante'])->toBe(0.0)
+        ->and($ric['delta_fiscale_pos'])->toBe(0.0)
         ->and($ric['delta_fiscale'])->toBe(0.0)
         ->and($ric['contante_consegnato'])->toBe(6.0);
 });
