@@ -28,6 +28,7 @@ class Comanda extends Model
         'autorizzato_da',
         'nominativo',
         'pagamento_note',
+        'sconto_percentuale',
         'sospeso_chiuso_at',
         'era_sospeso',
     ];
@@ -38,6 +39,7 @@ class Comanda extends Model
             'totale' => 'decimal:2',
             'importo_contante' => 'decimal:2',
             'importo_pos' => 'decimal:2',
+            'sconto_percentuale' => 'integer',
             'sospeso_chiuso_at' => 'datetime',
             'era_sospeso' => 'boolean',
         ];
@@ -48,9 +50,52 @@ class Comanda extends Model
         return $this->metodo_pagamento === 'omaggio';
     }
 
+    /** Sconto parziale (1–99%): si paga il residuo con contante/POS/misto. */
+    public function isScontoParziale(): bool
+    {
+        $p = (int) ($this->sconto_percentuale ?? 0);
+
+        return $p > 0 && $p < 100 && ! $this->isOmaggio();
+    }
+
     public function isSospesoAperto(): bool
     {
         return $this->metodo_pagamento === 'sospeso';
+    }
+
+    /** Somma righe a prezzo pieno (prima dello sconto). */
+    public function totaleLordo(): float
+    {
+        if ($this->relationLoaded('righe')) {
+            return round($this->righe->sum(fn ($r) => (int) $r->quantita * (float) $r->prezzo_unitario), 2);
+        }
+
+        return round((float) $this->righe()->selectRaw('COALESCE(SUM(quantita * prezzo_unitario), 0) as t')->value('t'), 2);
+    }
+
+    public function importoSconto(): float
+    {
+        if ($this->isOmaggio()) {
+            return $this->totaleLordo();
+        }
+        if (! $this->isScontoParziale()) {
+            return 0.0;
+        }
+
+        return round(max(0, $this->totaleLordo() - (float) $this->totale), 2);
+    }
+
+    /** Etichetta stampa/UI: OMAGGIO oppure SCONTO X%. */
+    public function etichettaScontoOmaggio(): ?string
+    {
+        if ($this->isOmaggio()) {
+            return 'OMAGGIO';
+        }
+        if ($this->isScontoParziale()) {
+            return 'SCONTO '.(int) $this->sconto_percentuale.'%';
+        }
+
+        return null;
     }
 
     /** Conta nel totale incassi (esclude omaggio e sospesi ancora aperti). */

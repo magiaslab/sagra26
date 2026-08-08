@@ -1,13 +1,13 @@
 <div>
     <x-gestione.subnav />
     <x-gestione.page-header
-        title="Omaggi"
-        subtitle="Comande omaggio della serata — rendiconto per i responsabili"
+        title="Omaggi e sconti"
+        subtitle="Comande omaggio e scontate della serata — rendiconto per i responsabili"
     >
         <x-slot:actions>
             @if ($serata)
                 <span class="inline-flex min-h-9 items-center rounded-md bg-sky-50 px-3 py-1.5 text-sm font-medium text-sky-900 ring-1 ring-sky-200">
-                    {{ $omaggi->count() }} omaggi · {{ number_format($totaleValore, 2, ',', '.') }} €
+                    {{ $omaggi->count() }} · {{ number_format($totaleValore, 2, ',', '.') }} € valore
                 </span>
                 @if ($omaggi->isNotEmpty())
                     <button type="button"
@@ -43,15 +43,15 @@
             </div>
             @if ($serata)
                 <p class="pb-2 text-sm text-sagra-muted">
-                    Coperti omaggio: <span class="font-semibold text-sagra-ink">{{ $totaleCoperti }}</span>
-                    · non conteggiati negli incassi
+                    Coperti coinvolti: <span class="font-semibold text-sagra-ink">{{ $totaleCoperti }}</span>
+                    · omaggi non in cassa; sconti: in cassa solo il residuo
                 </p>
             @endif
         </div>
 
         @if ($omaggi->isEmpty())
             <p class="rounded-lg bg-white px-5 py-8 text-center text-sm text-sagra-muted shadow-sm ring-1 ring-sagra-line/80">
-                Nessuna comanda omaggio in questa serata.
+                Nessuna comanda omaggio o scontata in questa serata.
             </p>
         @else
             @if ($perAutorizzatore->isNotEmpty())
@@ -74,11 +74,12 @@
             @endif
 
             <div class="overflow-x-auto rounded-lg bg-white shadow-sm ring-1 ring-sagra-line/80">
-                <table class="w-full min-w-[40rem] text-left text-sm">
+                <table class="w-full min-w-[44rem] text-left text-sm">
                     <thead class="bg-sagra-softer text-xs uppercase tracking-wide text-sagra-muted">
                         <tr>
                             <th class="px-4 py-2.5 font-semibold">N.</th>
                             <th class="px-4 py-2.5 font-semibold">Ora</th>
+                            <th class="px-4 py-2.5 font-semibold">Tipo</th>
                             <th class="px-4 py-2.5 font-semibold">Ospite</th>
                             <th class="px-4 py-2.5 font-semibold">Autorizzato da</th>
                             <th class="px-4 py-2.5 font-semibold">Cassa</th>
@@ -94,6 +95,15 @@
                                     {{ optional($c->created_at)->format('H:i') ?: '—' }}
                                 </td>
                                 <td class="px-4 py-3">
+                                    <span class="font-semibold text-sagra-ink">{{ $c->etichettaScontoOmaggio() }}</span>
+                                    @if ($c->isScontoParziale())
+                                        <div class="text-xs text-sagra-muted">
+                                            pagato {{ number_format((float) $c->totale, 2, ',', '.') }} €
+                                            ({{ strtoupper($c->metodo_pagamento) }})
+                                        </div>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3">
                                     <div class="font-medium text-sagra-ink">{{ $c->nominativo ?: '—' }}</div>
                                     @if ($c->pagamento_note)
                                         <div class="text-xs text-sagra-muted">{{ $c->pagamento_note }}</div>
@@ -101,7 +111,7 @@
                                 </td>
                                 <td class="px-4 py-3 text-sagra-muted">{{ $c->autorizzato_da ?: '—' }}</td>
                                 <td class="px-4 py-3 text-sagra-muted">{{ $c->postazione?->nome }}</td>
-                                <td class="px-4 py-3 text-right font-mono font-semibold tabular-nums">{{ number_format($c->totale, 2, ',', '.') }} €</td>
+                                <td class="px-4 py-3 text-right font-mono font-semibold tabular-nums">{{ number_format($c->importoSconto(), 2, ',', '.') }} €</td>
                                 <td class="px-4 py-3 text-right">
                                     <a class="inline-flex items-center rounded-md bg-white px-2.5 py-1.5 text-xs font-semibold text-sagra-ink ring-1 ring-inset ring-sagra-line hover:bg-sagra-softer"
                                        href="{{ route('cassa.stampa', $c, absolute: false) }}" target="_blank">Stampa</a>
@@ -111,7 +121,7 @@
                     </tbody>
                     <tfoot class="border-t border-sagra-line bg-sagra-softer text-sm font-semibold">
                         <tr>
-                            <td class="px-4 py-3" colspan="5">Totale valore omaggi (non in cassa)</td>
+                            <td class="px-4 py-3" colspan="6">Totale valore omaggi/sconti</td>
                             <td class="px-4 py-3 text-right font-mono tabular-nums">{{ number_format($totaleValore, 2, ',', '.') }} €</td>
                             <td></td>
                         </tr>

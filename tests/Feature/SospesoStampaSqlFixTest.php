@@ -96,6 +96,10 @@ it('dopo il fix migration un DB con CHECK vecchio accetta sospesi e omaggi', fun
     $migration = require database_path('migrations/2026_08_06_205300_fix_comande_metodo_pagamento_sospeso.php');
     $migration->up();
 
+    // La rebuild del fix metodo non include colonne aggiunte dopo: riapplica sconto %.
+    $scontoMigration = require database_path('migrations/2026_08_08_221500_add_sconto_percentuale_to_comande.php');
+    $scontoMigration->up();
+
     $sospeso = app(ComandaService::class)->confermaEStampa(
         $serata,
         $postazione,

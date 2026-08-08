@@ -198,28 +198,40 @@
         <div class="totale-print">
             TOTALE PAGATO {{ number_format($comanda->totale, 2, ',', '.') }} €
         </div>
-        <div class="pay-badge pay-badge--{{ $metodo }}">
-            @if ($metodo === 'contante')
-                € CONTANTE
-            @elseif ($metodo === 'pos')
-                ▭ POS
-            @elseif ($metodo === 'omaggio')
-                OMAGGIO
-            @elseif ($metodo === 'sospeso')
-                SOSPESO
-            @else
-                MISTO
-                · € {{ number_format($comanda->importoContanteEffettivo(), 2, ',', '.') }}
-                + ▭ {{ number_format($comanda->importoPosEffettivo(), 2, ',', '.') }}
-            @endif
+        @if ($comanda->isScontoParziale())
+            <div class="meta-small">
+                Lordo {{ number_format($comanda->totaleLordo(), 2, ',', '.') }} €
+                − sconto {{ (int) $comanda->sconto_percentuale }}%
+            </div>
+        @endif
+        @php
+            $badgeClass = $comanda->isOmaggio()
+                ? 'omaggio'
+                : ($comanda->isScontoParziale() ? 'sconto' : $metodo);
+            $etichettaPagamento = match (true) {
+                $comanda->isOmaggio() => 'OMAGGIO',
+                $comanda->isScontoParziale() && $metodo === 'contante' => 'SCONTO '.(int) $comanda->sconto_percentuale.'% · € CONTANTE',
+                $comanda->isScontoParziale() && $metodo === 'pos' => 'SCONTO '.(int) $comanda->sconto_percentuale.'% · ▭ POS',
+                $comanda->isScontoParziale() && $metodo === 'misto' => 'SCONTO '.(int) $comanda->sconto_percentuale.'% · MISTO · € '
+                    .number_format($comanda->importoContanteEffettivo(), 2, ',', '.')
+                    .' + ▭ '.number_format($comanda->importoPosEffettivo(), 2, ',', '.'),
+                $metodo === 'contante' => '€ CONTANTE',
+                $metodo === 'pos' => '▭ POS',
+                $metodo === 'sospeso' => 'SOSPESO',
+                default => 'MISTO · € '.number_format($comanda->importoContanteEffettivo(), 2, ',', '.')
+                    .' + ▭ '.number_format($comanda->importoPosEffettivo(), 2, ',', '.'),
+            };
+        @endphp
+        <div class="pay-badge pay-badge--{{ $badgeClass }}">
+            {{ $etichettaPagamento }}
         </div>
-        @if (in_array($metodo, ['omaggio', 'sospeso'], true))
+        @if (in_array($metodo, ['omaggio', 'sospeso'], true) || $comanda->isScontoParziale())
             <div class="tag-pagamento-meta">
                 @if (filled($comanda->autorizzato_da))
                     Aut. {{ $comanda->autorizzato_da }}
                 @endif
                 @if (filled($comanda->nominativo))
-                    · {{ $metodo === 'omaggio' ? 'Ospite' : 'Nominativo' }}: {{ $comanda->nominativo }}
+                    · {{ $metodo === 'sospeso' ? 'Nominativo' : 'Ospite' }}: {{ $comanda->nominativo }}
                 @endif
                 @if (filled($comanda->pagamento_note))
                     · {{ $comanda->pagamento_note }}

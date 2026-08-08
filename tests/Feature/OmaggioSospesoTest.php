@@ -227,5 +227,118 @@ it('ui cassa espone omaggio e sospeso sotto al misto', function () {
         ->toContain("apriAuthSpeciale('omaggio')")
         ->toContain("apriAuthSpeciale('sospeso')")
         ->toContain('PIN gestione')
-        ->toContain('Nome ospite');
+        ->toContain('Nome ospite')
+        ->toContain('flagOmaggio')
+        ->toContain('Sconto %');
+});
+
+it('sconto percentuale riduce il totale e stampa SCONTO', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->first();
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+
+    $comanda = app(ComandaService::class)->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 2]],
+        0,
+        'contante',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        'Mario',
+        'Ospite sconto',
+        null,
+        30,
+    );
+
+    expect($comanda->metodo_pagamento)->toBe('contante')
+        ->and((int) $comanda->sconto_percentuale)->toBe(30)
+        ->and($comanda->isScontoParziale())->toBeTrue()
+        ->and((float) $comanda->totale)->toBe(2.8) // 4€ − 30%
+        ->and($comanda->importoSconto())->toBe(1.2)
+        ->and($comanda->importoIncasso())->toBe(2.8)
+        ->and($comanda->importoContanteEffettivo())->toBe(2.8)
+        ->and($comanda->etichettaScontoOmaggio())->toBe('SCONTO 30%');
+
+    $html = $this->get(route('cassa.stampa', $comanda))->assertOk()->getContent();
+
+    expect($html)
+        ->toContain('SCONTO 30%')
+        ->toContain('pay-badge--sconto')
+        ->not->toContain('>OMAGGIO<');
+});
+
+it('conferma sconto richiede pin e salva percentuale', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->first();
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+    $pin = Impostazione::corrente()->pin_gestione;
+
+    $this->postJson(route('cassa.postazione'), ['postazione_id' => $postazione->id])->assertOk();
+
+    $this->postJson(route('cassa.conferma'), [
+        'postazione_id' => $postazione->id,
+        'coperti' => 0,
+        'metodo_pagamento' => 'pos',
+        'sconto_percentuale' => 50,
+        'pin_autorizzazione' => '0000',
+        'autorizzato_da' => 'Mario',
+        'nominativo' => 'Ospite',
+        'righe' => [['menu_item_id' => $acqua->id, 'quantita' => 2]],
+    ])
+        ->assertStatus(422)
+        ->assertJsonFragment(['error' => 'PIN non valido.']);
+
+    $this->postJson(route('cassa.conferma'), [
+        'postazione_id' => $postazione->id,
+        'coperti' => 0,
+        'metodo_pagamento' => 'pos',
+        'sconto_percentuale' => 50,
+        'pin_autorizzazione' => $pin,
+        'autorizzato_da' => 'Mario',
+        'nominativo' => 'Ospite',
+        'righe' => [['menu_item_id' => $acqua->id, 'quantita' => 2]],
+    ])
+        ->assertOk()
+        ->assertJsonPath('ok', true);
+
+    $comanda = Comanda::query()->latest('id')->first();
+    expect((int) $comanda->sconto_percentuale)->toBe(50)
+        ->and((float) $comanda->totale)->toBe(2.0)
+        ->and($comanda->metodo_pagamento)->toBe('pos');
+});
+
+it('omaggio imposta sconto 100 e badge OMAGGIO', function () {
+    $puntoId = PuntoCassa::query()->first()->id;
+    $serata = app(SerataService::class)->apri(now()->toDateString(), null, [], [$puntoId => 50]);
+    $postazione = Postazione::query()->first();
+    $acqua = MenuItem::query()->where('nome', 'Acqua Naturale 1L')->firstOrFail();
+
+    $comanda = app(ComandaService::class)->confermaEStampa(
+        $serata,
+        $postazione,
+        [['menu_item_id' => $acqua->id, 'quantita' => 1]],
+        0,
+        'omaggio',
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        'Mario',
+        'Ospite',
+        null,
+    );
+
+    expect((int) $comanda->sconto_percentuale)->toBe(100)
+        ->and($comanda->etichettaScontoOmaggio())->toBe('OMAGGIO');
 });
