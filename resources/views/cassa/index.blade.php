@@ -658,9 +658,9 @@
                                               x-text="c.postazione || '—'"
                                               :title="'Emessa da ' + (c.postazione || 'postazione sconosciuta')"></span>
                                         <span class="hidden min-w-0 flex-1 truncate text-sm text-sagra-muted sm:inline"
-                                              x-text="c.n_righe + ' voci · ' + c.coperti + ' cop. · ' + labelMetodoBreve(c.metodo_pagamento) + (c.nominativo ? (' · ' + c.nominativo) : '')"></span>
+                                              x-text="c.n_righe + ' voci · ' + c.coperti + ' cop. · ' + labelMetodoBreve(c.metodo_pagamento) + (c.sconto_percentuale > 0 && c.sconto_percentuale < 100 ? (' −' + c.sconto_percentuale + '%') : '') + (c.correzioni_count ? (' · mod.' + c.correzioni_count) : '') + (c.nominativo ? (' · ' + c.nominativo) : '')"></span>
                                         <span class="min-w-0 flex-1 truncate text-xs text-sagra-muted sm:hidden"
-                                              x-text="labelMetodoBreve(c.metodo_pagamento) + (c.nominativo ? (' · ' + c.nominativo) : '')"></span>
+                                              x-text="labelMetodoBreve(c.metodo_pagamento) + (c.correzioni_count ? (' · mod.' + c.correzioni_count) : '') + (c.nominativo ? (' · ' + c.nominativo) : '')"></span>
                                         <span class="shrink-0 font-mono text-base font-bold tabular-nums text-sagra-ink sm:text-lg" x-text="formatEuro(c.totale)"></span>
                                         <div class="flex shrink-0 items-center gap-1.5">
                                             <button type="button"
@@ -924,10 +924,10 @@ function cassaApp(cfg) {
         },
 
         get mostraOpzioneMisto() {
-            return !this.comandaId
-                || this.metodoOriginale === 'sospeso'
-                || this.metodoOriginale === 'omaggio'
-                || (this.scontoPercentuale > 0 && this.scontoPercentuale < 100);
+            // Misto a totale pieno solo su comanda nuova, oppure chiusura da sospeso/omaggio.
+            // Con sconto su comanda nuova: sì (residuo da spaccare). In correzione con delta: no.
+            if (!this.comandaId) return true;
+            return this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio';
         },
 
         get labelPulsanteContante() {
@@ -1619,7 +1619,7 @@ function cassaApp(cfg) {
                         quantita: r.q,
                     })),
                 };
-                if (this.metodo === 'misto' && (!this.comandaId || this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio' || (this.scontoPercentuale > 0 && this.scontoPercentuale < 100))) {
+                if (this.metodo === 'misto' && (!this.comandaId || this.metodoOriginale === 'sospeso' || this.metodoOriginale === 'omaggio')) {
                     payload.importo_contante = this.importoContanteMisto;
                     payload.importo_pos = this.importoPosMisto;
                 }

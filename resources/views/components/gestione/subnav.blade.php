@@ -43,6 +43,12 @@
             'icon' => 'omaggi',
         ],
         [
+            'label' => 'Modificate',
+            'route' => 'gestione.correzioni',
+            'match' => 'gestione.correzioni',
+            'icon' => 'correzioni',
+        ],
+        [
             'label' => 'Report',
             'route' => 'gestione.report',
             'match' => 'gestione.report',
@@ -108,6 +114,9 @@
                             @break
                         @case('omaggi')
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M20 12v7a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-7"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v10M8 7l4-4 4 4"/></svg>
+                            @break
+                        @case('correzioni')
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M11 4H4v7"/><path stroke-linecap="round" stroke-linejoin="round" d="M4 4l7 7"/><path stroke-linecap="round" stroke-linejoin="round" d="M20 14v6h-6"/><path stroke-linecap="round" stroke-linejoin="round" d="m14 20 6-6"/></svg>
                             @break
                         @case('chart')
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" class="h-4 w-4"><path stroke-linecap="round" stroke-linejoin="round" d="M4 19V5M4 19h16M8 17V11M12 17V7M16 17v-4"/></svg>

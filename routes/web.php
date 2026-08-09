@@ -13,6 +13,7 @@ use App\Livewire\Gestione\ImpostazioniPage;
 use App\Livewire\Gestione\MenuCrud;
 use App\Livewire\Gestione\Pin;
 use App\Livewire\Gestione\Serate;
+use App\Livewire\Gestione\Correzioni;
 use App\Livewire\Gestione\Omaggi;
 use App\Livewire\Gestione\Sospesi;
 use App\Livewire\Gestione\StatoSistema;
@@ -47,6 +48,7 @@ Route::middleware(PinGestione::class)->prefix('gestione')->name('gestione.')->gr
     Route::get('/chiusura', ChiusuraForm::class)->name('chiusura');
     Route::get('/sospesi', Sospesi::class)->name('sospesi');
     Route::get('/omaggi', Omaggi::class)->name('omaggi');
+    Route::get('/correzioni', Correzioni::class)->name('correzioni');
     Route::get('/report', ReportHub::class)->name('report');
     Route::get('/impostazioni', ImpostazioniPage::class)->name('impostazioni');
     Route::get('/backup', BackupPage::class)->name('backup');

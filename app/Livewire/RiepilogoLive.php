@@ -64,12 +64,13 @@ class RiepilogoLive extends Component
                 ];
             })->sortBy('nome')->values();
 
+            $exprIncasso = Comanda::sqlIncassoRigaNetto();
             $dati['per_piatto'] = ComandaRiga::query()
                 ->join('comande', 'comande.id', '=', 'comanda_righe.comanda_id')
                 ->select(
                     'comanda_righe.menu_item_id',
                     DB::raw('SUM(comanda_righe.quantita) as qta'),
-                    DB::raw("SUM(CASE WHEN comande.metodo_pagamento NOT IN ('omaggio', 'sospeso') THEN comanda_righe.quantita * comanda_righe.prezzo_unitario ELSE 0 END) as incasso")
+                    DB::raw("SUM({$exprIncasso}) as incasso")
                 )
                 ->where('comande.serata_id', $serata->id)
                 ->where('comande.stato', 'stampata')

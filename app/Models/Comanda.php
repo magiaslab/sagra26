@@ -98,6 +98,45 @@ class Comanda extends Model
         return null;
     }
 
+    /** Etichetta metodo attuale (con sconto se presente). */
+    public function etichettaPagamento(): string
+    {
+        if ($this->isOmaggio()) {
+            return 'OMAGGIO';
+        }
+        if ($this->isSospesoAperto()) {
+            return 'SOSPESO';
+        }
+        $base = match ($this->metodo_pagamento) {
+            'pos' => 'POS',
+            'misto' => 'MISTO',
+            'contante' => 'CONTANTE',
+            default => strtoupper((string) $this->metodo_pagamento),
+        };
+        if ($this->isScontoParziale()) {
+            return 'SCONTO '.(int) $this->sconto_percentuale.'% · '.$base;
+        }
+
+        return $base;
+    }
+
+    /**
+     * Espressione SQL: contributo di una riga all'incasso netto
+     * (rispetta omaggio/sospeso e sconto % sulla comanda).
+     * Richiede join/alias su `comande` e `comanda_righe`.
+     */
+    public static function sqlIncassoRigaNetto(): string
+    {
+        return "CASE
+            WHEN comande.metodo_pagamento IN ('omaggio', 'sospeso') THEN 0
+            WHEN COALESCE(comande.sconto_percentuale, 0) > 0
+                 AND COALESCE(comande.sconto_percentuale, 0) < 100
+                THEN comanda_righe.quantita * comanda_righe.prezzo_unitario
+                     * (100.0 - comande.sconto_percentuale) / 100.0
+            ELSE comanda_righe.quantita * comanda_righe.prezzo_unitario
+        END";
+    }
+
     /** Conta nel totale incassi (esclude omaggio e sospesi ancora aperti). */
     public function contaComeIncasso(): bool
     {
