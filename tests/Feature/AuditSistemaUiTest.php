@@ -26,6 +26,7 @@ it('le pagine gestione principali rispondono 200 dopo il pin', function () {
         'gestione.chiusura',
         'gestione.sospesi',
         'gestione.omaggi',
+        'gestione.correzioni',
         'gestione.report',
         'gestione.impostazioni',
         'gestione.stato',

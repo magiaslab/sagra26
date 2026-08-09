@@ -16,6 +16,7 @@ class ComandaCorrezione extends Model
         'postazione_id',
         'righe_precedenti',
         'totale_precedente',
+        'pagamento_precedente',
         'motivo',
     ];
 
@@ -23,9 +24,41 @@ class ComandaCorrezione extends Model
     {
         return [
             'righe_precedenti' => 'array',
+            'pagamento_precedente' => 'array',
             'totale_precedente' => 'decimal:2',
             'created_at' => 'datetime',
         ];
+    }
+
+    /** Etichetta metodo precedente dallo snapshot (es. POS, SCONTO 30%). */
+    public function etichettaPagamentoPrecedente(): string
+    {
+        $p = $this->pagamento_precedente ?? [];
+        $metodo = (string) ($p['metodo'] ?? '');
+        $sconto = (int) ($p['sconto_percentuale'] ?? 0);
+
+        if ($metodo === 'omaggio') {
+            return 'OMAGGIO';
+        }
+        if ($sconto > 0 && $sconto < 100) {
+            $base = match ($metodo) {
+                'pos' => 'POS',
+                'misto' => 'MISTO',
+                'contante' => 'CONTANTE',
+                default => strtoupper($metodo ?: '—'),
+            };
+
+            return 'SCONTO '.$sconto.'% · '.$base;
+        }
+
+        return match ($metodo) {
+            'pos' => 'POS',
+            'misto' => 'MISTO',
+            'contante' => 'CONTANTE',
+            'sospeso' => 'SOSPESO',
+            'omaggio' => 'OMAGGIO',
+            default => $metodo !== '' ? strtoupper($metodo) : '—',
+        };
     }
 
     public function comanda(): BelongsTo

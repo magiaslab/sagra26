@@ -137,6 +137,7 @@ class ComandaService
                     'contante' => $comanda->importoContanteEffettivo(),
                     'pos' => $comanda->importoPosEffettivo(),
                     'metodo' => (string) $comanda->metodo_pagamento,
+                    'sconto_percentuale' => (int) ($comanda->sconto_percentuale ?? 0),
                 ];
 
                 // Prezzi già pagati: in correzione non si ricalcolano dal menù attuale
@@ -156,6 +157,7 @@ class ComandaService
                         'prezzo_unitario' => (float) $r->prezzo_unitario,
                     ])->all(),
                     'totale_precedente' => $comanda->totale,
+                    'pagamento_precedente' => $pagamentoPrecedente,
                     'motivo' => $motivo,
                 ]);
 
@@ -383,6 +385,14 @@ class ComandaService
             $comanda->pagamento_note = ($pagamentoNote !== null && trim($pagamentoNote) !== '')
                 ? mb_substr(trim($pagamentoNote), 0, 255)
                 : null;
+        } else {
+            // Pagamento ordinario: toglie metadati omaggio/sconto.
+            // Chiusura sospeso: conserva il nominativo per il tracciamento.
+            $comanda->autorizzato_da = null;
+            $comanda->pagamento_note = null;
+            if ($metodoPrecedente !== 'sospeso') {
+                $comanda->nominativo = null;
+            }
         }
 
         if ($metodo === 'sospeso') {

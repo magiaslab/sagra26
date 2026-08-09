@@ -325,7 +325,7 @@ class CassaController extends Controller
 
         $comande = Comanda::query()
             ->with(['postazione'])
-            ->withCount('righe')
+            ->withCount(['righe', 'correzioni'])
             ->where('serata_id', $serata->id)
             ->whereIn('stato', ['stampata', 'annullata'])
             ->orderByDesc('numero_progressivo')
@@ -337,11 +337,13 @@ class CassaController extends Controller
                 'version' => $c->version,
                 'coperti' => $c->coperti,
                 'metodo_pagamento' => $c->metodo_pagamento,
+                'sconto_percentuale' => (int) ($c->sconto_percentuale ?? 0),
                 'nominativo' => $c->nominativo,
                 'totale' => (float) $c->totale,
                 'stato' => $c->stato,
                 'motivo_annullo' => $c->motivo_annullo,
                 'n_righe' => $c->righe_count,
+                'correzioni_count' => (int) $c->correzioni_count,
                 'postazione_id' => (int) $c->postazione_id,
                 'postazione' => $c->postazione?->nome,
                 'print_url' => route('cassa.stampa', $c, absolute: false),

@@ -326,11 +326,15 @@ class ReportHub extends Component
             ->groupBy('menu_item_id')
             ->get();
 
-        // Incasso €: esclude omaggio e sospesi aperti.
+        // Incasso € netto: esclude omaggio/sospeso e applica sconto % sulla comanda.
+        $expr = Comanda::sqlIncassoRigaNetto();
         $incassoRows = ComandaRiga::query()
-            ->select('menu_item_id', DB::raw('SUM(quantita * prezzo_unitario) as incasso'))
-            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata')->contanoComeIncasso())
-            ->groupBy('menu_item_id')
+            ->join('comande', 'comande.id', '=', 'comanda_righe.comanda_id')
+            ->select('comanda_righe.menu_item_id', DB::raw("SUM({$expr}) as incasso"))
+            ->whereIn('comande.serata_id', $serataIds)
+            ->where('comande.stato', 'stampata')
+            ->whereNotIn('comande.metodo_pagamento', ['omaggio', 'sospeso'])
+            ->groupBy('comanda_righe.menu_item_id')
             ->get();
 
         $qta = [];
@@ -519,11 +523,15 @@ class ReportHub extends Component
             return 0.0;
         }
 
+        $expr = Comanda::sqlIncassoRigaNetto();
         $val = ComandaRiga::query()
-            ->where('bar', $bar)
-            ->whereIn('menu_item_id', $menuItemIds)
-            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata')->contanoComeIncasso())
-            ->selectRaw('COALESCE(SUM(quantita * prezzo_unitario), 0) as tot')
+            ->join('comande', 'comande.id', '=', 'comanda_righe.comanda_id')
+            ->where('comanda_righe.bar', $bar)
+            ->whereIn('comanda_righe.menu_item_id', $menuItemIds)
+            ->whereIn('comande.serata_id', $serataIds)
+            ->where('comande.stato', 'stampata')
+            ->whereNotIn('comande.metodo_pagamento', ['omaggio', 'sospeso'])
+            ->selectRaw("COALESCE(SUM({$expr}), 0) as tot")
             ->value('tot');
 
         return round((float) $val, 2);
@@ -531,10 +539,14 @@ class ReportHub extends Component
 
     public static function totaleBarPerSerate($serataIds): float
     {
+        $expr = Comanda::sqlIncassoRigaNetto();
         $val = ComandaRiga::query()
-            ->where('bar', true)
-            ->whereHas('comanda', fn ($q) => $q->whereIn('serata_id', $serataIds)->where('stato', 'stampata')->contanoComeIncasso())
-            ->selectRaw('COALESCE(SUM(quantita * prezzo_unitario), 0) as tot')
+            ->join('comande', 'comande.id', '=', 'comanda_righe.comanda_id')
+            ->where('comanda_righe.bar', true)
+            ->whereIn('comande.serata_id', $serataIds)
+            ->where('comande.stato', 'stampata')
+            ->whereNotIn('comande.metodo_pagamento', ['omaggio', 'sospeso'])
+            ->selectRaw("COALESCE(SUM({$expr}), 0) as tot")
             ->value('tot');
 
         return round((float) $val, 2);

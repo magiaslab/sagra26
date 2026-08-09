@@ -76,17 +76,24 @@ return new class extends Migration
 
     private function rebuildComandaCorrezioni(): void
     {
-        Schema::create('comanda_correzioni_fix_fk', function (Blueprint $table) {
+        $haPagamento = Schema::hasColumn('comanda_correzioni', 'pagamento_precedente');
+
+        Schema::create('comanda_correzioni_fix_fk', function (Blueprint $table) use ($haPagamento) {
             $table->id();
             $table->foreignId('comanda_id')->constrained('comande')->cascadeOnDelete();
             $table->foreignId('postazione_id')->constrained('postazioni');
             $table->json('righe_precedenti');
             $table->decimal('totale_precedente', 8, 2);
+            if ($haPagamento) {
+                $table->json('pagamento_precedente')->nullable();
+            }
             $table->string('motivo')->nullable();
             $table->timestamp('created_at')->useCurrent();
         });
 
-        $cols = 'id, comanda_id, postazione_id, righe_precedenti, totale_precedente, motivo, created_at';
+        $cols = 'id, comanda_id, postazione_id, righe_precedenti, totale_precedente'
+            .($haPagamento ? ', pagamento_precedente' : '')
+            .', motivo, created_at';
         DB::statement("INSERT INTO comanda_correzioni_fix_fk ({$cols}) SELECT {$cols} FROM comanda_correzioni");
 
         Schema::drop('comanda_correzioni');
