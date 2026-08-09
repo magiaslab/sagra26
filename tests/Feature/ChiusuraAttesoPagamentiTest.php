@@ -55,7 +55,13 @@ it('chiusura atteso esclude omaggio e sospeso aperto, include sconto e cambio me
     // POS 4 + contante sconto 2 + contante (ex POS) 4 = contante 6, pos 4
     expect($atteso['contante'])->toBe(6.0)
         ->and($atteso['pos'])->toBe(4.0)
-        ->and($atteso['totale'])->toBe(10.0);
+        ->and($atteso['totale'])->toBe(10.0)
+        ->and($atteso['n_omaggi'])->toBe(1)
+        ->and($atteso['omaggi_valore'])->toBe(4.0)
+        ->and($atteso['n_sospesi_aperti'])->toBe(1)
+        ->and($atteso['n_sconti'])->toBe(1)
+        ->and($atteso['sconti_valore'])->toBe(2.0)
+        ->and($atteso['n_corrette'])->toBe(1);
 });
 
 it('chiusura atteso dopo chiusura sospeso e correzione con delta misto', function () {

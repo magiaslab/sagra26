@@ -289,7 +289,9 @@
                 </div>
                 <div class="mt-3 space-y-1.5 text-sm leading-snug text-sagra-ink">
                     <p class="m-0">Consegnato: <strong class="tabular-nums">{{ number_format($riconciliazione['contante_consegnato'], 2, ',', '.') }} €</strong></p>
-                    <p class="m-0">Incasso contante reale: <strong class="tabular-nums">{{ number_format($riconciliazione['incasso_contante_reale'], 2, ',', '.') }} €</strong></p>
+                    <p class="m-0">Incasso contante reale: <strong class="tabular-nums">{{ number_format($riconciliazione['incasso_contante_reale'], 2, ',', '.') }} €</strong>
+                        <span class="text-xs text-sagra-muted">(pezzi − fondo iniziale)</span>
+                    </p>
                     <p class="m-0">
                         Fondo sera dopo: <strong class="tabular-nums">{{ number_format((float) $fondo_trattenuto, 2, ',', '.') }} €</strong>
                         @if ($fondoPezziTotale > 0)
@@ -297,6 +299,56 @@
                         @endif
                     </p>
                 </div>
+
+                @php $d = $riconciliazione['atteso_dettaglio'] ?? null; @endphp
+                @if ($d)
+                    <div class="mt-4 rounded-md bg-sagra-softer px-3 py-3 text-sm text-sagra-ink">
+                        <p class="m-0 text-xs font-semibold uppercase tracking-wide text-sagra-muted">Come è calcolato l’atteso</p>
+                        <ul class="mt-2 mb-0 list-none space-y-1.5 p-0 text-sm leading-snug">
+                            <li>{{ $d['n_comande'] }} comande stampate su questo punto cassa</li>
+                            <li>
+                                <strong class="tabular-nums">{{ number_format($riconciliazione['atteso_contante'], 2, ',', '.') }} €</strong> contante
+                                + <strong class="tabular-nums">{{ number_format($riconciliazione['atteso_pos'], 2, ',', '.') }} €</strong> POS
+                                <span class="text-sagra-muted">(stato attuale dopo eventuali correzioni)</span>
+                            </li>
+                            @if ($d['n_omaggi'] > 0)
+                                <li>
+                                    {{ $d['n_omaggi'] }} omaggi
+                                    ({{ number_format($d['omaggi_valore'], 2, ',', '.') }} €) —
+                                    <strong>non</strong> nell’atteso
+                                </li>
+                            @endif
+                            @if ($d['n_sospesi_aperti'] > 0)
+                                <li>
+                                    {{ $d['n_sospesi_aperti'] }} sospesi aperti
+                                    ({{ number_format($d['sospesi_valore'], 2, ',', '.') }} €) —
+                                    <strong>non</strong> nell’atteso finché non saldati
+                                </li>
+                            @endif
+                            @if ($d['n_sconti'] > 0)
+                                <li>
+                                    {{ $d['n_sconti'] }} sconti:
+                                    in atteso solo il residuo pagato
+                                    (sconto complessivo {{ number_format($d['sconti_valore'], 2, ',', '.') }} €)
+                                </li>
+                            @endif
+                            @if ($d['n_corrette'] > 0)
+                                <li>
+                                    {{ $d['n_corrette'] }} comande modificate —
+                                    conta il metodo/totale <strong>dopo</strong> la correzione
+                                    (<a class="font-semibold text-sagra underline" href="{{ route('gestione.correzioni', absolute: false) }}">vedi storico</a>)
+                                </li>
+                            @endif
+                            @if ($d['n_miste'] > 0)
+                                <li>{{ $d['n_miste'] }} pagamenti misti: contante e POS sommati nei rispettivi canali</li>
+                            @endif
+                        </ul>
+                        <p class="mt-2 mb-0 text-xs text-sagra-muted">
+                            Reale contante = pezzi in cassetto − fondo iniziale.
+                            Δ reale = reale − atteso. Δ fiscale = atteso − Z.
+                        </p>
+                    </div>
+                @endif
             @endif
         </div>
     </div>
