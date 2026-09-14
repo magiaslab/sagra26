@@ -66,7 +66,28 @@ class MenuItem extends Model
             'cucina_2' => 'Cucina 2',
             'griglia' => 'Griglia',
             'cliente' => 'Cliente',
+            'bevande' => 'Bevande / Bibite',
+            'bar' => 'Bar',
             default => (string) $area,
         };
+    }
+
+    /**
+     * Chiave reparto per report vendite menù (cucina / bibite / bar).
+     * Bevande e Bar hanno priorità su area_stampa (spesso «cliente»).
+     */
+    public function chiaveReparto(): string
+    {
+        $cat = $this->categoria;
+        if ($cat && $cat->is_bevande) {
+            return $this->bar ? 'bar' : 'bevande';
+        }
+
+        return $this->areaStampaEffettiva();
+    }
+
+    public function etichettaReparto(): string
+    {
+        return self::etichettaArea($this->chiaveReparto());
     }
 }

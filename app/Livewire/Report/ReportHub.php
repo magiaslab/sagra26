@@ -20,7 +20,7 @@ use Livewire\Component;
 
 class ReportHub extends Component
 {
-    public string $tipo = 'cumulativo';
+    public string $tipo = 'piatti';
 
     public ?int $serataId = null;
 
@@ -34,12 +34,17 @@ class ReportHub extends Component
 
     public bool $completo = true;
 
+    /** Range date (Y-m-d) per report «Cumulativo piatti». */
+    public ?string $dataDa = null;
+
+    public ?string $dataA = null;
+
     /** Se true, avvia window.print() al caricamento (es. da Chiusura → Foglio consegna). */
     public bool $autoPrint = false;
 
     private const TIPI = [
         'cumulativo', 'cucina_1', 'cucina_2', 'griglia', 'bevande',
-        'statistiche', 'economico', 'consegna', 'confronto',
+        'statistiche', 'economico', 'consegna', 'confronto', 'piatti',
     ];
 
     public function mount(): void
@@ -75,6 +80,67 @@ class ReportHub extends Component
         }
         $this->serataConfrontoId = $this->serataDaId;
         $this->autoPrint = request()->boolean('print');
+        $this->inizializzaRangeDate();
+
+        $daData = request()->query('data_da') ?? request()->query('dataDa');
+        $aData = request()->query('data_a') ?? request()->query('dataA');
+        if (is_string($daData) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $daData)) {
+            $this->dataDa = $daData;
+        }
+        if (is_string($aData) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $aData)) {
+            $this->dataA = $aData;
+        }
+    }
+
+    public function updatedTipo(string $value): void
+    {
+        if ($value === 'piatti' && (! $this->dataDa || ! $this->dataA)) {
+            $this->inizializzaRangeDate();
+        }
+    }
+
+    /** Imposta dataDa/dataA sulla prima e ultima serata dell’edizione. */
+    public function tuttaLaSagra(): void
+    {
+        $this->inizializzaRangeDate();
+    }
+
+    private function inizializzaRangeDate(): void
+    {
+        $serate = Serata::queryEdizione()->orderBy('data')->get(['id', 'data']);
+        if ($serate->isEmpty()) {
+            $this->dataDa = null;
+            $this->dataA = null;
+
+            return;
+        }
+        $this->dataDa = $serate->first()->data->toDateString();
+        $this->dataA = $serate->last()->data->toDateString();
+    }
+
+    /**
+     * Serate dell’edizione comprese tra dataDa e dataA (incluse).
+     *
+     * @return Collection<int, Serata>
+     */
+    private function serateNelRangeDate(): Collection
+    {
+        $edizione = Edizione::corrente();
+        $query = Serata::queryEdizione($edizione?->id)->orderBy('data');
+
+        $da = $this->dataDa;
+        $a = $this->dataA;
+        if (is_string($da) && is_string($a) && $da > $a) {
+            [$da, $a] = [$a, $da];
+        }
+        if (is_string($da) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $da)) {
+            $query->whereDate('data', '>=', $da);
+        }
+        if (is_string($a) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $a)) {
+            $query->whereDate('data', '<=', $a);
+        }
+
+        return $query->get();
     }
 
     public function updatedSerataId(?int $value): void
@@ -99,8 +165,38 @@ class ReportHub extends Component
         $this->serataConfrontoId = $value;
     }
 
+    /**
+     * Apre la stessa vista in modalità stampa: nella finestra del browser
+     * scegliere «Salva come PDF» (destinazione stampante).
+     */
+    public function exportPdf()
+    {
+        $params = [
+            'tipo' => $this->tipo,
+            'print' => 1,
+        ];
+
+        if ($this->tipo === 'piatti') {
+            $params['data_da'] = $this->dataDa;
+            $params['data_a'] = $this->dataA;
+        } else {
+            $params['serata_id'] = $this->serataId;
+            $params['serata_da_id'] = $this->serataDaId;
+            $params['punto_cassa_id'] = $this->puntoCassaId;
+            if ($this->completo) {
+                $params['completo'] = 1;
+            }
+        }
+
+        return redirect()->route('gestione.report', $params);
+    }
+
     public function exportCsv()
     {
+        if ($this->tipo === 'piatti') {
+            return $this->exportCsvPiatti();
+        }
+
         $serata = $this->serataId ? Serata::query()->find($this->serataId) : null;
         if (! $serata) {
             return;
@@ -159,6 +255,73 @@ class ReportHub extends Component
         ]);
     }
 
+    /** CSV aggregato: tutti i piatti nel range date selezionato. */
+    private function exportCsvPiatti()
+    {
+        $dati = $this->datiPiattiRange();
+        if (($dati['errore'] ?? null) !== null) {
+            return;
+        }
+
+        $da = $dati['label_da'] ?? 'inizio';
+        $a = $dati['label_a'] ?? 'fine';
+        $filename = 'menu-cumulativo-'.str_replace('/', '', $da).'-'.str_replace('/', '', $a).'.csv';
+
+        return response()->streamDownload(function () use ($dati) {
+            $out = fopen('php://output', 'w');
+            fwrite($out, "\xEF\xBB\xBF");
+            fputcsv($out, [
+                'reparto', 'categoria', 'voce', 'quantita', 'incasso_euro',
+                'prezzo_medio', 'periodo_da', 'periodo_a', 'n_serate',
+            ], ';');
+
+            foreach ($dati['reparti'] as $rep) {
+                foreach ($rep['items'] as $item) {
+                    $qta = (int) $item['qta'];
+                    $incasso = (float) $item['incasso'];
+                    fputcsv($out, [
+                        $rep['nome'],
+                        $item['categoria'] ?? '',
+                        $item['nome'],
+                        $qta,
+                        number_format($incasso, 2, '.', ''),
+                        $qta > 0 ? number_format($incasso / $qta, 2, '.', '') : '0.00',
+                        $dati['label_da'],
+                        $dati['label_a'],
+                        $dati['n_serate'],
+                    ], ';');
+                }
+            }
+
+            fputcsv($out, [], ';');
+            fputcsv($out, [
+                'TOTALE',
+                '',
+                '',
+                $dati['totale_qta'],
+                number_format($dati['totale_incasso'], 2, '.', ''),
+                '',
+                $dati['label_da'],
+                $dati['label_a'],
+                $dati['n_serate'],
+            ], ';');
+            fputcsv($out, [
+                'RIEPILOGO',
+                'coperti',
+                $dati['coperti'],
+                'comande',
+                $dati['comande'],
+                'contante',
+                number_format($dati['contante'], 2, '.', ''),
+                'pos',
+                number_format($dati['pos'], 2, '.', ''),
+            ], ';');
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
+    }
+
     public function render()
     {
         $edizione = Edizione::corrente();
@@ -170,7 +333,9 @@ class ReportHub extends Component
         }
         $dati = [];
 
-        if ($serata) {
+        if ($this->tipo === 'piatti') {
+            $dati = $this->datiPiattiRange();
+        } elseif ($serata) {
             // Completo = tutta l’edizione; senza spunta = solo la serata selezionata.
             $serateAmbito = $this->completo
                 ? $serate
@@ -200,7 +365,181 @@ class ReportHub extends Component
             'punti' => PuntoCassa::query()->where('attivo', true)->get(),
             'dati' => $dati,
             'impostazioni' => Impostazione::corrente(),
+            'minData' => $serate->first()?->data?->toDateString(),
+            'maxData' => $serate->last()?->data?->toDateString(),
         ])->layout('layouts.app', ['impostazioni' => Impostazione::corrente()]);
+    }
+
+    /**
+     * Cumulativo di tutto il menù venduto nel range date (cucina, bibite, bar, …).
+     *
+     * @return array{
+     *   errore: ?string,
+     *   label_da: string,
+     *   label_a: string,
+     *   n_serate: int,
+     *   serate_label: list<string>,
+     *   reparti: list<array{key: string, nome: string, items: list<array{id: int, nome: string, categoria: string, qta: int, incasso: float}>, qta: int, incasso: float}>,
+     *   categorie: list<array{nome: string, items: list<array{id: int, nome: string, area: string, qta: int, incasso: float}>, qta: int, incasso: float}>,
+     *   totale_qta: int,
+     *   totale_incasso: float,
+     *   coperti: int,
+     *   comande: int,
+     *   contante: float,
+     *   pos: float
+     * }
+     */
+    private function datiPiattiRange(): array
+    {
+        $vuoto = [
+            'errore' => null,
+            'label_da' => $this->dataDa ? \Carbon\Carbon::parse($this->dataDa)->format('d/m/Y') : '—',
+            'label_a' => $this->dataA ? \Carbon\Carbon::parse($this->dataA)->format('d/m/Y') : '—',
+            'n_serate' => 0,
+            'serate_label' => [],
+            'reparti' => [],
+            'categorie' => [],
+            'totale_qta' => 0,
+            'totale_incasso' => 0.0,
+            'coperti' => 0,
+            'comande' => 0,
+            'contante' => 0.0,
+            'pos' => 0.0,
+        ];
+
+        $serate = $this->serateNelRangeDate();
+        if ($serate->isEmpty()) {
+            $vuoto['errore'] = 'Nessuna serata nel periodo selezionato. Controlla le date Da / A.';
+
+            return $vuoto;
+        }
+
+        $ids = $serate->pluck('id');
+        $dettaglio = $this->venditeDettaglioPerItem($ids);
+        $idsVenduti = array_keys(array_filter($dettaglio['qta'], fn ($q) => (int) $q > 0));
+
+        $menuItems = MenuItem::query()
+            ->with('categoria')
+            ->orderBy('ordinamento')
+            ->get();
+
+        /** @var array<string, array{key: string, nome: string, items: list<array{id: int, nome: string, categoria: string, qta: int, incasso: float}>, qta: int, incasso: float}> $perReparto */
+        $perReparto = [];
+        $totaleQta = 0;
+        $totaleIncasso = 0.0;
+        $idsInTabella = [];
+
+        foreach ($menuItems as $item) {
+            $id = (int) $item->id;
+            $qta = (int) ($dettaglio['qta'][$id] ?? 0);
+            if ($qta <= 0) {
+                continue;
+            }
+            $incasso = (float) ($dettaglio['incasso'][$id] ?? 0);
+            $chiave = $item->chiaveReparto();
+            if (! isset($perReparto[$chiave])) {
+                $perReparto[$chiave] = [
+                    'key' => $chiave,
+                    'nome' => MenuItem::etichettaArea($chiave),
+                    'items' => [],
+                    'qta' => 0,
+                    'incasso' => 0.0,
+                ];
+            }
+            $perReparto[$chiave]['items'][] = [
+                'id' => $id,
+                'nome' => $item->nome,
+                'categoria' => $item->categoria?->nome ?? '—',
+                'qta' => $qta,
+                'incasso' => $incasso,
+            ];
+            $perReparto[$chiave]['qta'] += $qta;
+            $perReparto[$chiave]['incasso'] += $incasso;
+            $totaleQta += $qta;
+            $totaleIncasso += $incasso;
+            $idsInTabella[] = $id;
+        }
+
+        // Voci vendute non più in menu_items (sicurezza).
+        $orfani = array_values(array_diff($idsVenduti, $idsInTabella));
+        if ($orfani !== []) {
+            $chiave = 'altro';
+            $perReparto[$chiave] = [
+                'key' => $chiave,
+                'nome' => 'Altro',
+                'items' => [],
+                'qta' => 0,
+                'incasso' => 0.0,
+            ];
+            foreach ($orfani as $id) {
+                $qta = (int) ($dettaglio['qta'][$id] ?? 0);
+                $incasso = (float) ($dettaglio['incasso'][$id] ?? 0);
+                $perReparto[$chiave]['items'][] = [
+                    'id' => (int) $id,
+                    'nome' => '#'.$id,
+                    'categoria' => '—',
+                    'qta' => $qta,
+                    'incasso' => $incasso,
+                ];
+                $perReparto[$chiave]['qta'] += $qta;
+                $perReparto[$chiave]['incasso'] += $incasso;
+                $totaleQta += $qta;
+                $totaleIncasso += $incasso;
+            }
+        }
+
+        $ordineReparti = ['cucina_1', 'cucina_2', 'griglia', 'bevande', 'bar', 'cliente', 'altro'];
+        $reparti = [];
+        foreach ($ordineReparti as $key) {
+            if (! isset($perReparto[$key])) {
+                continue;
+            }
+            $blocco = $perReparto[$key];
+            usort($blocco['items'], fn ($x, $y) => $y['qta'] <=> $x['qta']);
+            $blocco['incasso'] = round($blocco['incasso'], 2);
+            $reparti[] = $blocco;
+            unset($perReparto[$key]);
+        }
+        foreach ($perReparto as $blocco) {
+            usort($blocco['items'], fn ($x, $y) => $y['qta'] <=> $x['qta']);
+            $blocco['incasso'] = round($blocco['incasso'], 2);
+            $reparti[] = $blocco;
+        }
+
+        // Alias categorie = reparti (compatibilità vista/CSV precedenti).
+        $categorie = array_map(fn (array $r) => [
+            'nome' => $r['nome'],
+            'items' => array_map(fn (array $i) => [
+                'id' => $i['id'],
+                'nome' => $i['nome'],
+                'area' => $i['categoria'],
+                'qta' => $i['qta'],
+                'incasso' => $i['incasso'],
+            ], $r['items']),
+            'qta' => $r['qta'],
+            'incasso' => $r['incasso'],
+        ], $reparti);
+
+        $comande = Comanda::query()
+            ->whereIn('serata_id', $ids)
+            ->where('stato', 'stampata')
+            ->get();
+
+        return [
+            'errore' => null,
+            'label_da' => $serate->first()->data->format('d/m/Y'),
+            'label_a' => $serate->last()->data->format('d/m/Y'),
+            'n_serate' => $serate->count(),
+            'serate_label' => $serate->map(fn (Serata $s) => $s->data->format('d/m'))->all(),
+            'reparti' => $reparti,
+            'categorie' => $categorie,
+            'totale_qta' => $totaleQta,
+            'totale_incasso' => round($totaleIncasso, 2),
+            'coperti' => (int) $comande->sum('coperti'),
+            'comande' => $comande->count(),
+            'contante' => round($comande->sum(fn ($c) => $c->importoContanteEffettivo()), 2),
+            'pos' => round($comande->sum(fn ($c) => $c->importoPosEffettivo()), 2),
+        ];
     }
 
     private function serataPrecedenteId(?int $serataId): ?int
